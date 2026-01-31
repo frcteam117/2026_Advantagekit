@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter;
+package frc.robot.subsystems.intake;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -28,18 +28,19 @@ import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction.TrapezoidProfileConfig;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 
-public class ShooterConstants {
-  public static final String logName = "Shooter";
+public class IntakeConstants {
+  public static final String logName = "Intake";
 
-  public static final MechanismConfig<AngularPV_State> hoodConfig =
+  public static final MechanismConfig<AngularPV_State> armConfig =
       new MechanismConfig<AngularPV_State>();
 
-  public static final MechanismConfig<AngularPV_State> flywheelConfig =
+  public static final MechanismConfig<AngularPV_State> rollerConfig =
       new MechanismConfig<AngularPV_State>();
 
   static {
-    String logName = ShooterConstants.logName + "/Hood";
-    String tuningLogName = "Tuning/" + hoodConfig.logName;
+    // 6 bar constants
+    String logName = IntakeConstants.logName + "/Arm";
+    String tuningLogName = "Tuning/" + armConfig.logName;
     int[] canIds = new int[] {9};
     MotorType revMotorType = MotorType.kBrushless;
     SparkMaxConfig sparkConfig = new SparkMaxConfig();
@@ -51,8 +52,8 @@ public class ShooterConstants {
         0.18; // change this to be a function of cm radius and moi make simulation realistic
     double period_s = Robot.codePeriod_s;
     double min_rad = 0;
-    double max_rad = Math.PI / 4;
-    AngularPV_State start_State = new AngularPV_State(0, 0);
+    double max_rad = Math.PI / 1.8;
+    AngularPV_State start_State = new AngularPV_State(Math.PI / 1.8, 0);
     double max_radPs = 4;
     double max_radPs2 = 12;
     PIDController realPID = new PIDController(0, 0, 0, period_s);
@@ -62,15 +63,15 @@ public class ShooterConstants {
 
     sparkConfig.voltageCompensation(Robot.nominal_V).smartCurrentLimit(30);
 
-    hoodConfig.logName = logName;
-    hoodConfig.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};
-    hoodConfig.simComponents = new ComponentSimBase[0]; // {absoluteEncoderSimComponent};
+    armConfig.logName = logName;
+    armConfig.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};
+    armConfig.simComponents = new ComponentSimBase[0]; // {absoluteEncoderSimComponent};
 
     SparkMaxControllerConfig sparkMaxControllerConfig = new SparkMaxControllerConfig();
     sparkMaxControllerConfig.canIds = canIds;
     sparkMaxControllerConfig.baseMotorType = revMotorType;
     sparkMaxControllerConfig.baseSparkConfig = sparkConfig;
-    hoodConfig.realController = new SparkMaxController(sparkMaxControllerConfig);
+    armConfig.realController = new SparkMaxController(sparkMaxControllerConfig);
 
     ArmSimulatorConfig hoodSimConfig = new ArmSimulatorConfig();
     hoodSimConfig.canIds = canIds;
@@ -82,7 +83,7 @@ public class ShooterConstants {
     hoodSimConfig.max_rad = max_rad;
     hoodSimConfig.start_rad = start_State.rad();
     hoodSimConfig.plant = LinearSystemId.createSingleJointedArmSystem(dcMotor, moi_kgm2, reduction);
-    hoodConfig.simController = new ArmSimulator(hoodSimConfig);
+    armConfig.simController = new ArmSimulator(hoodSimConfig);
 
     TrapezoidProfileConfig trapezoidProfileConfig = new TrapezoidProfileConfig();
     trapezoidProfileConfig.mechanismTuningLogName = tuningLogName;
@@ -91,9 +92,9 @@ public class ShooterConstants {
     trapezoidProfileConfig.constraints = new AngularVA_State(max_radPs, max_radPs2);
     trapezoidProfileConfig.min = new AngularP_State(min_rad);
     trapezoidProfileConfig.max = new AngularP_State(max_rad);
-    hoodConfig.profiles =
+    armConfig.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(trapezoidProfileConfig)};
-    hoodConfig.feedbacks = new ControlFunctionBase[] {
+    armConfig.feedbacks = new ControlFunctionBase[] {
       new ArmPIDF(
           RobotBase.isReal() ? realPID : simPID,
           RobotBase.isReal() ? realFF : simFF,
@@ -101,25 +102,26 @@ public class ShooterConstants {
           cmOffset_rad,
           tuningLogName)
     };
-    hoodConfig.componentsToState = componentStates -> new AngularPV_State(
+    armConfig.componentsToState = componentStates -> new AngularPV_State(
         ((Motor_State) componentStates[0]).rad() / reduction,
         ((Motor_State) componentStates[0]).radPs() / reduction);
   }
 
   static {
-    String logName = ShooterConstants.logName + "/Flywheel";
-    String tuningLogName = "Tuning/" + flywheelConfig.logName;
+    // Roller Constants
+    String logName = IntakeConstants.logName + "/Roller";
+    String tuningLogName = "Tuning/" + rollerConfig.logName;
     int[] canIds = new int[] {10, 11};
     boolean[] followerInversions = new boolean[] {false, true};
     MotorType revMotorType = MotorType.kBrushless;
     SparkMaxConfig sparkConfig = new SparkMaxConfig();
-    double reduction = 1;
-    DCMotor dcMotor = DCMotor.getNeoVortex(2).withReduction(reduction);
-    double moi_kgm2 = .05;
+    double reduction = 5;
+    DCMotor dcMotor = DCMotor.getNEO(1).withReduction(reduction);
+    double moi_kgm2 = .03;
     double period_s = Robot.codePeriod_s;
     AngularPV_State start_State = new AngularPV_State(0, 0);
-    double max_radPs = 628;
-    double max_radPs2 = 2000;
+    double max_radPs = 100;
+    double max_radPs2 = 400;
     PIDController realPID = new PIDController(0, 0, 0, period_s);
     PIDController simPID = new PIDController(0, 0, 0, period_s);
     SimpleMotorFeedforward realFF = new SimpleMotorFeedforward(0, 0, 0, period_s);
@@ -127,18 +129,18 @@ public class ShooterConstants {
 
     sparkConfig.voltageCompensation(Robot.nominal_V).smartCurrentLimit(30);
 
-    flywheelConfig.logName = logName;
-    flywheelConfig.realComponents = new ComponentBase[0];
-    flywheelConfig.simComponents = new ComponentSimBase[0];
+    rollerConfig.logName = logName;
+    rollerConfig.realComponents = new ComponentBase[0];
+    rollerConfig.simComponents = new ComponentSimBase[0];
 
     SparkMaxControllerConfig sparkMaxControllerConfig = new SparkMaxControllerConfig();
     sparkMaxControllerConfig.canIds = canIds;
     sparkMaxControllerConfig.followerInversions = followerInversions;
     sparkMaxControllerConfig.baseMotorType = revMotorType;
     sparkMaxControllerConfig.baseSparkConfig = sparkConfig;
-    flywheelConfig.realController = new SparkMaxController(sparkMaxControllerConfig);
+    rollerConfig.realController = new SparkMaxController(sparkMaxControllerConfig);
 
-    flywheelConfig.simController = new DCMotorSimulator(
+    rollerConfig.simController = new DCMotorSimulator(
         new DCMotorSim(LinearSystemId.createDCMotorSystem(dcMotor, moi_kgm2, reduction), dcMotor),
         canIds);
 
@@ -150,16 +152,16 @@ public class ShooterConstants {
     trapezoidProfileConfig.min = new AngularP_State(-Double.MAX_VALUE);
     trapezoidProfileConfig.max = new AngularP_State(Double.MAX_VALUE);
     trapezoidProfileConfig.enableContinuousInput = true;
-    flywheelConfig.profiles =
+    rollerConfig.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(trapezoidProfileConfig)};
-    flywheelConfig.feedbacks = new ControlFunctionBase[] {
+    rollerConfig.feedbacks = new ControlFunctionBase[] {
       new SimplePIDF(
           RobotBase.isReal() ? realPID : simPID,
           RobotBase.isReal() ? realFF : simFF,
           start_State,
           tuningLogName)
     };
-    flywheelConfig.componentsToState = componentStates -> new AngularPV_State(
+    rollerConfig.componentsToState = componentStates -> new AngularPV_State(
         ((Motor_State) componentStates[0]).rad() / reduction,
         ((Motor_State) componentStates[0]).radPs() / reduction);
   }

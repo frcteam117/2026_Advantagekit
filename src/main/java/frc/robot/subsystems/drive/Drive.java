@@ -41,6 +41,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -64,7 +65,8 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
   // Kinematics
-  private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
+  private final SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(Swerve.moduleTranslations);
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
   private final SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
@@ -79,7 +81,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
 
   // Motion Profiling
   private final SwerveSetpointGenerator swerveSetpointGenerator =
-      new SwerveSetpointGenerator(ppConfig, maxSpeed_mPs / driveBaseRadius_m);
+      new SwerveSetpointGenerator(Swerve.ppConfig, Wheel.max_mPs / Swerve.trackRadius_m);
   private SwerveSetpoint lastSetpoint = new SwerveSetpoint(
       new ChassisSpeeds(),
       new SwerveModuleState[] {
@@ -120,14 +122,14 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         this::getPose,
         this::resetOdometry,
         this::getChassisSpeeds,
-        this::setNextVelocity,
+        this::setGoalVelocity,
         new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
-        ppConfig,
-        // () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        () -> {
-          return false;
-        },
+        Swerve.ppConfig,
+        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+        // () -> {
+        //   return false;
+        // },
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback((activePath) -> {
@@ -210,7 +212,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     // Calculate module setpoints
     speeds_mps = ChassisSpeeds.discretize(speeds_mps, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds_mps);
-    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxSpeed_mPs);
+    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, Wheel.max_mPs);
 
     // Log unoptimized setpoints
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
@@ -267,7 +269,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   public void stopWithX() {
     Rotation2d[] headings = new Rotation2d[4];
     for (int i = 0; i < 4; i++) {
-      headings[i] = moduleTranslations[i].getAngle();
+      headings[i] = Swerve.moduleTranslations[i].getAngle();
     }
     kinematics.resetHeadings(headings);
     stop();
@@ -357,11 +359,11 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
 
   /** Returns the maximum linear speed in meters per sec. */
   public double getMaxLinearSpeedMetersPerSec() {
-    return maxSpeed_mPs;
+    return Wheel.max_mPs;
   }
 
   /** Returns the maximum angular speed in radians per sec. */
   public double getMaxAngularSpeedRadPerSec() {
-    return maxSpeed_mPs / driveBaseRadius_m;
+    return Wheel.max_mPs / Swerve.trackRadius_m;
   }
 }

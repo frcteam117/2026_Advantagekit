@@ -16,18 +16,18 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.controller.PIDController;
-import frc.robot.subsystems.drive.DriveConstants.DriveMotor;
-import frc.robot.subsystems.drive.DriveConstants.TurnMotor;
+import frc.robot.subsystems.drive.DriveConstants.Azimuth;
+import frc.robot.subsystems.drive.DriveConstants.Wheel;
 import frc.robot.util.SparkUtil;
 import java.util.Arrays;
-import swervelib.simulation.ironmaple.simulation.drivesims.SwerveModuleSimulation;
-import swervelib.simulation.ironmaple.simulation.motorsims.SimulatedMotorController;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
+import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 
 /** Physics sim implementation of module IO. */
 public class ModuleIOSim implements ModuleIO {
   private final SwerveModuleSimulation moduleSimulation;
   private final SimulatedMotorController.GenericMotorController driveMotor, turnMotor;
-  private final PIDController drivePID = DriveMotor.simPID, turnPID = TurnMotor.simPID;
+  private final PIDController drivePID = Wheel.simPID, turnPID = Azimuth.simPID;
   private boolean driveClosedLoop = false, turnClosedLoop = false;
   private double lastNextDriveVelocity_radPs = 0.0,
       currentTurnVelocity_radPs = 0.0,
@@ -39,20 +39,20 @@ public class ModuleIOSim implements ModuleIO {
     this.moduleSimulation = moduleSimulation;
     this.driveMotor = moduleSimulation
         .useGenericMotorControllerForDrive()
-        .withCurrentLimit(Amps.of(DriveMotor.config.limits.getMaxStatorCurrent()));
+        .withCurrentLimit(Amps.of(Wheel.config.limits.getMaxStatorCurrent()));
     this.turnMotor = moduleSimulation
         .useGenericControllerForSteer()
-        .withCurrentLimit(Amps.of(TurnMotor.config.limits.getMaxSupplyCurrent()));
+        .withCurrentLimit(Amps.of(Azimuth.config.limits.getMaxSupplyCurrent()));
   }
 
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     // Run closed-loop control
     if (!driveClosedLoop) {
-      DriveMotor.simPID.reset();
+      Wheel.simPID.reset();
     }
     if (!turnClosedLoop) {
-      TurnMotor.simPID.reset();
+      Azimuth.simPID.reset();
     }
 
     // Update simulation state
@@ -72,7 +72,7 @@ public class ModuleIOSim implements ModuleIO {
     // Update turn inputs
     inputs.turnConnected = true;
     inputs.turnPosition_rad =
-        moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / TurnMotor.reduction;
+        moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction;
     inputs.turnAbsolutePosition_rad = moduleSimulation.getSteerAbsoluteFacing().getRadians();
     inputs.turnVelocity_radPs =
         moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
@@ -119,8 +119,8 @@ public class ModuleIOSim implements ModuleIO {
   @Override
   public void setNextDriveState(double nextVelocity_radPs, double nextAcceleration_radPs2) {
     driveClosedLoop = true;
-    driveAppliedVolts = DriveMotor.simFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2)
-        + DriveMotor.simPID.calculate(
+    driveAppliedVolts = Wheel.simFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2)
+        + Wheel.simPID.calculate(
             moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond),
             lastNextDriveVelocity_radPs);
     lastNextDriveVelocity_radPs = nextVelocity_radPs;
@@ -130,8 +130,8 @@ public class ModuleIOSim implements ModuleIO {
   public void setNextTurnState(double nextPosition_rad, double nextVelocity_radPs) {
     turnClosedLoop = true;
     turnAppliedVolts =
-        TurnMotor.simFF.calculateWithVelocities(currentTurnVelocity_radPs, nextVelocity_radPs)
-            + TurnMotor.simPID.calculate(
+        Azimuth.simFF.calculateWithVelocities(currentTurnVelocity_radPs, nextVelocity_radPs)
+            + Azimuth.simPID.calculate(
                 moduleSimulation.getSteerAbsoluteFacing().getRadians(), lastNextTurnPosition_rad);
     lastNextTurnPosition_rad = nextPosition_rad;
   }

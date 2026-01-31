@@ -20,7 +20,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.Constants;
+import frc.robot.Constants.Robot;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -50,7 +50,7 @@ public class Module {
     int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
     odometryPositions = new SwerveModulePosition[sampleCount];
     for (int i = 0; i < sampleCount; i++) {
-      double positionMeters = inputs.odometryDrivePositions_rad[i] * wheelRadius_m;
+      double positionMeters = inputs.odometryDrivePositions_rad[i] * Wheel.radius_m;
       double angle_rad = inputs.odometryTurnPositions_rad[i];
       odometryPositions[i] =
           new SwerveModulePosition(positionMeters, Rotation2d.fromRadians(angle_rad));
@@ -78,15 +78,15 @@ public class Module {
     double acceleration_radPs2 =
         Math.cos(state.angle.getRadians() - inputs.turnAbsolutePosition_rad)
             * acceleration_mPs2
-            / wheelRadius_m;
+            / Wheel.radius_m;
     state.optimize(Rotation2d.fromRadians(inputs.turnAbsolutePosition_rad));
     state.cosineScale(Rotation2d.fromRadians(inputs.turnAbsolutePosition_rad));
 
     // Apply setpoints
-    io.setNextDriveState(state.speedMetersPerSecond / wheelRadius_m, acceleration_radPs2);
+    io.setNextDriveState(state.speedMetersPerSecond / Wheel.radius_m, acceleration_radPs2);
     io.setNextTurnState(
         state.angle.getRadians(),
-        (state.angle.getRadians() - lastTurnAngle_rad) / Constants.robotPeriod_s);
+        (state.angle.getRadians() - lastTurnAngle_rad) / Robot.codePeriod_s);
     lastTurnAngle_rad = state.angle.getRadians();
   }
 
@@ -109,12 +109,12 @@ public class Module {
 
   /** Returns the current drive position of the module in meters. */
   public double getPositionMeters() {
-    return inputs.drivePosition_rad * wheelRadius_m;
+    return inputs.drivePosition_rad * Wheel.radius_m;
   }
 
   /** Returns the current drive velocity of the module in meters per second. */
   public double getVelocityMetersPerSec() {
-    return inputs.driveVelocity_radPs * wheelRadius_m;
+    return inputs.driveVelocity_radPs * Wheel.radius_m;
   }
 
   /** Returns the module position (turn angle and drive position). */

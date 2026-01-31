@@ -40,44 +40,22 @@ public class LogUtil {
 
   public static void createTunablePID(
       String key, PIDController pidController, BooleanSupplier shouldPublish) {
-    @SuppressWarnings("unused")
-    TunableDouble
-        P = new TunableDouble(key + "P", pidController.getP(), shouldPublish, pidController::setP),
-        I = new TunableDouble(key + "I", pidController.getI(), shouldPublish, pidController::setI),
-        D = new TunableDouble(key + "D", pidController.getD(), shouldPublish, pidController::setD);
+    new TunableDouble(key + "1-P", pidController.getP(), shouldPublish, pidController::setP);
+    new TunableDouble(key + "2-I", pidController.getI(), shouldPublish, pidController::setI);
+    new TunableDouble(key + "3-D", pidController.getD(), shouldPublish, pidController::setD);
   }
 
   public static void createTunableFF(
       String key, SimpleMotorFeedforward ff, BooleanSupplier shouldPublish) {
-    @SuppressWarnings("unused")
-    TunableDouble S = new TunableDouble(key + "S", ff.getKs(), shouldPublish, ff::setKs),
-        V = new TunableDouble(key + "V", ff.getKv(), shouldPublish, ff::setKv),
-        A = new TunableDouble(key + "A", ff.getKa(), shouldPublish, ff::setKa);
+    new TunableDouble(key + "4-S", ff.getKs(), shouldPublish, ff::setKs);
+    new TunableDouble(key + "5-V", ff.getKv(), shouldPublish, ff::setKv);
+    new TunableDouble(key + "6-A", ff.getKa(), shouldPublish, ff::setKa);
   }
 
   public static void createTunableFF(String key, ArmFeedforward ff, BooleanSupplier shouldPublish) {
-    @SuppressWarnings("unused")
-    TunableDouble S = new TunableDouble(key + "S", ff.getKs(), shouldPublish, ff::setKs),
-        G = new TunableDouble(key + "G", ff.getKg(), shouldPublish, ff::setKg),
-        V = new TunableDouble(key + "V", ff.getKv(), shouldPublish, ff::setKv),
-        A = new TunableDouble(key + "A", ff.getKa(), shouldPublish, ff::setKa);
+    new TunableDouble(key + "4-S", ff.getKs(), shouldPublish, ff::setKs);
+    new TunableDouble(key + "7-G", ff.getKg(), shouldPublish, ff::setKg);
+    new TunableDouble(key + "5-V", ff.getKv(), shouldPublish, ff::setKv);
+    new TunableDouble(key + "6-A", ff.getKa(), shouldPublish, ff::setKa);
   }
-
-  public record AngularMechanismState(
-      double mechanism_rad,
-      double mechanism_radPs,
-      double stator_V,
-      double stator_A,
-      double supply_A) {}
-
-  public record LinearMechanismState(
-      double mechanism_m,
-      double mechanism_mPs,
-      double stator_V,
-      double stator_A,
-      double supply_A) {}
-
-  public record AngularSetpoint(double V, double rad, double radPs) {}
-
-  public record LinearSetpoint(double V, double m, double mPs) {}
 }

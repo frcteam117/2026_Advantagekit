@@ -30,16 +30,16 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterCommands;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOReal;
-import frc.robot.subsystems.shooter.ShooterIOSim;
+// import frc.robot.subsystems.shooter.ShooterIO;
+// import frc.robot.subsystems.shooter.ShooterIOReal;
+// import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil.SysIdType;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-import swervelib.simulation.ironmaple.simulation.SimulatedArena;
-import swervelib.simulation.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import swervelib.simulation.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -50,7 +50,7 @@ import swervelib.simulation.ironmaple.simulation.seasonspecific.reefscape2025.Re
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Vision vision;
+  //   private final Vision vision;
   private final Shooter shooter;
   private SwerveDriveSimulation driveSimulation = null;
 
@@ -73,16 +73,18 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        this.vision = new Vision(
-            drive,
-            new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-            new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-        this.shooter = new Shooter(new ShooterIOReal());
+        // this.vision = new Vision(
+        //     drive,
+        //     new VisionIOPhotonVision(VisionConstants.camera0Name,
+        // VisionConstants.robotToCamera0),
+        //     new VisionIOPhotonVision(VisionConstants.camera1Name,
+        // VisionConstants.robotToCamera1));
+        this.shooter = new Shooter();
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
         this.driveSimulation = new SwerveDriveSimulation(
-            DriveConstants.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+            DriveConstants.Swerve.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
         // add the simulated drivetrain to the simulation field
         SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
         // Body body = new Body();
@@ -102,14 +104,14 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        vision = new Vision(
-            drive,
-            new VisionIOPhotonVisionSim(
-                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
-            new VisionIOPhotonVisionSim(
-                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+        // vision = new Vision(
+        //     drive,
+        //     new VisionIOPhotonVisionSim(
+        //         camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+        //     new VisionIOPhotonVisionSim(
+        //         camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
 
-        shooter = new Shooter(new ShooterIOSim());
+        shooter = new Shooter();
 
         break;
       default:
@@ -121,9 +123,9 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             (pose) -> {});
-        vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
+        // vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
 
-        shooter = new Shooter(new ShooterIO() {});
+        shooter = new Shooter();
 
         break;
     }
@@ -147,33 +149,26 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     autoChooser.addOption(
-        "Flywheel SysId (Quasistatic Forward)",
-        ShooterCommands.flywheelSysId(shooter, SysIdType.QuasistaticForward));
+        "Flywheel SysId (Quasistatic)",
+        ShooterCommands.flywheelSysId(shooter, SysIdType.Quasistatic));
     autoChooser.addOption(
-        "Flywheel SysId (Quasistatic Reverse)",
-        ShooterCommands.flywheelSysId(shooter, SysIdType.QuasistaticReverse));
-    autoChooser.addOption(
-        "Flywheel SysId (Dynamic Forward)",
-        ShooterCommands.flywheelSysId(shooter, SysIdType.DynamicForward));
-    autoChooser.addOption(
-        "Flywheel SysId (Dynamic Reverse)",
-        ShooterCommands.flywheelSysId(shooter, SysIdType.DynamicReverse));
+        "Flywheel SysId (Dynamic)", ShooterCommands.flywheelSysId(shooter, SysIdType.Dynamic));
     autoChooser.addOption(
         "Hood SysId (Quasistatic)", ShooterCommands.hoodSysId(shooter, SysIdType.Quasistatic));
     autoChooser.addOption(
         "Hood SysId (Dynamic)", ShooterCommands.hoodSysId(shooter, SysIdType.Dynamic));
-    autoChooser.addOption(
-        "Turret SysId (Quasistatic Forward)",
-        ShooterCommands.turretSysId(shooter, SysIdType.QuasistaticForward));
-    autoChooser.addOption(
-        "Turret SysId (Quasistatic Reverse)",
-        ShooterCommands.turretSysId(shooter, SysIdType.QuasistaticReverse));
-    autoChooser.addOption(
-        "Turret SysId (Dynamic Forward)",
-        ShooterCommands.turretSysId(shooter, SysIdType.DynamicForward));
-    autoChooser.addOption(
-        "Turret SysId (Dynamic Reverse)",
-        ShooterCommands.turretSysId(shooter, SysIdType.DynamicReverse));
+    // autoChooser.addOption(
+    //     "Turret SysId (Quasistatic Forward)",
+    //     ShooterCommands.turretSysId(shooter, SysIdType.QuasistaticForward));
+    // autoChooser.addOption(
+    //     "Turret SysId (Quasistatic Reverse)",
+    //     ShooterCommands.turretSysId(shooter, SysIdType.QuasistaticReverse));
+    // autoChooser.addOption(
+    //     "Turret SysId (Dynamic Forward)",
+    //     ShooterCommands.turretSysId(shooter, SysIdType.DynamicForward));
+    // autoChooser.addOption(
+    //     "Turret SysId (Dynamic Reverse)",
+    //     ShooterCommands.turretSysId(shooter, SysIdType.DynamicReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -192,8 +187,8 @@ public class RobotContainer {
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
         () -> -controller.getRawAxis(2)));
-    shooter.setDefaultCommand(ShooterCommands.trackPosition(
-        shooter, drive::getPose, () -> new Translation2d(4.489, 4.026)));
+    // shooter.setDefaultCommand(ShooterCommands.trackPosition(
+    //     shooter, drive::getPose, () -> new Translation2d(4.489, 4.026)));
     // shooter.setDefaultCommand(ShooterCommands.runFlywheelGoalVelocity(
     //     shooter, () -> -500 + 1000 * (-controller.getRawAxis(3) + 1) / 2));
 

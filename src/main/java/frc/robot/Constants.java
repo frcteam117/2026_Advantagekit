@@ -21,8 +21,12 @@ import edu.wpi.first.wpilibj.RobotBase;
  * (log replay from a file).
  */
 public final class Constants {
-  public static final double robotPeriod_s = 0.02;
-  public static final double nominalVoltage_V = 12.0;
+  public static class Robot {
+    public static final double codePeriod_s = 0.02;
+    public static final double nominal_V = 12.0;
+    public static final double mass_kg = 18.35;
+    public static final double moi_kgm2 = 4.883;
+  }
 
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;

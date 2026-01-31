@@ -6,7 +6,7 @@ import com.thethriftybot.devices.ThriftyNova;
 import com.thethriftybot.devices.ThriftyNova.Error;
 import edu.wpi.first.wpilibj.Timer;
 import java.util.function.BooleanSupplier;
-import swervelib.simulation.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.SimulatedArena;
 
 public class NovaUtil {
   /** Attempts to run the command until no error is produced. */
@@ -19,7 +19,7 @@ public class NovaUtil {
       String onFailure,
       Error... errors) {
     for (int i = 0; i < maxAttempts; i++) {
-      boolean containedError = false;
+      // boolean containedError = false;
       command.run();
       if (isCorrect.getAsBoolean()) {
         System.out.println(onSuccess + nova.getID());

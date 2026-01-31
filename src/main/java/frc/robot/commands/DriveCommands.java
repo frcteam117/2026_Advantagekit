@@ -33,7 +33,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.DriveConstants.Swerve;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -232,7 +232,7 @@ public class DriveCommands {
             Commands.run(
                 () -> {
                   double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
-                  drive.setNextVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                  drive.setGoalVelocity(new ChassisSpeeds(0.0, 0.0, speed));
                 },
                 drive)),
 
@@ -262,8 +262,7 @@ public class DriveCommands {
                   for (int i = 0; i < 4; i++) {
                     wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
                   }
-                  double wheelRadius =
-                      (state.gyroDelta * DriveConstants.driveBaseRadius_m) / wheelDelta;
+                  double wheelRadius = (state.gyroDelta * Swerve.trackRadius_m) / wheelDelta;
 
                   NumberFormat formatter = new DecimalFormat("#0.000");
                   System.out.println("********** Wheel Radius Characterization Results **********");
