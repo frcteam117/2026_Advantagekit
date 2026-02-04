@@ -91,9 +91,15 @@ public class Module {
   }
 
   /** Runs the module with the specified voltage while controlling to zero degrees. */
-  public void runCharacterization(double voltage_V) {
+  public void runDriveSysId(double voltage_V) {
     io.setDriveVoltage(voltage_V);
     io.setNextTurnState(0.0, 0.0);
+  }
+
+  public void runTurnSysId(double voltage_V) {
+    io.setDriveVoltage(0);
+    io.setTurnVoltage(voltage_V);
+    ;
   }
 
   /** Disables all outputs to motors. */

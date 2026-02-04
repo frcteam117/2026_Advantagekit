@@ -25,6 +25,13 @@ public class ArmSimulator extends ComponentSimControllerBase {
         config.motorNames[i] = "CAN-" + config.canIds[i];
       }
     }
+    if (config.length_m == 0) {
+      config.length_m = Math.sqrt(3
+          * config.moi_kgm2
+          / config
+              .mass_kg); // SingleJointedArmSim assumes J=1/3 mL² -> L=(3J/m)^½, m=mass, L=length,
+      // J=moi
+    }
     sim = new SingleJointedArmSim(
         config.plant,
         config.gearbox,
@@ -87,7 +94,11 @@ public class ArmSimulator extends ComponentSimControllerBase {
     public LinearSystem<N2, N1, N2> plant;
     public DCMotor gearbox;
     public double reduction;
+    /** Use moi and mass instead to make simulation more accurate. */
     public double length_m;
+
+    public double moi_kgm2;
+    public double mass_kg;
     public double min_rad;
     public double max_rad;
     public double start_rad;

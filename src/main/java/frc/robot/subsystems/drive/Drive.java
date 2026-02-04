@@ -49,6 +49,8 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.SysIdUtil;
+import frc.robot.util.SysIdUtil.SysIdType;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -60,7 +62,8 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
-  private final SysIdRoutine sysId;
+  private final SysIdRoutine driveSysId;
+  private final SysIdRoutine turnSysId;
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
@@ -115,7 +118,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
     // Start odometry thread
-    SparkOdometryThread.getInstance().start();
+    NovaOdometryThread.getInstance().start();
 
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configure(
@@ -133,25 +136,34 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback((activePath) -> {
-      Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
+      Logger.recordOutput("Drive/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
     });
     PathPlannerLogging.setLogTargetPoseCallback((targetPose) -> {
-      Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+      Logger.recordOutput("Drive/TrajectorySetpoint", targetPose);
     });
 
     // Configure SysId
-    sysId = new SysIdRoutine(
+    driveSysId = new SysIdRoutine(
         new SysIdRoutine.Config(
-            null, null, null, (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
-        new SysIdRoutine.Mechanism(
-            (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+            null,
+            null,
+            null,
+            (state) -> Logger.recordOutput("Drive/DriveSysIdState", state.toString())),
+        new SysIdRoutine.Mechanism((voltage) -> runDriveSysId(voltage.in(Volts)), null, this));
+    turnSysId = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,
+            null,
+            null,
+            (state) -> Logger.recordOutput("Drive/TurnSysIdState", state.toString())),
+        new SysIdRoutine.Mechanism((voltage) -> runTurnSysId(voltage.in(Volts)), null, this));
   }
 
   @Override
   public void periodic() {
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
-    Logger.processInputs("Drive/Gyro", gyroInputs);
+    Logger.processInputs("Gyro", gyroInputs);
     for (var module : modules) {
       module.periodic();
     }
@@ -163,8 +175,9 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         module.stop();
       }
 
-      Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
-      Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
+      Logger.recordOutput("Drive/ModuleSetpoints", new SwerveModuleState[] {});
+      Logger.recordOutput("Drive/ChassisSetpoint", new ChassisSpeeds());
+      Logger.recordOutput("Drive/ModuleSetpointsOptimized", new SwerveModuleState[] {});
     }
 
     // Update odometry
@@ -215,8 +228,8 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, Wheel.max_mPs);
 
     // Log unoptimized setpoints
-    Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
-    Logger.recordOutput("SwerveChassisSpeeds/Setpoints", speeds_mps);
+    Logger.recordOutput("Drive/ModuleSetpoints", setpointStates);
+    Logger.recordOutput("Drive/ChassisSetpoint", speeds_mps);
 
     // Send setpoints to modules
     // for (int i = 0; i < 4; i++) {
@@ -224,7 +237,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     // }
 
     // Log optimized setpoints (runSetpoint mutates each state)
-    Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+    Logger.recordOutput("Drive/ModuleSetpointsOptimized", setpointStates);
   }
 
   /**
@@ -236,8 +249,8 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   public void setGoalVelocity(ChassisSpeeds speeds_mps) {
     lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, speeds_mps, 0.02);
     // Log unoptimized setpoints
-    Logger.recordOutput("SwerveStates/Setpoints", lastSetpoint.moduleStates());
-    Logger.recordOutput("SwerveChassisSpeeds/Setpoints", lastSetpoint.robotRelativeSpeeds());
+    Logger.recordOutput("Drive/ModuleSetpoints", lastSetpoint.moduleStates());
+    Logger.recordOutput("Drive/ChassisSetpoint", lastSetpoint.robotRelativeSpeeds());
 
     // Send setpoints to modules
     for (int i = 0; i < 4; i++) {
@@ -246,14 +259,20 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     }
 
     // Log optimized setpoints (runSetpoint mutates each state)
-    Logger.recordOutput("SwerveStates/SetpointsOptimized", lastSetpoint.moduleStates());
-    Logger.recordOutput("SwerveSetpoint", lastSetpoint);
+    Logger.recordOutput("Drive/ModuleSetpointsOptimized", lastSetpoint.moduleStates());
+    // Logger.recordOutput("SwerveSetpoint", lastSetpoint);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
-  public void runCharacterization(double output) {
+  public void runDriveSysId(double output_V) {
     for (int i = 0; i < 4; i++) {
-      modules[i].runCharacterization(output);
+      modules[i].runDriveSysId(output_V);
+    }
+  }
+
+  public void runTurnSysId(double output_V) {
+    for (int i = 0; i < 4; i++) {
+      modules[i].runTurnSysId(output_V);
     }
   }
 
@@ -275,20 +294,20 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     stop();
   }
 
-  /** Returns a command to run a quasistatic test in the specified direction. */
-  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return run(() -> runCharacterization(0.0))
+  /** Returns a command to run a drive sysId test with the specified type. */
+  public Command getDriveSysId(SysIdType type) {
+    return run(() -> runDriveSysId(0.0))
         .withTimeout(1.0)
-        .andThen(sysId.quasistatic(direction));
+        .andThen(SysIdUtil.getSysIdCommand(driveSysId, type));
   }
 
-  /** Returns a command to run a dynamic test in the specified direction. */
-  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
+  /** Returns a command to run a drive sysId test with the specified type. */
+  public Command getTurnSysId(SysIdType type) {
+    return SysIdUtil.getSysIdCommand(driveSysId, type);
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
-  @AutoLogOutput(key = "SwerveStates/Measured")
+  @AutoLogOutput(key = "Drive/ModulesMeasured")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (int i = 0; i < 4; i++) {
@@ -307,7 +326,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   }
 
   /** Returns the measured chassis speeds of the robot. */
-  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
+  @AutoLogOutput(key = "Drive/ChassisMeasured")
   private ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
@@ -331,7 +350,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   }
 
   /** Returns the current odometry pose. */
-  @AutoLogOutput(key = "Odometry/Robot")
+  @AutoLogOutput(key = "Drive/EstimatedPose")
   public Pose2d getPose() {
     return poseEstimator.getEstimatedPosition();
   }
