@@ -8,9 +8,9 @@ import frc.robot.util.States.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
 
-public class Indexer extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
-  public Indexer() {
-    super(IndexerConstants.hopperConfig, IndexerConstants.kickerConfig);
+public class IndexerSubsystem extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
+  public IndexerSubsystem() {
+    super(IndexerConstants.HOPPER_CONFIG, IndexerConstants.KICKER_CONFIG);
   }
 
   public Pose3d[] getPose3ds() {

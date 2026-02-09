@@ -10,9 +10,9 @@ import frc.robot.util.States.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
 
-public class Intake extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
-  public Intake() {
-    super(IntakeConstants.pivotConfig, IntakeConstants.rollerConfig);
+public class IntakeSubsystem extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
+  public IntakeSubsystem() {
+    super(IntakeConstants.PIVOT_CONFIG, IntakeConstants.ROLLER_CONFIG);
   }
 
   public Pose3d[] getPose3ds() {

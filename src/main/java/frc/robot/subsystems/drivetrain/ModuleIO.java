@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drivetrain;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -26,18 +26,18 @@ public interface ModuleIO {
     public double driveStatorCurrent_A = 0.0;
     public double driveSupplyCurrent_A = 0.0;
 
-    public double turnAbsolutePosition_rad = 0.0;
+    public double azimuthAbsolutePosition_rad = 0.0;
 
-    public boolean turnConnected = false;
-    public double turnPosition_rad = 0.0;
-    public double turnVelocity_radPs = 0.0;
-    public double turnVoltage_V = 0.0;
-    public double turnStatorCurrent_A = 0.0;
-    public double turnSupplyCurrent_A = 0.0;
+    public boolean azimuthConnected = false;
+    public double azimuthPosition_rad = 0.0;
+    public double azimuthVelocity_radPs = 0.0;
+    public double azimuthVoltage_V = 0.0;
+    public double azimuthStatorCurrent_A = 0.0;
+    public double azimuthSupplyCurrent_A = 0.0;
 
     public double[] odometryTimestamps = new double[] {};
     public double[] odometryDrivePositions_rad = new double[] {};
-    public double[] odometryTurnPositions_rad = new double[] {};
+    public double[] odometryAzimuthPositions_rad = new double[] {};
   }
 
   /** Updates the set of loggable inputs. */
@@ -46,8 +46,8 @@ public interface ModuleIO {
   /** Runs the drive motor at the specified voltage without feedback. */
   public default void setDriveVoltage(double voltage_V) {}
 
-  /** Runs the turn motor at the specified voltage without feedback. */
-  public default void setTurnVoltage(double voltage_V) {}
+  /** Runs the azimuth motor at the specified voltage without feedback. */
+  public default void setAzimuthVoltage(double voltage_V) {}
 
   /** Runs the drive motor at the next pidf voltage based on the given velocity. */
   public default void setNextDriveVelocity(double nextVelocity_radPs) {}
@@ -56,6 +56,6 @@ public interface ModuleIO {
   public default void setNextDriveState(
       double nextVelocity_radPs, double nextAcceleration_radPs2) {}
 
-  /** Runs the turn motor at the next pidf voltage based on the given position and velocity. */
-  public default void setNextTurnState(double position_rad, double velocity_radPs) {}
+  /** Runs the azimuth motor at the next pidf voltage based on the given position and velocity. */
+  public default void setNextAzimuthState(double position_rad, double velocity_radPs) {}
 }

@@ -9,6 +9,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import frc.robot.util.States.Voltage_State;
 import frc.robot.util.components.bases.ComponentControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
+import frc.robot.util.mechanisms.MechanismConstants;
 
 public class SparkMaxController extends ComponentControllerBase {
   private final SparkMax[] sparkMaxes;
@@ -36,6 +37,31 @@ public class SparkMaxController extends ComponentControllerBase {
         sparkMaxes[i].configure(config.baseSparkConfig, config.resetMode, config.persistMode);
       } else {
         sparkMaxes[i].configure(config.sparkConfigs[i], config.resetMode, config.persistMode);
+      }
+      relativeEncoders[i] = sparkMaxes[i].getEncoder();
+    }
+  }
+
+  public SparkMaxController(MechanismConstants config) {
+    sparkMaxes = new SparkMax[config.motorCanIds.length];
+    relativeEncoders = new RelativeEncoder[config.motorCanIds.length];
+    componentNames = new String[config.motorCanIds.length];
+    controllerName = config.outputsLogName;
+
+    for (int i = 0; i < config.motorCanIds.length; i++) {
+      componentNames[i] = "CAN-" + config.motorCanIds[i];
+      if (i >= 1) {
+        config.baseSparkConfig.follow(config.motorCanIds[0], config.followerInversions[i]);
+      }
+      if (config.revMotorTypes == null) {
+        sparkMaxes[i] = new SparkMax(config.motorCanIds[i], config.revMotorType);
+      } else {
+        sparkMaxes[i] = new SparkMax(config.motorCanIds[i], config.revMotorTypes[i]);
+      }
+      if (config.sparkConfigs == null) {
+        sparkMaxes[i].configure(config.baseSparkConfig, config.revResetMode, config.revPersistMode);
+      } else {
+        sparkMaxes[i].configure(config.sparkConfigs[i], config.revResetMode, config.revPersistMode);
       }
       relativeEncoders[i] = sparkMaxes[i].getEncoder();
     }

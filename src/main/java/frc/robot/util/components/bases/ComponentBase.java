@@ -1,9 +1,9 @@
 package frc.robot.util.components.bases;
 
-import frc.robot.util.components.bases.ComponentStates.ComponentState;
+import frc.robot.util.States.State;
 
 public interface ComponentBase {
   public abstract String[] getComponentNames();
 
-  public abstract ComponentState[] getState();
+  public abstract State[] getState();
 }

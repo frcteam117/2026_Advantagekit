@@ -9,7 +9,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkString;
 public class TunableString implements Supplier<String> {
   private final String key;
   private final BooleanSupplier shouldPublish;
-  private final Consumer<String> onChange;
+  private Consumer<String> onChange;
   private String value;
   private LoggedNetworkString networkString = null;
 
@@ -41,6 +41,10 @@ public class TunableString implements Supplier<String> {
         NetworkTableInstance.getDefault().getStringTopic(key).getEntry(value).unpublish();
       }
     }
+  }
+
+  public void runOnChange(Consumer<String> onChange) {
+    this.onChange = onChange;
   }
 
   @Override

@@ -9,16 +9,14 @@ import frc.robot.util.States.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
 
-public class Shooter extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
+public class ShooterSubsystem extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
 
-  public Shooter() {
-    super(ShooterConstants.hoodConfig, ShooterConstants.flywheelConfig);
+  public ShooterSubsystem() {
+    super(ShooterConstants.HOOD_CONFIG, ShooterConstants.FLYWHEEL_CONFIG);
   }
 
-  public Pose3d[] getPose3ds() {
-    return new Pose3d[] {
-      new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -getHoodState().rad(), 0))
-    };
+  public Pose3d getPose3d() {
+    return new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -getHoodState().rad(), 0));
   }
 
   // Hood

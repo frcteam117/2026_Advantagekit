@@ -1,5 +1,7 @@
 package frc.robot.util.mechanisms;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -12,42 +14,55 @@ import frc.robot.util.States.State;
 
 public class MechanismConstants {
   // Physical constraints
-  String outputsLogName;
-  String tuningLogName;
+  public String outputsLogName;
+  public String tuningLogName;
 
   // Motor constants
-  double moi_kgm2;
-  double reduction;
-  DCMotor gearbox;
-  int[] motorCanIds;
-  boolean[] followerInversions;
-  MotorType revMotorType;
-  SparkMaxConfig sparkConfig;
+  public String[] motorNames;
+  public Double moi_kgm2;
+  public Double reduction;
+  public DCMotor gearbox;
+  public int[] motorCanIds;
+  /** true if that motor should follow opposite of the first motor */
+  public boolean[] followerInversions;
+
+  public MotorType baseRevMotorType;
+  public MotorType[] revMotorTypes;
+  public MotorType revMotorType;
+  public SparkMaxConfig baseSparkConfig;
+  public SparkMaxConfig[] sparkConfigs;
+  public ResetMode revResetMode = ResetMode.kResetSafeParameters;
+  public PersistMode revPersistMode = PersistMode.kPersistParameters;
 
   // Physical constants
-  double mass_kg;
-  double codePeriod_s;
+  public Double mass_kg;
+  public Double codePeriod_s;
   /** For arms */
-  double length_m;
+  public Double length_m;
 
   // Profile constants
-  State start_State;
+  public State start_State;
 
-  Pos_State min_Pos;
-  Pos_State max_Pos;
+  public Pos_State min_Pos;
+  public Pos_State max_Pos;
+  public Boolean isContinuous;
 
   /** For arms: Angle of the center of mass above horizontal when the measured angle is zero. */
-  Pos_State cmOffset_Pos;
+  public Pos_State cmOffset_Pos;
 
-  State limits_State;
+  public State limits_State;
 
   // Feedback constants
-  PIDController realPID;
-  PIDController simPID;
-  SimpleMotorFeedforward realSimpleFF;
-  SimpleMotorFeedforward simSimpleFF;
-  ArmFeedforward realArmFF;
-  ArmFeedforward simArmFF;
-  ElevatorFeedforward realElevatorFF;
-  ElevatorFeedforward simElevatorFF;
+  public PIDController pid;
+  public SimpleMotorFeedforward simpleFF;
+  public ArmFeedforward armFF;
+  public ElevatorFeedforward elevatorFF;
+  // public PIDController realPID;
+  // public PIDController simPID;
+  // public SimpleMotorFeedforward realSimpleFF;
+  // public SimpleMotorFeedforward simSimpleFF;
+  // public ArmFeedforward realArmFF;
+  // public ArmFeedforward simArmFF;
+  // public ElevatorFeedforward realElevatorFF;
+  // public ElevatorFeedforward simElevatorFF;
 }

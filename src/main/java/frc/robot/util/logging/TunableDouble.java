@@ -9,7 +9,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 public class TunableDouble implements DoubleSupplier {
   private final String key;
   private final BooleanSupplier shouldPublish;
-  private final DoubleConsumer onChange;
+  private DoubleConsumer onChange;
   private double value;
   private LoggedNetworkNumber networkNumber = null;
 
@@ -41,6 +41,10 @@ public class TunableDouble implements DoubleSupplier {
         NetworkTableInstance.getDefault().getDoubleTopic(key).getEntry(value).unpublish();
       }
     }
+  }
+
+  public void runOnChange(DoubleConsumer onChange) {
+    this.onChange = onChange;
   }
 
   @Override

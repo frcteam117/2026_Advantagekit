@@ -8,7 +8,7 @@ import java.util.List;
 
 public abstract class ComponentControllerBase implements ComponentBase {
   protected List<Method> setInputMethods = new ArrayList<>(1);
-  protected List<Method> resetMethods = new ArrayList<>(3);
+  protected List<Method> resetMethods = new ArrayList<>(1);
 
   public ComponentControllerBase() {
     Method[] methods = this.getClass().getMethods();

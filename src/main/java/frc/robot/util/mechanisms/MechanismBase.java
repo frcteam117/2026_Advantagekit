@@ -5,12 +5,12 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.Robot;
+import frc.robot.RobotConstants;
 import frc.robot.util.States.State;
 import frc.robot.util.States.Voltage_State;
 import frc.robot.util.SysIdUtil;
@@ -35,9 +35,9 @@ public class MechanismBase<Output_State extends State> {
   private final List<ComponentSimBase> simulators;
   private final ComponentControllerBase controller;
 
-  private ComponentState[] componentStates;
+  private State[] componentStates;
   private final String[] componentNames;
-  private final Function<ComponentState[], Output_State> componentsToState;
+  private final Function<State[], Output_State> componentsToState;
   private Output_State mechanism_State;
 
   private final ControlFunctionBase[] profiles;
@@ -52,8 +52,6 @@ public class MechanismBase<Output_State extends State> {
   private State outputStateNaN;
 
   private final SysIdRoutine sysId;
-  private final Timer timer = new Timer();
-  private final double[] times = new double[11];
 
   private final String logName;
   private final ComponentStatesLogger componentStatesLogger = new ComponentStatesLogger();
@@ -111,7 +109,7 @@ public class MechanismBase<Output_State extends State> {
   public void update() {
     int i = 0;
     for (ComponentBase component : components) {
-      for (ComponentState state : component.getState()) {
+      for (State state : component.getState()) {
         componentStates[i] = state;
         i++;
       }
@@ -121,7 +119,7 @@ public class MechanismBase<Output_State extends State> {
     Logger.recordOutput(logName + "/State", (Record) mechanism_State);
     // Logger.recordOutput("Tuning/test", 1);
     for (ComponentSimBase simulator : simulators) {
-      simulator.updateState(Robot.codePeriod_s);
+      simulator.updateState(RobotConstants.CODE_PERIOD_s);
     }
     // MechanismState newMechanismState = componentStateAverager.apply(componentStates);
     // if (mechanismState == null) {
@@ -218,15 +216,24 @@ public class MechanismBase<Output_State extends State> {
     @Override
     public void toLog(LogTable table) {
       for (int i = 0; i < componentStates.length; i++) {
-        table.put(componentNames[i], (Record) componentStates[i]);
+        // make this work for everything compatable with advantagekit
+        if (StructSerializable.class.isAssignableFrom(componentStates[i].getClass())) {
+          table.put(componentNames[i], (StructSerializable) componentStates[i]);
+        } else if (Record.class.isAssignableFrom(componentStates[i].getClass())) {
+          table.put(componentNames[i], (Record) componentStates[i]);
+        }
       }
     }
 
     @Override
     public void fromLog(LogTable table) {
       for (int i = 0; i < componentStates.length; i++) {
-        componentStates[i] =
-            (ComponentState) table.get(componentNames[i], (Record) componentStates[i]);
+        if (StructSerializable.class.isAssignableFrom(componentStates[i].getClass())) {
+          componentStates[i] =
+              (State) table.get(componentNames[i], (StructSerializable) componentStates[i]);
+        } else if (Record.class.isAssignableFrom(componentStates[i].getClass())) {
+          componentStates[i] = (State) table.get(componentNames[i], (Record) componentStates[i]);
+        }
       }
     }
   }
@@ -246,7 +253,7 @@ public class MechanismBase<Output_State extends State> {
   //   }
   // }
 
-  public static class MechanismConfig<Output_State extends State> {
+  public static class MechanismConfig<Output_State> {
     public String logName;
     public String tuningLogName;
     public ComponentBase[] realComponents = new ComponentBase[0];
@@ -261,7 +268,7 @@ public class MechanismBase<Output_State extends State> {
     /** An array with elements corresponding to arrays of feedback classes with the same order and length as the controllers.  */
     public ControlFunctionBase[] feedbacks;
 
-    public Function<ComponentState[], Output_State> componentsToState;
+    public Function<State[], Output_State> componentsToState;
     public double sysIdRampRate_VPs = 1;
     public double sysIdStepVoltage_V = 7;
     public double sysIdTimeout_s = 10;

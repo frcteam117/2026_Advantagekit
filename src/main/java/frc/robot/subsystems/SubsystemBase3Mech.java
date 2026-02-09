@@ -135,67 +135,67 @@ public class SubsystemBase3Mech<
 
   // Mechanism 0
 
-  public void setMech0Goal(State goal_State, int usedProfile, int usedFeedback) {
+  protected void setMech0Goal(State goal_State, int usedProfile, int usedFeedback) {
     mechanism0.setGoal(goal_State, usedProfile, usedFeedback);
   }
 
-  public void setMech0Goal(State goal_State) {
+  protected void setMech0Goal(State goal_State) {
     mechanism0.setGoal(goal_State);
   }
 
-  public Command getMech0SysIdCommand(SysIdType type) {
+  protected Command getMech0SysIdCommand(SysIdType type) {
     return mechanism0.getSysIdCommand(type);
   }
 
-  public Output0_State getMech0State() {
+  protected Output0_State getMech0State() {
     return mechanism0.getState();
   }
 
-  public MechanismBase<Output0_State> getMech0() {
+  protected MechanismBase<Output0_State> getMech0() {
     return mechanism0;
   }
 
   // Mechanism 1
 
-  public void setMech1Goal(State goal_State, int usedProfile, int usedFeedback) {
+  protected void setMech1Goal(State goal_State, int usedProfile, int usedFeedback) {
     mechanism1.setGoal(goal_State, usedProfile, usedFeedback);
   }
 
-  public void setMech1Goal(State goal_State) {
+  protected void setMech1Goal(State goal_State) {
     mechanism1.setGoal(goal_State);
   }
 
-  public Command getMech1SysIdCommand(SysIdType type) {
+  protected Command getMech1SysIdCommand(SysIdType type) {
     return mechanism1.getSysIdCommand(type);
   }
 
-  public Output1_State getMech1State() {
+  protected Output1_State getMech1State() {
     return mechanism1.getState();
   }
 
-  public MechanismBase<Output1_State> getMech1() {
+  protected MechanismBase<Output1_State> getMech1() {
     return mechanism1;
   }
 
   // Mechanism 2
 
-  public void setMech2Goal(State goal_State, int usedProfile, int usedFeedback) {
+  protected void setMech2Goal(State goal_State, int usedProfile, int usedFeedback) {
     mechanism2.setGoal(goal_State, usedProfile, usedFeedback);
   }
 
-  public void setMech2Goal(State goal_State) {
+  protected void setMech2Goal(State goal_State) {
     mechanism2.setGoal(goal_State);
   }
 
-  public Command getMech2SysIdCommand(SysIdType type) {
+  protected Command getMech2SysIdCommand(SysIdType type) {
     return mechanism2.getSysIdCommand(type);
   }
 
-  public Output2_State getMech2State() {
+  protected Output2_State getMech2State() {
     return mechanism2.getState();
   }
 
-  public MechanismBase<Output2_State> getMech2() {
+  protected MechanismBase<Output2_State> getMech2() {
     return mechanism2;
   }
 }

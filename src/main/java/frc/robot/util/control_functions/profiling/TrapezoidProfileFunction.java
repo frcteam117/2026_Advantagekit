@@ -5,8 +5,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.util.States.Angular;
 import frc.robot.util.States.AngularPV_State;
 import frc.robot.util.States.LinearPV_State;
-import frc.robot.util.States.LinearP_State;
-import frc.robot.util.States.LinearVA_State;
 import frc.robot.util.States.PosVel_State;
 import frc.robot.util.States.Pos_State;
 import frc.robot.util.States.VelAcc_State;
@@ -14,74 +12,134 @@ import frc.robot.util.States.Vel_State;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
+import frc.robot.util.mechanisms.MechanismConstants;
 
 public class TrapezoidProfileFunction extends ControlFunctionBase {
-  private TrapezoidProfileConfig config;
+  private String profileName;
   private TrapezoidProfile trapezoidProfile;
   private TrapezoidProfile.State prevState;
+  private double period_s;
   private boolean isAngular;
-  public double maxError_Pos;
+  private double maxError_Pos;
+  private double min_Pos;
+  private double max_Pos;
+  private double max_Vel;
+  private double max_Acc;
+  private boolean isContinuous;
   private boolean enableTuning = false;
 
   public TrapezoidProfileFunction(TrapezoidProfileConfig config) {
-    trapezoidProfile = new TrapezoidProfile(
-        new TrapezoidProfile.Constraints(config.constraints.vel(), config.constraints.acc()));
-    prevState = new TrapezoidProfile.State(config.start.pos(), config.start.vel());
+    profileName = config.name;
+    period_s = config.period_s;
+    min_Pos = config.min.pos();
+    max_Pos = config.max.pos();
+    maxError_Pos = (max_Pos - min_Pos) / 2;
+    max_Vel = ((VelAcc_State) config.constraints).vel();
+    max_Acc = ((VelAcc_State) config.constraints).acc();
+    isContinuous = config.enableContinuousInput;
     isAngular = Angular.class.isAssignableFrom(config.start.getClass());
-    maxError_Pos = (config.max.pos() - config.min.pos()) / 2;
-    this.config = config;
-    new TunableDouble(
-        "Tuning/" + config.mechanismTuningLogName + "/" + config.name + "/MinPos",
-        config.min.pos(),
-        () -> enableTuning,
-        value -> {
-          config.min = new LinearP_State(value);
-          maxError_Pos = (config.max.pos() - config.min.pos()) / 2;
-        });
-    new TunableDouble(
-        config.mechanismTuningLogName + "/" + config.name + "/MaxPos",
-        config.max.pos(),
-        () -> enableTuning,
-        value -> {
-          config.max = new LinearP_State(value);
-          maxError_Pos = (config.max.pos() - config.min.pos()) / 2;
-        });
-    new TunableDouble(
-        config.mechanismTuningLogName + "/" + config.name + "/MaxVel",
-        config.constraints.vel(),
-        () -> enableTuning,
-        value -> {
-          config.constraints = new LinearVA_State(value, config.constraints.acc());
-          trapezoidProfile = new TrapezoidProfile(
-              new TrapezoidProfile.Constraints(config.constraints.vel(), config.constraints.acc()));
-        });
-    new TunableDouble(
-        config.mechanismTuningLogName + "/" + config.name + "/MaxAcc",
-        config.constraints.acc(),
-        () -> enableTuning,
-        value -> {
-          config.constraints = new LinearVA_State(config.constraints.vel(), value);
-          trapezoidProfile = new TrapezoidProfile(
-              new TrapezoidProfile.Constraints(config.constraints.vel(), config.constraints.acc()));
-        });
+    trapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(max_Vel, max_Acc));
+    prevState = new TrapezoidProfile.State(
+        ((PosVel_State) config.start).pos(), ((PosVel_State) config.start).vel());
+    String profileTuningName = config.mechanismTuningLogName + "/" + config.name;
+    new TunableDouble(profileTuningName + "/0 Min_Pos", min_Pos, () -> enableTuning, value -> {
+      min_Pos = value;
+      maxError_Pos = (max_Pos - min_Pos) / 2;
+    });
+    new TunableDouble(profileTuningName + "/1 Max_Pos", max_Pos, () -> enableTuning, value -> {
+      max_Pos = value;
+      maxError_Pos = (max_Pos - min_Pos) / 2;
+    });
+    new TunableDouble(profileTuningName + "/2 Max_Vel", max_Vel, () -> enableTuning, value -> {
+      max_Vel = value;
+      trapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(max_Vel, max_Acc));
+    });
+    new TunableDouble(profileTuningName + "/3 Max_Acc", max_Acc, () -> enableTuning, value -> {
+      max_Acc = value;
+      trapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(max_Vel, max_Acc));
+    });
     new TunableBoolean(
-        config.mechanismTuningLogName + "/" + config.name + "/Continuous",
-        config.enableContinuousInput,
+        profileTuningName + "/4 isContinuous",
+        isContinuous,
         () -> enableTuning,
-        value -> config.enableContinuousInput = value);
+        value -> isContinuous = value);
+  }
+
+  public TrapezoidProfileFunction(MechanismConstants config) {
+    this(config, "TrapezoidProfile");
+  }
+
+  public TrapezoidProfileFunction(MechanismConstants config, String profileName) {
+    if (config.start_State == null) {
+      // TODO: add an exeption
+    }
+    if (config.limits_State == null) {
+      // TODO: add an exeption
+    }
+    if (config.min_Pos == null) {
+      // TODO: add an exeption
+    }
+    if (config.max_Pos == null) {
+      // TODO: add an exeption
+    }
+    if (config.isContinuous == null) {
+      // TODO: add an exeption
+    }
+    if (config.codePeriod_s == null) {
+      // TODO: add an exeption
+    }
+    if (!VelAcc_State.class.isAssignableFrom(config.limits_State.getClass())) {
+      // TODO: add an exeption
+    }
+    if (!PosVel_State.class.isAssignableFrom(config.start_State.getClass())) {
+      // TODO: add an exeption
+    }
+    this.profileName = profileName;
+    period_s = config.codePeriod_s;
+    min_Pos = config.min_Pos.pos();
+    max_Pos = config.max_Pos.pos();
+    maxError_Pos = (max_Pos - min_Pos) / 2;
+    max_Vel = ((VelAcc_State) config.limits_State).vel();
+    max_Acc = ((VelAcc_State) config.limits_State).acc();
+    isContinuous = config.isContinuous;
+    isAngular = Angular.class.isAssignableFrom(config.start_State.getClass());
+    trapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(max_Vel, max_Acc));
+    prevState = new TrapezoidProfile.State(
+        ((PosVel_State) config.start_State).pos(), ((PosVel_State) config.start_State).vel());
+    String profileTuningName = config.tuningLogName + "/" + profileName;
+    new TunableDouble(profileTuningName + "/0 Min_Pos", min_Pos, () -> enableTuning, value -> {
+      min_Pos = value;
+      maxError_Pos = (max_Pos - min_Pos) / 2;
+    });
+    new TunableDouble(profileTuningName + "/1 Max_Pos", max_Pos, () -> enableTuning, value -> {
+      max_Pos = value;
+      maxError_Pos = (max_Pos - min_Pos) / 2;
+    });
+    new TunableDouble(profileTuningName + "/2 Max_Vel", max_Vel, () -> enableTuning, value -> {
+      max_Vel = value;
+      trapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(max_Vel, max_Acc));
+    });
+    new TunableDouble(profileTuningName + "/3 Max_Acc", max_Acc, () -> enableTuning, value -> {
+      max_Acc = value;
+      trapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(max_Vel, max_Acc));
+    });
+    new TunableBoolean(
+        profileTuningName + "/4 isContinuous",
+        isContinuous,
+        () -> enableTuning,
+        value -> isContinuous = value);
   }
 
   public PosVel_State calculate(Vel_State goal_State, PosVel_State mechanism_State) {
     prevState = new TrapezoidProfile(new TrapezoidProfile.Constraints(
-            Math.min(config.constraints.vel(), Math.abs(goal_State.vel())),
-            config.constraints.acc()))
+            Math.min(max_Vel, Math.abs(goal_State.vel())), max_Acc))
         .calculate(
-            config.period_s,
+            period_s,
             prevState,
             new TrapezoidProfile.State(
-                config.enableContinuousInput
+                isContinuous
                     ? (goal_State.vel() < 0) ? -Double.MAX_VALUE : Double.MAX_VALUE
-                    : (goal_State.vel() < 0) ? config.min.pos() : config.max.pos(),
+                    : (goal_State.vel() < 0) ? min_Pos : max_Pos,
                 goal_State.vel()));
     return isAngular
         ? new AngularPV_State(prevState.position, prevState.velocity)
@@ -90,10 +148,10 @@ public class TrapezoidProfileFunction extends ControlFunctionBase {
 
   public PosVel_State calculate(PosVel_State goal_State, PosVel_State mechanism_State) {
     prevState = trapezoidProfile.calculate(
-        config.period_s,
+        period_s,
         prevState,
         new TrapezoidProfile.State(
-            config.enableContinuousInput
+            isContinuous
                 ? prevState.position
                     + MathUtil.inputModulus(
                         goal_State.pos() - prevState.position, -maxError_Pos, maxError_Pos)
@@ -106,10 +164,10 @@ public class TrapezoidProfileFunction extends ControlFunctionBase {
 
   public PosVel_State calculate(Pos_State goal_State, PosVel_State mechanism_State) {
     prevState = trapezoidProfile.calculate(
-        config.period_s,
+        period_s,
         prevState,
         new TrapezoidProfile.State(
-            config.enableContinuousInput
+            isContinuous
                 ? prevState.position
                     + MathUtil.inputModulus(
                         goal_State.pos() - prevState.position, -maxError_Pos, maxError_Pos)
@@ -139,7 +197,7 @@ public class TrapezoidProfileFunction extends ControlFunctionBase {
 
   @Override
   public String getControlFunctionName() {
-    return config.name;
+    return profileName;
   }
 
   @Override

@@ -6,6 +6,7 @@ import frc.robot.util.States.PosVel_State;
 import frc.robot.util.States.Voltage_State;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.LogUtil;
+import frc.robot.util.mechanisms.MechanismConstants;
 
 public class SimplePIDF extends ControlFunctionBase {
   private String name = "SimplePIDF";
@@ -34,6 +35,26 @@ public class SimplePIDF extends ControlFunctionBase {
     lastNext_State = startingState;
     LogUtil.createTunablePID(mechanismTuningLogName + "/" + name + "/", pid, () -> enableTuning);
     LogUtil.createTunableFF(mechanismTuningLogName + "/" + name + "/", ff, () -> enableTuning);
+  }
+
+  public SimplePIDF(MechanismConstants config) {
+    this(config, "SimplePIDF");
+  }
+
+  public SimplePIDF(MechanismConstants config, String profileName) {
+    name = profileName;
+    if (config.pid == null) {
+      // TODO: make this an exception
+    }
+    if (config.simpleFF == null) {
+      // TODO: make this an exception
+    }
+    if (!PosVel_State.class.isAssignableFrom(config.start_State.getClass())) {
+      // TODO: make this an exception
+    }
+    pid = config.pid;
+    ff = config.simpleFF;
+    lastNext_State = (PosVel_State) config.start_State;
   }
 
   public Voltage_State calculate(PosVel_State next_State, PosVel_State mechanism_State) {

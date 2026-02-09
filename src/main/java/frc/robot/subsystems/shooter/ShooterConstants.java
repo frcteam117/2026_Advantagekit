@@ -6,10 +6,8 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.Constants.Robot;
+import frc.robot.RobotConstants;
 import frc.robot.util.States.AngularPV_State;
 import frc.robot.util.States.AngularP_State;
 import frc.robot.util.States.AngularVA_State;
@@ -17,150 +15,117 @@ import frc.robot.util.components.bases.ComponentBase;
 import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.components.controllers.SparkMaxController;
-import frc.robot.util.components.controllers.SparkMaxController.SparkMaxControllerConfig;
 import frc.robot.util.components.simulators.ArmSimulator;
-import frc.robot.util.components.simulators.ArmSimulator.ArmSimulatorConfig;
 import frc.robot.util.components.simulators.DCMotorSimulator;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.control_functions.feedback.ArmPIDF;
 import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
-import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction.TrapezoidProfileConfig;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
+import frc.robot.util.mechanisms.MechanismConstants;
 
 public class ShooterConstants {
-  public static final String logName = "Shooter";
+  public static final String LOG_NAME = "4.Shooter";
 
-  public static final MechanismConfig<AngularPV_State> hoodConfig =
+  public static final MechanismConstants HOOD_CONSTANTS = new MechanismConstants();
+  public static final MechanismConfig<AngularPV_State> HOOD_CONFIG =
       new MechanismConfig<AngularPV_State>();
 
-  public static final MechanismConfig<AngularPV_State> flywheelConfig =
+  public static final MechanismConstants FLYWHEEL_CONSTANTS = new MechanismConstants();
+  public static final MechanismConfig<AngularPV_State> FLYWHEEL_CONFIG =
       new MechanismConfig<AngularPV_State>();
 
   static {
-    String logName = ShooterConstants.logName + "/Hood";
-    String tuningLogName = "Tuning/" + hoodConfig.logName;
-    int[] canIds = new int[] {9};
-    MotorType revMotorType = MotorType.kBrushless;
-    SparkMaxConfig sparkConfig = new SparkMaxConfig();
-    double reduction = 30;
-    DCMotor dcMotor = DCMotor.getNEO(1).withReduction(reduction);
-    double moi_kgm2 = .02;
-    double cmOffset_rad = -.1;
-    double length_m =
-        0.18; // change this to be a function of cm radius and moi make simulation realistic
-    double period_s = Robot.codePeriod_s;
-    double min_rad = 0;
-    double max_rad = Math.PI / 4;
-    AngularPV_State start_State = new AngularPV_State(0, 0);
-    double max_radPs = 4;
-    double max_radPs2 = 12;
-    PIDController realPID = new PIDController(0, 0, 0, period_s);
-    PIDController simPID = new PIDController(0, 0, 0, period_s);
-    ArmFeedforward realFF = new ArmFeedforward(0, 0, 0, 0, period_s);
-    ArmFeedforward simFF = new ArmFeedforward(0, 0, 0, 0, period_s);
+    // Miscellaneous
+    HOOD_CONSTANTS.outputsLogName = ShooterConstants.LOG_NAME + "/Hood";
+    HOOD_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + HOOD_CONSTANTS.outputsLogName;
+    HOOD_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
+    HOOD_CONSTANTS.mass_kg = 0.5;
+    HOOD_CONSTANTS.cmOffset_Pos = new AngularP_State(-0.1);
+    // Motor
+    HOOD_CONSTANTS.motorCanIds = new int[] {9};
+    HOOD_CONSTANTS.revMotorType = MotorType.kBrushless;
+    HOOD_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
+    HOOD_CONSTANTS
+        .baseSparkConfig
+        .voltageCompensation(RobotConstants.NOMINAL_V)
+        .smartCurrentLimit(30);
+    // Motor properties
+    HOOD_CONSTANTS.reduction = 30d;
+    HOOD_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(HOOD_CONSTANTS.reduction);
+    HOOD_CONSTANTS.moi_kgm2 = .3;
+    // Profiling
+    HOOD_CONSTANTS.start_State = new AngularPV_State(0, 0);
+    HOOD_CONSTANTS.min_Pos = new AngularP_State(0);
+    HOOD_CONSTANTS.max_Pos = new AngularP_State(0.76);
+    HOOD_CONSTANTS.limits_State = new AngularVA_State(4, 12);
+    HOOD_CONSTANTS.isContinuous = false;
+    // Feedback
+    HOOD_CONSTANTS.pid = RobotBase.isReal()
+        ? new PIDController(0, 0, 0, HOOD_CONSTANTS.codePeriod_s)
+        : new PIDController(0, 0, 0, HOOD_CONSTANTS.codePeriod_s);
+    HOOD_CONSTANTS.armFF = RobotBase.isReal()
+        ? new ArmFeedforward(0, 0, 0, 0, HOOD_CONSTANTS.codePeriod_s)
+        : new ArmFeedforward(0, 0, 0, 0, HOOD_CONSTANTS.codePeriod_s);
 
-    sparkConfig.voltageCompensation(Robot.nominal_V).smartCurrentLimit(30);
-
-    hoodConfig.logName = logName;
-    hoodConfig.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};
-    hoodConfig.simComponents = new ComponentSimBase[0]; // {absoluteEncoderSimComponent};
-
-    SparkMaxControllerConfig sparkMaxControllerConfig = new SparkMaxControllerConfig();
-    sparkMaxControllerConfig.canIds = canIds;
-    sparkMaxControllerConfig.baseMotorType = revMotorType;
-    sparkMaxControllerConfig.baseSparkConfig = sparkConfig;
-    hoodConfig.realController = new SparkMaxController(sparkMaxControllerConfig);
-
-    ArmSimulatorConfig hoodSimConfig = new ArmSimulatorConfig();
-    hoodSimConfig.canIds = canIds;
-    hoodSimConfig.cmOffset_rad = cmOffset_rad;
-    hoodSimConfig.reduction = reduction;
-    hoodSimConfig.gearbox = dcMotor;
-    hoodSimConfig.length_m = length_m;
-    hoodSimConfig.min_rad = min_rad;
-    hoodSimConfig.max_rad = max_rad;
-    hoodSimConfig.start_rad = start_State.rad();
-    hoodSimConfig.plant = LinearSystemId.createSingleJointedArmSystem(dcMotor, moi_kgm2, reduction);
-    hoodConfig.simController = new ArmSimulator(hoodSimConfig);
-
-    TrapezoidProfileConfig trapezoidProfileConfig = new TrapezoidProfileConfig();
-    trapezoidProfileConfig.mechanismTuningLogName = tuningLogName;
-    trapezoidProfileConfig.period_s = period_s;
-    trapezoidProfileConfig.start = start_State;
-    trapezoidProfileConfig.constraints = new AngularVA_State(max_radPs, max_radPs2);
-    trapezoidProfileConfig.min = new AngularP_State(min_rad);
-    trapezoidProfileConfig.max = new AngularP_State(max_rad);
-    hoodConfig.profiles =
-        new ControlFunctionBase[] {new TrapezoidProfileFunction(trapezoidProfileConfig)};
-    hoodConfig.feedbacks = new ControlFunctionBase[] {
-      new ArmPIDF(
-          RobotBase.isReal() ? realPID : simPID,
-          RobotBase.isReal() ? realFF : simFF,
-          start_State,
-          cmOffset_rad,
-          tuningLogName)
-    };
-    hoodConfig.componentsToState = componentStates -> new AngularPV_State(
-        ((Motor_State) componentStates[0]).rad() / reduction,
-        ((Motor_State) componentStates[0]).radPs() / reduction);
+    HOOD_CONFIG.logName = HOOD_CONSTANTS.outputsLogName;
+    HOOD_CONFIG.tuningLogName = HOOD_CONSTANTS.tuningLogName;
+    HOOD_CONFIG.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};
+    HOOD_CONFIG.simComponents = new ComponentSimBase[0]; // {absoluteEncoderSimComponent};
+    HOOD_CONFIG.realController = new SparkMaxController(HOOD_CONSTANTS);
+    HOOD_CONFIG.simController = new ArmSimulator(HOOD_CONSTANTS);
+    HOOD_CONFIG.profiles = new ControlFunctionBase[] {new TrapezoidProfileFunction(HOOD_CONSTANTS)};
+    HOOD_CONFIG.feedbacks = new ControlFunctionBase[] {new ArmPIDF(HOOD_CONSTANTS)};
+    HOOD_CONFIG.componentsToState = componentStates -> new AngularPV_State(
+        ((Motor_State) componentStates[0]).rad() / HOOD_CONSTANTS.reduction,
+        ((Motor_State) componentStates[0]).radPs() / HOOD_CONSTANTS.reduction);
   }
 
   static {
-    String logName = ShooterConstants.logName + "/Flywheel";
-    String tuningLogName = "Tuning/" + flywheelConfig.logName;
-    int[] canIds = new int[] {10, 11};
-    boolean[] followerInversions = new boolean[] {false, true};
-    MotorType revMotorType = MotorType.kBrushless;
-    SparkMaxConfig sparkConfig = new SparkMaxConfig();
-    double reduction = 1;
-    DCMotor dcMotor = DCMotor.getNeoVortex(2).withReduction(reduction);
-    double moi_kgm2 = .05;
-    double period_s = Robot.codePeriod_s;
-    AngularPV_State start_State = new AngularPV_State(0, 0);
-    double max_radPs = 628;
-    double max_radPs2 = 2000;
-    PIDController realPID = new PIDController(0, 0, 0, period_s);
-    PIDController simPID = new PIDController(0, 0, 0, period_s);
-    SimpleMotorFeedforward realFF = new SimpleMotorFeedforward(0, 0, 0, period_s);
-    SimpleMotorFeedforward simFF = new SimpleMotorFeedforward(0, 0, 0, period_s);
+    // Miscellaneous
+    FLYWHEEL_CONSTANTS.outputsLogName = ShooterConstants.LOG_NAME + "/Flywheel";
+    FLYWHEEL_CONSTANTS.tuningLogName =
+        RobotConstants.TUNING_PREFIX + FLYWHEEL_CONSTANTS.outputsLogName;
+    FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
+    // Motor
+    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {10, 11};
+    FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true};
+    FLYWHEEL_CONSTANTS.revMotorType = MotorType.kBrushless;
+    FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
+    FLYWHEEL_CONSTANTS
+        .baseSparkConfig
+        .voltageCompensation(RobotConstants.NOMINAL_V)
+        .smartCurrentLimit(30);
+    // Motor properties
+    FLYWHEEL_CONSTANTS.reduction = 1d;
+    FLYWHEEL_CONSTANTS.gearbox =
+        DCMotor.getNeoVortex(2).withReduction(FLYWHEEL_CONSTANTS.reduction);
+    FLYWHEEL_CONSTANTS.moi_kgm2 = .05;
+    // Profiling
+    FLYWHEEL_CONSTANTS.start_State = new AngularPV_State(0, 0);
+    FLYWHEEL_CONSTANTS.min_Pos = new AngularP_State(-Double.MAX_VALUE);
+    FLYWHEEL_CONSTANTS.max_Pos = new AngularP_State(Double.MAX_VALUE);
+    FLYWHEEL_CONSTANTS.limits_State = new AngularVA_State(628, 2000);
+    FLYWHEEL_CONSTANTS.isContinuous = true;
+    // Feedback
+    FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
+        ? new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
+        : new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
+    FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
+        ? new SimpleMotorFeedforward(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
+        : new SimpleMotorFeedforward(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
 
-    sparkConfig.voltageCompensation(Robot.nominal_V).smartCurrentLimit(30);
-
-    flywheelConfig.logName = logName;
-    flywheelConfig.realComponents = new ComponentBase[0];
-    flywheelConfig.simComponents = new ComponentSimBase[0];
-
-    SparkMaxControllerConfig sparkMaxControllerConfig = new SparkMaxControllerConfig();
-    sparkMaxControllerConfig.canIds = canIds;
-    sparkMaxControllerConfig.followerInversions = followerInversions;
-    sparkMaxControllerConfig.baseMotorType = revMotorType;
-    sparkMaxControllerConfig.baseSparkConfig = sparkConfig;
-    flywheelConfig.realController = new SparkMaxController(sparkMaxControllerConfig);
-
-    flywheelConfig.simController = new DCMotorSimulator(
-        new DCMotorSim(LinearSystemId.createDCMotorSystem(dcMotor, moi_kgm2, reduction), dcMotor),
-        canIds);
-
-    TrapezoidProfileConfig trapezoidProfileConfig = new TrapezoidProfileConfig();
-    trapezoidProfileConfig.mechanismTuningLogName = tuningLogName;
-    trapezoidProfileConfig.period_s = period_s;
-    trapezoidProfileConfig.start = start_State;
-    trapezoidProfileConfig.constraints = new AngularVA_State(max_radPs, max_radPs2);
-    trapezoidProfileConfig.min = new AngularP_State(-Double.MAX_VALUE);
-    trapezoidProfileConfig.max = new AngularP_State(Double.MAX_VALUE);
-    trapezoidProfileConfig.enableContinuousInput = true;
-    flywheelConfig.profiles =
-        new ControlFunctionBase[] {new TrapezoidProfileFunction(trapezoidProfileConfig)};
-    flywheelConfig.feedbacks = new ControlFunctionBase[] {
-      new SimplePIDF(
-          RobotBase.isReal() ? realPID : simPID,
-          RobotBase.isReal() ? realFF : simFF,
-          start_State,
-          tuningLogName)
-    };
-    flywheelConfig.componentsToState = componentStates -> new AngularPV_State(
-        ((Motor_State) componentStates[0]).rad() / reduction,
-        ((Motor_State) componentStates[0]).radPs() / reduction);
+    FLYWHEEL_CONFIG.logName = FLYWHEEL_CONSTANTS.outputsLogName;
+    FLYWHEEL_CONFIG.tuningLogName = FLYWHEEL_CONSTANTS.tuningLogName;
+    FLYWHEEL_CONFIG.realComponents = new ComponentBase[0];
+    FLYWHEEL_CONFIG.simComponents = new ComponentSimBase[0];
+    FLYWHEEL_CONFIG.realController = new SparkMaxController(FLYWHEEL_CONSTANTS);
+    FLYWHEEL_CONFIG.simController = new DCMotorSimulator(FLYWHEEL_CONSTANTS);
+    FLYWHEEL_CONFIG.profiles =
+        new ControlFunctionBase[] {new TrapezoidProfileFunction(FLYWHEEL_CONSTANTS)};
+    FLYWHEEL_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(FLYWHEEL_CONSTANTS)};
+    FLYWHEEL_CONFIG.componentsToState = componentStates -> new AngularPV_State(
+        ((Motor_State) componentStates[0]).rad() / FLYWHEEL_CONSTANTS.reduction,
+        ((Motor_State) componentStates[0]).radPs() / FLYWHEEL_CONSTANTS.reduction);
   }
 }

@@ -4,6 +4,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.util.States.PosVel_State;
 import frc.robot.util.States.Pos_State;
@@ -11,11 +12,14 @@ import frc.robot.util.States.Vel_State;
 import frc.robot.util.States.Voltage_State;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
+import frc.robot.util.mechanisms.MechanismConstants;
 import java.util.Arrays;
 
 public class ArmSimulator extends ComponentSimControllerBase {
   private final SingleJointedArmSim sim;
-  private final ArmSimulatorConfig config;
+  private final String[] motorNames;
+  private final double reduction;
+  private final double cmOffset_rad;
   private double motorVoltage_V = 0;
 
   public ArmSimulator(ArmSimulatorConfig config) {
@@ -32,6 +36,7 @@ public class ArmSimulator extends ComponentSimControllerBase {
               .mass_kg); // SingleJointedArmSim assumes J=1/3 mL² -> L=(3J/m)^½, m=mass, L=length,
       // J=moi
     }
+    motorNames = config.motorNames;
     sim = new SingleJointedArmSim(
         config.plant,
         config.gearbox,
@@ -41,7 +46,38 @@ public class ArmSimulator extends ComponentSimControllerBase {
         config.max_rad + config.cmOffset_rad,
         true,
         config.start_rad + config.cmOffset_rad);
-    this.config = config;
+    reduction = config.reduction;
+    cmOffset_rad = config.cmOffset_rad;
+  }
+
+  public ArmSimulator(MechanismConstants config) {
+    if (config.motorNames == null) {
+      config.motorNames = new String[config.motorCanIds.length];
+      for (int i = 0; i < config.motorNames.length; i++) {
+        config.motorNames[i] = "CAN-" + config.motorCanIds[i];
+      }
+    }
+    if (config.length_m == null) {
+      config.length_m = Math.sqrt(3
+          * config.moi_kgm2
+          / config
+              .mass_kg); // SingleJointedArmSim assumes J=1/3 mL² -> L=(3J/m)^½, m=mass, L=length,
+      // J=moi
+    }
+    motorNames = config.motorNames;
+    reduction = config.reduction;
+    cmOffset_rad = config.cmOffset_Pos.pos();
+    // TODO: allow making your own plant
+    sim = new SingleJointedArmSim(
+        LinearSystemId.createSingleJointedArmSystem(
+            config.gearbox, config.moi_kgm2, config.reduction),
+        config.gearbox,
+        config.reduction,
+        config.length_m,
+        config.min_Pos.pos() + config.cmOffset_Pos.pos(),
+        config.max_Pos.pos() + config.cmOffset_Pos.pos(),
+        true,
+        ((Pos_State) config.start_State).pos() + config.cmOffset_Pos.pos());
   }
 
   public void setInput(Voltage_State voltage_State) {
@@ -68,12 +104,12 @@ public class ArmSimulator extends ComponentSimControllerBase {
 
   @Override
   public Motor_State[] getState() {
-    Motor_State[] states = new Motor_State[config.motorNames.length];
+    Motor_State[] states = new Motor_State[motorNames.length];
     Arrays.fill(
         states,
         new Motor_State(
-            (sim.getAngleRads() - config.cmOffset_rad) * config.reduction,
-            sim.getVelocityRadPerSec() * config.reduction,
+            (sim.getAngleRads() - cmOffset_rad) * reduction,
+            sim.getVelocityRadPerSec() * reduction,
             motorVoltage_V,
             sim.getCurrentDrawAmps(),
             Double.NaN));
@@ -82,12 +118,13 @@ public class ArmSimulator extends ComponentSimControllerBase {
 
   @Override
   public String[] getComponentNames() {
-    return config.motorNames;
+    return motorNames;
   }
 
   @Override
   public String getControllerName() {
-    return config.controllerName;
+    return "ArmSimulator";
+    // return config.controllerName;
   }
 
   public static class ArmSimulatorConfig {

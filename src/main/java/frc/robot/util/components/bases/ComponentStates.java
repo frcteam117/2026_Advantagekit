@@ -1,14 +1,42 @@
 package frc.robot.util.components.bases;
 
+import frc.robot.util.States.State;
+
 public class ComponentStates {
 
-  public static interface ComponentState {}
+  public static interface ComponentState extends State {}
 
-  public static record AbsoluteEncoder_State(double rad) implements ComponentState {}
+  public static record AbsoluteEncoder_State(double rad) implements ComponentState {
+
+    @Override
+    public String getShortName() {
+      // TODO Auto-generated method stub
+      throw new UnsupportedOperationException("Unimplemented method 'getShortName'");
+    }
+
+    @Override
+    public State getNaNState() {
+      // TODO Auto-generated method stub
+      throw new UnsupportedOperationException("Unimplemented method 'getNaNState'");
+    }
+  }
 
   public static record Motor_State(
       double rad, double radPs, double motor_V, double motor_A, double supply_A)
-      implements ComponentState {}
+      implements ComponentState {
+
+    @Override
+    public String getShortName() {
+      // TODO Auto-generated method stub
+      throw new UnsupportedOperationException("Unimplemented method 'getShortName'");
+    }
+
+    @Override
+    public State getNaNState() {
+      // TODO Auto-generated method stub
+      throw new UnsupportedOperationException("Unimplemented method 'getNaNState'");
+    }
+  }
 
   public static record AngularMechanismState(double rad, double radPs, Motor_State... motors) {
     public AngularMechanismState(double rad, double radPs, Motor_State motor) {

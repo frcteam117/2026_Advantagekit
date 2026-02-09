@@ -8,7 +8,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 public class TunableBoolean implements BooleanSupplier {
   private final String key;
   private final BooleanSupplier shouldPublish;
-  private final BooleanConsumer onChange;
+  private BooleanConsumer onChange;
   private boolean value;
   private LoggedNetworkBoolean networkBoolean = null;
 
@@ -40,6 +40,10 @@ public class TunableBoolean implements BooleanSupplier {
         NetworkTableInstance.getDefault().getBooleanTopic(key).getEntry(value).unpublish();
       }
     }
+  }
+
+  public void runOnChange(BooleanConsumer onChange) {
+    this.onChange = onChange;
   }
 
   @Override

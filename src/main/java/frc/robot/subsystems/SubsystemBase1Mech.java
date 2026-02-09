@@ -73,23 +73,23 @@ public class SubsystemBase1Mech<Output0_State extends State> extends AbstractSub
 
   // Mechanism 0
 
-  public void setMech0Goal(State goal_State, int usedProfile, int usedFeedback) {
+  protected void setMech0Goal(State goal_State, int usedProfile, int usedFeedback) {
     mechanism0.setGoal(goal_State, usedProfile, usedFeedback);
   }
 
-  public void setMech0Goal(State goal_State) {
+  protected void setMech0Goal(State goal_State) {
     mechanism0.setGoal(goal_State);
   }
 
-  public Command getMech0SysIdCommand(SysIdType type) {
+  protected Command getMech0SysIdCommand(SysIdType type) {
     return mechanism0.getSysIdCommand(type);
   }
 
-  public Output0_State getMech0State() {
+  protected Output0_State getMech0State() {
     return mechanism0.getState();
   }
 
-  public MechanismBase<Output0_State> getMechanism0() {
+  protected MechanismBase<Output0_State> getMechanism0() {
     return mechanism0;
   }
 }

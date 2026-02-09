@@ -1,5 +1,6 @@
 package frc.robot.util.components.simulators;
 
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.util.States.PosVel_State;
 import frc.robot.util.States.Pos_State;
@@ -7,6 +8,7 @@ import frc.robot.util.States.Vel_State;
 import frc.robot.util.States.Voltage_State;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
+import frc.robot.util.mechanisms.MechanismConstants;
 import java.util.Arrays;
 
 public class DCMotorSimulator extends ComponentSimControllerBase {
@@ -19,6 +21,17 @@ public class DCMotorSimulator extends ComponentSimControllerBase {
       componentNames[i] = "CAN-" + canIds[i];
     }
     sim = dcMotorSim;
+  }
+
+  public DCMotorSimulator(MechanismConstants config) {
+    // TODO: add the ability for the user to name the motors and make a more accurate DCMotorSim
+    componentNames = new String[config.motorCanIds.length];
+    for (int i = 0; i < componentNames.length; i++) {
+      componentNames[i] = "CAN-" + config.motorCanIds[i];
+    }
+    sim = new DCMotorSim(
+        LinearSystemId.createDCMotorSystem(config.gearbox, config.moi_kgm2, config.reduction),
+        config.gearbox);
   }
 
   public DCMotorSimulator(DCMotorSim dcMotorSim, String... motorNames) {

@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -27,7 +27,16 @@ public class GyroIONavX implements GyroIO {
   private final Queue<Double> yawTimestampQueue;
 
   public GyroIONavX() {
-    navX.enableOptionalMessages(true, false, false, false, false, false, false, false, false);
+    navX.enableOptionalMessages(
+        true, //           comment to make formatter spread this line out
+        false, //       comment to make formatter spread this line out
+        false, //       comment to make formatter spread this line out
+        false, //   comment to make formatter spread this line out
+        false, //    comment to make formatter spread this line out
+        true, //    comment to make formatter spread this line out
+        false, //  comment to make formatter spread this line out
+        false, //      comment to make formatter spread this line out
+        false); // comment to make formatter spread this line out
     yawTimestampQueue = NovaOdometryThread.getInstance().makeTimestampQueue();
     yawPositionQueue =
         NovaOdometryThread.getInstance().registerSignal(() -> navX.getYaw().in(Radians));

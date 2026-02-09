@@ -1,7 +1,6 @@
 package frc.robot.util.control_functions;
 
 import frc.robot.util.States.State;
-import frc.robot.util.States.StateBase;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -60,7 +59,7 @@ public abstract class ControlFunctionBase {
     }
   }
 
-  public final State calculate(StateBase goal_State, StateBase mechanism_State) {
+  public final State calculate(Object goal_State, Object mechanism_State) {
     for (Method m : calculateMethods) {
       Class<?>[] paramTypes = m.getParameterTypes();
       if (paramTypes[0].isAssignableFrom(goal_State.getClass())
@@ -77,7 +76,7 @@ public abstract class ControlFunctionBase {
     return null;
   }
 
-  public final void updateState(StateBase mechanism_State) {
+  public final void updateState(Object mechanism_State) {
     for (Method m : updateMethods) {
       if (m.getParameterTypes()[0].isAssignableFrom(mechanism_State.getClass())) {
         try {
@@ -91,7 +90,7 @@ public abstract class ControlFunctionBase {
     // TODO Make this an exception
   }
 
-  public final void resetState(StateBase new_State) {
+  public final void resetState(Object new_State) {
     for (Method m : resetMethods) {
       if (m.getParameterTypes()[0].isAssignableFrom(new_State.getClass())) {
         try {

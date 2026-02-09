@@ -114,45 +114,45 @@ public class SubsystemBase2Mech<Output0_State extends State, Output1_State exten
 
   // Mechanism 0
 
-  public void setMech0Goal(State goal_State, int usedProfile, int usedFeedback) {
+  protected void setMech0Goal(State goal_State, int usedProfile, int usedFeedback) {
     mechanism0.setGoal(goal_State, usedProfile, usedFeedback);
   }
 
-  public void setMech0Goal(State goal_State) {
+  protected void setMech0Goal(State goal_State) {
     mechanism0.setGoal(goal_State);
   }
 
-  public Command getMech0SysIdCommand(SysIdType type) {
+  protected Command getMech0SysIdCommand(SysIdType type) {
     return mechanism0.getSysIdCommand(type);
   }
 
-  public Output0_State getMech0State() {
+  protected Output0_State getMech0State() {
     return mechanism0.getState();
   }
 
-  public MechanismBase<Output0_State> getMechanism0() {
+  protected MechanismBase<Output0_State> getMechanism0() {
     return mechanism0;
   }
 
   // Mechanism 1
 
-  public void setMech1Goal(State goal_State, int usedProfile, int usedFeedback) {
+  protected void setMech1Goal(State goal_State, int usedProfile, int usedFeedback) {
     mechanism1.setGoal(goal_State, usedProfile, usedFeedback);
   }
 
-  public void setMech1Goal(State goal_State) {
+  protected void setMech1Goal(State goal_State) {
     mechanism1.setGoal(goal_State);
   }
 
-  public Command getMech1SysIdCommand(SysIdType type) {
+  protected Command getMech1SysIdCommand(SysIdType type) {
     return mechanism1.getSysIdCommand(type);
   }
 
-  public Output1_State getMech1State() {
+  protected Output1_State getMech1State() {
     return mechanism1.getState();
   }
 
-  public MechanismBase<Output1_State> getMechanism1() {
+  protected MechanismBase<Output1_State> getMechanism1() {
     return mechanism1;
   }
 }

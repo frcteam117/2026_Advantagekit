@@ -11,13 +11,13 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.controller.PIDController;
-import frc.robot.subsystems.drive.DriveConstants.Azimuth;
-import frc.robot.subsystems.drive.DriveConstants.Wheel;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.SparkUtil;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -26,38 +26,38 @@ import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 /** Physics sim implementation of module IO. */
 public class ModuleIOSim implements ModuleIO {
   private final SwerveModuleSimulation moduleSimulation;
-  private final SimulatedMotorController.GenericMotorController driveMotor, turnMotor;
-  private final PIDController drivePID = Wheel.simPID, turnPID = Azimuth.simPID;
-  private boolean driveClosedLoop = false, turnClosedLoop = false;
+  private final SimulatedMotorController.GenericMotorController driveMotor, azimuthMotor;
+  private final PIDController drivePID = Drive.simPID, azimuthPID = Azimuth.simPID;
+  private boolean driveClosedLoop = false, azimuthClosedLoop = false;
   private double lastNextDriveVelocity_radPs = 0.0,
-      currentTurnVelocity_radPs = 0.0,
-      lastNextTurnPosition_rad = 0.0,
+      currentAzimuthVelocity_radPs = 0.0,
+      lastNextAzimuthPosition_rad = 0.0,
       driveAppliedVolts = 0.0,
-      turnAppliedVolts = 0.0;
+      azimuthAppliedVolts = 0.0;
 
   public ModuleIOSim(SwerveModuleSimulation moduleSimulation) {
     this.moduleSimulation = moduleSimulation;
     this.driveMotor = moduleSimulation
         .useGenericMotorControllerForDrive()
-        .withCurrentLimit(Amps.of(Wheel.config.limits.getMaxStatorCurrent()));
-    this.turnMotor = moduleSimulation
+        .withCurrentLimit(Amps.of(Drive.config.maxCurrent));
+    this.azimuthMotor = moduleSimulation
         .useGenericControllerForSteer()
-        .withCurrentLimit(Amps.of(Azimuth.config.limits.getMaxSupplyCurrent()));
+        .withCurrentLimit(Amps.of(Azimuth.config.maxCurrent));
   }
 
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     // Run closed-loop control
     if (!driveClosedLoop) {
-      Wheel.simPID.reset();
+      Drive.simPID.reset();
     }
-    if (!turnClosedLoop) {
+    if (!azimuthClosedLoop) {
       Azimuth.simPID.reset();
     }
 
     // Update simulation state
     driveMotor.requestVoltage(Volts.of(driveAppliedVolts));
-    turnMotor.requestVoltage(Volts.of(turnAppliedVolts));
+    azimuthMotor.requestVoltage(Volts.of(azimuthAppliedVolts));
 
     // Update drive inputs
     inputs.driveConnected = true;
@@ -69,18 +69,19 @@ public class ModuleIOSim implements ModuleIO {
     inputs.driveSupplyCurrent_A =
         Math.abs(moduleSimulation.getDriveMotorSupplyCurrent().in(Amps));
 
-    // Update turn inputs
-    inputs.turnConnected = true;
-    inputs.turnPosition_rad =
+    // Update azimuth inputs
+    inputs.azimuthConnected = true;
+    inputs.azimuthPosition_rad =
         moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction;
-    inputs.turnAbsolutePosition_rad = moduleSimulation.getSteerAbsoluteFacing().getRadians();
-    inputs.turnVelocity_radPs =
+    inputs.azimuthAbsolutePosition_rad =
+        moduleSimulation.getSteerAbsoluteFacing().getRadians();
+    inputs.azimuthVelocity_radPs =
         moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
-    currentTurnVelocity_radPs = inputs.turnVelocity_radPs;
-    inputs.turnVoltage_V = turnAppliedVolts;
-    inputs.turnStatorCurrent_A =
+    currentAzimuthVelocity_radPs = inputs.azimuthVelocity_radPs;
+    inputs.azimuthVoltage_V = azimuthAppliedVolts;
+    inputs.azimuthStatorCurrent_A =
         Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps));
-    inputs.turnSupplyCurrent_A =
+    inputs.azimuthSupplyCurrent_A =
         Math.abs(moduleSimulation.getSteerMotorSupplyCurrent().in(Amps));
 
     // Update odometry inputs
@@ -89,7 +90,7 @@ public class ModuleIOSim implements ModuleIO {
             moduleSimulation.getCachedDriveWheelFinalPositions())
         .mapToDouble(angle -> angle.in(Radians))
         .toArray();
-    inputs.odometryTurnPositions_rad = Arrays.stream(
+    inputs.odometryAzimuthPositions_rad = Arrays.stream(
             moduleSimulation.getCachedSteerAbsolutePositions())
         .mapToDouble((rotation) -> rotation.getRadians())
         .toArray();
@@ -103,10 +104,10 @@ public class ModuleIOSim implements ModuleIO {
   }
 
   @Override
-  public void setTurnVoltage(double output) {
-    turnClosedLoop = false;
-    turnAppliedVolts = output;
-    lastNextTurnPosition_rad = moduleSimulation.getSteerAbsoluteFacing().getRadians();
+  public void setAzimuthVoltage(double output) {
+    azimuthClosedLoop = false;
+    azimuthAppliedVolts = output;
+    lastNextAzimuthPosition_rad = moduleSimulation.getSteerAbsoluteFacing().getRadians();
   }
 
   // @Override
@@ -119,20 +120,20 @@ public class ModuleIOSim implements ModuleIO {
   @Override
   public void setNextDriveState(double nextVelocity_radPs, double nextAcceleration_radPs2) {
     driveClosedLoop = true;
-    driveAppliedVolts = Wheel.simFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2)
-        + Wheel.simPID.calculate(
+    driveAppliedVolts = Drive.simFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2)
+        + Drive.simPID.calculate(
             moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond),
             lastNextDriveVelocity_radPs);
     lastNextDriveVelocity_radPs = nextVelocity_radPs;
   }
 
   @Override
-  public void setNextTurnState(double nextPosition_rad, double nextVelocity_radPs) {
-    turnClosedLoop = true;
-    turnAppliedVolts =
-        Azimuth.simFF.calculateWithVelocities(currentTurnVelocity_radPs, nextVelocity_radPs)
-            + Azimuth.simPID.calculate(
-                moduleSimulation.getSteerAbsoluteFacing().getRadians(), lastNextTurnPosition_rad);
-    lastNextTurnPosition_rad = nextPosition_rad;
+  public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
+    azimuthClosedLoop = true;
+    azimuthAppliedVolts = Azimuth.simFF.calculateWithVelocities(
+            currentAzimuthVelocity_radPs, nextVelocity_radPs)
+        + Azimuth.simPID.calculate(
+            moduleSimulation.getSteerAbsoluteFacing().getRadians(), lastNextAzimuthPosition_rad);
+    lastNextAzimuthPosition_rad = nextPosition_rad;
   }
 }

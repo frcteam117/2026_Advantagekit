@@ -1,6 +1,7 @@
 package frc.robot.util.logging;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import java.util.ArrayList;
@@ -40,22 +41,40 @@ public class LogUtil {
 
   public static void createTunablePID(
       String key, PIDController pidController, BooleanSupplier shouldPublish) {
-    new TunableDouble(key + "1-P", pidController.getP(), shouldPublish, pidController::setP);
-    new TunableDouble(key + "2-I", pidController.getI(), shouldPublish, pidController::setI);
-    new TunableDouble(key + "3-D", pidController.getD(), shouldPublish, pidController::setD);
+    new TunableDouble(key + "0 P", pidController.getP(), shouldPublish, pidController::setP);
+    new TunableDouble(key + "1 I", pidController.getI(), shouldPublish, pidController::setI);
+    new TunableDouble(key + "2 D", pidController.getD(), shouldPublish, pidController::setD);
+    new TunableDouble(
+        key + "3 IZone", pidController.getIZone(), shouldPublish, pidController::setIZone);
+    TunableDouble minIntegral = new TunableDouble(key + "4 MinIntegral", -1, shouldPublish);
+    TunableDouble maxIntegral = new TunableDouble(
+        key + "5 MaxIntegral",
+        1,
+        shouldPublish,
+        max -> pidController.setIntegratorRange(minIntegral.getAsDouble(), max));
+    minIntegral.runOnChange(
+        min -> pidController.setIntegratorRange(min, maxIntegral.getAsDouble()));
   }
 
   public static void createTunableFF(
       String key, SimpleMotorFeedforward ff, BooleanSupplier shouldPublish) {
-    new TunableDouble(key + "4-S", ff.getKs(), shouldPublish, ff::setKs);
-    new TunableDouble(key + "5-V", ff.getKv(), shouldPublish, ff::setKv);
-    new TunableDouble(key + "6-A", ff.getKa(), shouldPublish, ff::setKa);
+    new TunableDouble(key + "6 S", ff.getKs(), shouldPublish, ff::setKs);
+    new TunableDouble(key + "7 V", ff.getKv(), shouldPublish, ff::setKv);
+    new TunableDouble(key + "8 A", ff.getKa(), shouldPublish, ff::setKa);
   }
 
   public static void createTunableFF(String key, ArmFeedforward ff, BooleanSupplier shouldPublish) {
-    new TunableDouble(key + "4-S", ff.getKs(), shouldPublish, ff::setKs);
-    new TunableDouble(key + "7-G", ff.getKg(), shouldPublish, ff::setKg);
-    new TunableDouble(key + "5-V", ff.getKv(), shouldPublish, ff::setKv);
-    new TunableDouble(key + "6-A", ff.getKa(), shouldPublish, ff::setKa);
+    new TunableDouble(key + "6 S", ff.getKs(), shouldPublish, ff::setKs);
+    new TunableDouble(key + "7 V", ff.getKv(), shouldPublish, ff::setKv);
+    new TunableDouble(key + "8 A", ff.getKa(), shouldPublish, ff::setKa);
+    new TunableDouble(key + "9 G", ff.getKg(), shouldPublish, ff::setKg);
+  }
+
+  public static void createTunableFF(
+      String key, ElevatorFeedforward ff, BooleanSupplier shouldPublish) {
+    new TunableDouble(key + "6 S", ff.getKs(), shouldPublish, ff::setKs);
+    new TunableDouble(key + "7 V", ff.getKv(), shouldPublish, ff::setKv);
+    new TunableDouble(key + "8 A", ff.getKa(), shouldPublish, ff::setKa);
+    new TunableDouble(key + "9 G", ff.getKg(), shouldPublish, ff::setKg);
   }
 }

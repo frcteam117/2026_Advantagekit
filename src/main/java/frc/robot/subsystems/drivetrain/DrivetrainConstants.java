@@ -11,34 +11,34 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
+import com.thethriftybot.devices.ThriftyNova.CurrentType;
+import com.thethriftybot.devices.ThriftyNova.ThriftyNovaConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.Robot;
+import frc.robot.RobotConstants;
 import frc.robot.util.UnitUtil;
 import frc.robot.util.logging.LogUtil;
-import frc.robot.util.nova.NovaConfig;
-import frc.robot.util.nova.NovaConfig.BrakeMode;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
-public class DriveConstants {
-  public static final String name = "Drive";
+public class DrivetrainConstants {
+  public static final String NAME = "1.Drivetrain";
   public static final LoggedNetworkBoolean tunable =
-      new LoggedNetworkBoolean("Tunable/" + name + "/.Tunable", false);
+      new LoggedNetworkBoolean(RobotConstants.TUNING_PREFIX + NAME + "/.Tunable", false);
 
-  public static final class Swerve {
-    public static final String name = DriveConstants.name + "/Swerve";
+  public static final class Chassis {
+    public static final String name = DrivetrainConstants.NAME + "/Chassis";
 
     // physical properties
     public static final double bumperLength_m = UnitUtil.inTom(30.625);
@@ -57,37 +57,37 @@ public class DriveConstants {
     public static final double odometryFrequency_Hz = 100.0;
 
     public static final RobotConfig ppConfig = new RobotConfig(
-        Robot.mass_kg,
-        Robot.moi_kgm2,
+        RobotConstants.MASS_kg,
+        RobotConstants.MOI_kgm2,
         new ModuleConfig(
-            Wheel.radius_m,
-            Wheel.max_mPs,
-            Wheel.cof,
-            Wheel.gearbox.withReduction(Wheel.reduction),
-            Wheel.config.limits.getMaxStatorCurrent(),
+            Drive.radius_m,
+            Drive.max_mPs,
+            Drive.cof,
+            Drive.gearbox.withReduction(Drive.reduction),
+            Drive.config.maxCurrent,
             1),
-        Swerve.moduleTranslations);
+        Chassis.moduleTranslations);
 
     public static final DriveTrainSimulationConfig mapleSimConfig =
         DriveTrainSimulationConfig.Default()
             .withBumperSize(Meters.of(bumperLength_m), Meters.of(bumperWidth_m))
-            .withCustomModuleTranslations(Swerve.moduleTranslations)
-            .withRobotMass(Kilogram.of(Robot.mass_kg))
+            .withCustomModuleTranslations(Chassis.moduleTranslations)
+            .withRobotMass(Kilogram.of(RobotConstants.MASS_kg))
             .withGyro(COTS.ofNav2X())
             .withSwerveModule(new SwerveModuleSimulationConfig(
-                Wheel.gearbox,
+                Drive.gearbox,
                 Azimuth.gearbox,
-                Wheel.reduction,
+                Drive.reduction,
                 Azimuth.reduction,
-                Volts.of(Wheel.realFF.getKs()),
+                Volts.of(Drive.realFF.getKs()),
                 Volts.of(Azimuth.realFF.getKs()),
-                Meters.of(Wheel.radius_m),
+                Meters.of(Drive.radius_m),
                 KilogramSquareMeters.of(Azimuth.moi_kgm2),
-                Wheel.cof));
+                Drive.cof));
   }
 
-  public static class Wheel {
-    public static final String name = DriveConstants.name + "/Wheel";
+  public static class Drive {
+    public static final String name = DrivetrainConstants.NAME + "/Drive";
 
     // physical properties
     public static final double radius_m = Units.inchesToMeters((3.875 - .12) / 2);
@@ -100,35 +100,36 @@ public class DriveConstants {
 
     // software limits
     public static final double max_mPs = Units.feetToMeters(15);
-    public static final NovaConfig config = new NovaConfig();
+    public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
     // Drive PID configuration
     public static final SimpleMotorFeedforward
-        realFF = new SimpleMotorFeedforward(0.013, 0.01, 0.0, Robot.codePeriod_s),
-        simFF = new SimpleMotorFeedforward(0.036968, 0.15869, 0.034, Robot.codePeriod_s);
+        realFF = new SimpleMotorFeedforward(0.013, 0.01, 0.0, RobotConstants.CODE_PERIOD_s),
+        simFF = new SimpleMotorFeedforward(0.036968, 0.15869, 0.034, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
-        realPID = new PIDController(0.0, 0.0, 0.0, Robot.codePeriod_s),
-        simPID = new PIDController(0.23931, 0.0, 0.0, Robot.codePeriod_s);
+        realPID = new PIDController(0.0, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
+        simPID = new PIDController(0.23931, 0.0, 0.0, RobotConstants.CODE_PERIOD_s);
 
     static {
-      config.setBrakeMode(BrakeMode.BRAKE).setVoltageCompensation(Robot.nominal_V);
-      config.limits.setMaxStatorCurrent(60).setMaxSupplyCurrent(60);
-      config
-          .canFreq
-          .setSensorPeriod(1 / Swerve.odometryFrequency_Hz)
-          .setControlPeriod(0.02)
-          .setCurrentPeriod(0.02)
-          .setFaultPeriod(0.02);
+      config.brakeMode = false;
+      config.voltageCompensation = RobotConstants.NOMINAL_V;
+      config.currentType = CurrentType.STATOR;
+      config.maxCurrent = 30.0;
+      config.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
+      config.canFreq.control = 0.02;
+      config.canFreq.current = 0.02;
+      config.canFreq.fault = 0.02;
 
-      LogUtil.createTunablePID("Tunable/" + name + "/real", realPID, tunable::get);
-      LogUtil.createTunableFF("Tunable/" + name + "/real", realFF, tunable::get);
-      LogUtil.createTunablePID("Tunable/" + name + "/sim", simPID, tunable::get);
-      LogUtil.createTunableFF("Tunable/" + name + "/sim", simFF, tunable::get);
+      LogUtil.createTunablePID(
+          RobotConstants.TUNING_PREFIX + name + "/real", realPID, tunable::get);
+      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/real", realFF, tunable::get);
+      LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name + "/sim", simPID, tunable::get);
+      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/sim", simFF, tunable::get);
     }
   }
 
   public static class Azimuth {
-    public static final String name = DriveConstants.name + "/Azimuth";
+    public static final String name = DrivetrainConstants.NAME + "/Azimuth";
 
     // physical properties
     public static final double moi_kgm2 = 0.02;
@@ -139,39 +140,37 @@ public class DriveConstants {
     public static final DCMotor gearbox = DCMotor.getNEO(1);
 
     // software limits
-    public static final NovaConfig config = new NovaConfig();
+    public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
     public static final SimpleMotorFeedforward
-        realFF = new SimpleMotorFeedforward(0.01, 0.051, 0.0, Robot.codePeriod_s),
-        simFF = new SimpleMotorFeedforward(0.004, 0.4960674, 0.006, Robot.codePeriod_s);
+        realFF = new SimpleMotorFeedforward(0.01, 0.051, 0.0, RobotConstants.CODE_PERIOD_s),
+        simFF = new SimpleMotorFeedforward(0.004, 0.4960674, 0.006, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
-        realPID = new PIDController(0.5, 0.0, 0.0, Robot.codePeriod_s),
-        simPID = new PIDController(4, 0.0, 0.05, Robot.codePeriod_s);
+        realPID = new PIDController(0.5, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
+        simPID = new PIDController(4, 0.0, 0.05, RobotConstants.CODE_PERIOD_s);
 
     static {
-      config
-          .setInversion(false)
-          .setBrakeMode(BrakeMode.BRAKE)
-          .setVoltageCompensation(Robot.nominal_V);
-      config.limits.setMaxStatorCurrent(50).setMaxSupplyCurrent(20);
-      config
-          .canFreq
-          .setSensorPeriod(1 / Swerve.odometryFrequency_Hz)
-          .setControlPeriod(0.02)
-          .setCurrentPeriod(0.02)
-          .setFaultPeriod(0.02);
+      config.brakeMode = false;
+      config.voltageCompensation = RobotConstants.NOMINAL_V;
+      config.currentType = CurrentType.STATOR;
+      config.maxCurrent = 30.0;
+      config.canFreq.sensor = Chassis.odometryFrequency_Hz;
+      config.canFreq.control = 50.0;
+      config.canFreq.current = 50.0;
+      config.canFreq.fault = 50.0;
 
       realPID.enableContinuousInput(0, 2 * Math.PI);
       simPID.enableContinuousInput(0, 2 * Math.PI);
-      LogUtil.createTunablePID("Tunable/" + name + "/real", realPID, tunable::get);
-      LogUtil.createTunableFF("Tunable/" + name + "/real", realFF, tunable::get);
-      LogUtil.createTunablePID("Tunable/" + name + "/sim", simPID, tunable::get);
-      LogUtil.createTunableFF("Tunable/" + name + "/sim", simFF, tunable::get);
+      LogUtil.createTunablePID(
+          RobotConstants.TUNING_PREFIX + name + "/real", realPID, tunable::get);
+      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/real", realFF, tunable::get);
+      LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name + "/sim", simPID, tunable::get);
+      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/sim", simFF, tunable::get);
     }
   }
 
   public static class AbsEncoder {
-    public static final String name = DriveConstants.name + "/AbsEncoder";
+    public static final String name = DrivetrainConstants.NAME + "/AbsEncoder";
 
     /** FL, FR, BL, BR */
     public static final int[] analogPorts = new int[] {0, 1, 2, 3};

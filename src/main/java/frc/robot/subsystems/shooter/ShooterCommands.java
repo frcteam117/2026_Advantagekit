@@ -5,14 +5,14 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.SysIdUtil.SysIdType;
 
 public class ShooterCommands {
-  public static Command hoodSysId(Shooter shooter, SysIdType type) {
+  public static Command hoodSysId(ShooterSubsystem shooter, SysIdType type) {
     return Commands.run(() -> {}, shooter)
         .withTimeout(1)
         .andThen(shooter.getHoodSysIdCommand(type))
         .withName("HoodSysId_" + type.name());
   }
 
-  public static Command flywheelSysId(Shooter shooter, SysIdType type) {
+  public static Command flywheelSysId(ShooterSubsystem shooter, SysIdType type) {
     return Commands.run(() -> {}, shooter)
         .withTimeout(1)
         .andThen(shooter.getFlywheelSysIdCommand(type))

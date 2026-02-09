@@ -11,11 +11,11 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drivetrain;
 
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.subsystems.drive.DriveConstants.Swerve;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -49,19 +49,19 @@ public class NovaOdometryThread {
 
   public void start() {
     if (!timestampQueues.isEmpty()) {
-      notifier.startPeriodic(1.0 / Swerve.odometryFrequency_Hz);
+      notifier.startPeriodic(1.0 / Chassis.odometryFrequency_Hz);
     }
   }
 
   /** Registers a generic signal to be read from the thread. */
   public Queue<Double> registerSignal(DoubleSupplier signal) {
     Queue<Double> queue = new ArrayBlockingQueue<>(20);
-    Drive.odometryLock.lock();
+    DrivetrainSubsystem.odometryLock.lock();
     try {
       genericSignals.add(signal);
       genericQueues.add(queue);
     } finally {
-      Drive.odometryLock.unlock();
+      DrivetrainSubsystem.odometryLock.unlock();
     }
     return queue;
   }
@@ -69,18 +69,18 @@ public class NovaOdometryThread {
   /** Returns a new queue that returns timestamp values for each sample. */
   public Queue<Double> makeTimestampQueue() {
     Queue<Double> queue = new ArrayBlockingQueue<>(20);
-    Drive.odometryLock.lock();
+    DrivetrainSubsystem.odometryLock.lock();
     try {
       timestampQueues.add(queue);
     } finally {
-      Drive.odometryLock.unlock();
+      DrivetrainSubsystem.odometryLock.unlock();
     }
     return queue;
   }
 
   private void run() {
     // Save new data to queues
-    Drive.odometryLock.lock();
+    DrivetrainSubsystem.odometryLock.lock();
     try {
       // Get sample timestamp
       double timestamp = RobotController.getFPGATime() / 1e6;
@@ -95,7 +95,7 @@ public class NovaOdometryThread {
         timestampQueues.get(i).offer(timestamp);
       }
     } finally {
-      Drive.odometryLock.unlock();
+      DrivetrainSubsystem.odometryLock.unlock();
     }
   }
 }
