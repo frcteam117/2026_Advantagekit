@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.util.States.PosVel_State;
 import frc.robot.util.States.Pos_State;
 import frc.robot.util.States.Vel_State;
-import frc.robot.util.States.Voltage_State;
+import frc.robot.util.States.Volt_State;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;
@@ -39,7 +39,7 @@ public class DCMotorSimulator extends ComponentSimControllerBase {
     sim = dcMotorSim;
   }
 
-  public void setInput(Voltage_State voltage_State) {
+  public void setInput(Volt_State voltage_State) {
     sim.setInputVoltage(voltage_State.V());
   }
 

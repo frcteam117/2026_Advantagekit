@@ -1,5 +1,17 @@
 package frc.robot.util;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Value;
+import static edu.wpi.first.units.Units.Volts;
+
+import edu.wpi.first.units.Unit;
+import edu.wpi.first.util.struct.StructSerializable;
+
 public class States {
   public interface StateBase {
     public abstract String getShortName();
@@ -7,7 +19,88 @@ public class States {
     public abstract State getNaNState();
   }
 
-  public interface State extends StateBase {}
+  public static class StateValue<T> {
+    private final T value;
+    private final Class<T> clazz;
+    private final String name;
+    private final Unit unit;
+
+    private StateValue(T value, Class<T> clazz, String name, Unit unit) {
+      this.value = value;
+      this.clazz = clazz;
+      this.name = name;
+      this.unit = unit;
+    }
+
+    public Class<T> getLoggableClass() {
+      return clazz;
+    }
+
+    public T getValue() {
+      return value;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public Unit getUnit() {
+      return unit;
+    }
+
+    public static StateValue<Double> create(double value) {
+      return new StateValue<Double>(value, Double.class, "", Value);
+    }
+
+    public static StateValue<Double> create(double value, String name) {
+      return new StateValue<Double>(value, Double.class, name, Value);
+    }
+
+    public static StateValue<Double> create(double value, Unit unit) {
+      return new StateValue<Double>(value, Double.class, "", unit);
+    }
+
+    public static StateValue<Double> create(Double value, String name, Unit unit) {
+      return new StateValue<Double>(value, Double.class, name, unit);
+    }
+
+    public static StateValue<Boolean> create(boolean value) {
+      return new StateValue<Boolean>(value, Boolean.class, "", Value);
+    }
+
+    public static StateValue<Boolean> create(boolean value, String name) {
+      return new StateValue<Boolean>(value, Boolean.class, name, Value);
+    }
+
+    public static StateValue<Boolean> create(boolean value, Unit unit) {
+      return new StateValue<Boolean>(value, Boolean.class, "", unit);
+    }
+
+    public static StateValue<Boolean> create(boolean value, String name, Unit unit) {
+      return new StateValue<Boolean>(value, Boolean.class, name, unit);
+    }
+
+    public static StateValue<StructSerializable> create(StructSerializable value) {
+      return new StateValue<StructSerializable>(value, StructSerializable.class, "", Value);
+    }
+
+    public static StateValue<StructSerializable> create(StructSerializable value, String name) {
+      return new StateValue<StructSerializable>(value, StructSerializable.class, name, Value);
+    }
+
+    public static StateValue<StructSerializable> create(StructSerializable value, Unit unit) {
+      return new StateValue<StructSerializable>(value, StructSerializable.class, "", unit);
+    }
+
+    public static StateValue<StructSerializable> create(
+        StructSerializable value, String name, Unit unit) {
+      return new StateValue<StructSerializable>(value, StructSerializable.class, name, unit);
+    }
+  }
+
+  public interface State {
+    public abstract StateValue<?>[] getValues();
+  }
 
   public interface Linear {}
 
@@ -64,589 +157,667 @@ public class States {
   public interface PosVelAccJerk_State
       extends PosVelAcc_State, PosVelJerk_State, PosAccJerk_State, VelAccJerk_State {}
 
-  public record Voltage_State(double V) implements State {
-    public String getShortName() {
-      return "Voltage";
+  public static class Volt_State implements State {
+    private final double V;
+    private final String logName;
+
+    public Volt_State(double V) {
+      this(V, "");
     }
 
-    public State getNaNState() {
-      return new Voltage_State(Double.NaN);
+    public Volt_State(double V, String logName) {
+      this.V = V;
+      this.logName = logName;
+    }
+
+    public double V() {
+      return V;
+    }
+
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {StateValue.create(V, logName, Volts)};
     }
   }
 
-  public record Current_State(double A) implements State {
-    public String getShortName() {
-      return "Current";
+  public static class Ampere_State implements State {
+    private final double A;
+    private final String logName;
+
+    public Ampere_State(double A) {
+      this(A, "");
     }
 
-    public State getNaNState() {
-      return new Current_State(Double.NaN);
+    public Ampere_State(double A, String logName) {
+      this.A = A;
+      this.logName = logName;
+    }
+
+    public double A() {
+      return A;
+    }
+
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {StateValue.create(A, logName, Amps)};
     }
   }
 
-  public record LinearP_State(double m) implements Linear, Pos_State {
-    public String getShortName() {
-      return "LinP";
+  public static class LinearP_State implements Linear, Pos_State {
+    private final double m;
+    private final String logName;
+
+    public LinearP_State(double m) {
+      this(m, "");
     }
 
-    public LinearP_State getNaNState() {
-      return new LinearP_State(Double.NaN);
+    public LinearP_State(double m, String logName) {
+      this.m = m;
+      this.logName = logName;
     }
 
+    public double m() {
+      return m;
+    }
+
+    @Override
     public double pos() {
-      return this.m();
+      return m;
+    }
+
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {StateValue.create(m, logName, Meters)};
     }
   }
 
-  public record LinearV_State(double mPs) implements Linear, Vel_State {
-    public String getShortName() {
-      return "LinV";
+  // public record LinearV_State(double mPs) implements Linear, Vel_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {MetersPerSecond};
+  //   }
+
+  //   public double vel() {
+  //     return this.mPs();
+  //   }
+  // }
+
+  // public record LinearA_State(double mPs2) implements Linear, Acc_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {MetersPerSecondPerSecond};
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+  // }
+
+  // public record LinearJ_State(double mPs3) implements Linear, Jerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {MetersPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  public static class LinearPV_State implements Linear, PosVel_State {
+    private final double m;
+    private final double mPs;
+    private final String[] logNames;
+
+    public LinearPV_State(double m, double mPs) {
+      this(m, mPs, "", "");
     }
 
-    public LinearV_State getNaNState() {
-      return new LinearV_State(Double.NaN);
+    public LinearPV_State(double m, double mPs, String... logNames) {
+      this.m = m;
+      this.mPs = mPs;
+      this.logNames = logNames;
     }
 
-    public double vel() {
-      return this.mPs();
-    }
-  }
-
-  public record LinearA_State(double mPs2) implements Linear, Acc_State {
-    public String getShortName() {
-      return "LinA";
+    public double m() {
+      return m;
     }
 
-    public LinearA_State getNaNState() {
-      return new LinearA_State(Double.NaN);
+    public double mPs() {
+      return mPs;
     }
 
-    public double acc() {
-      return this.mPs2();
-    }
-  }
-
-  public record LinearJ_State(double mPs3) implements Linear, Jerk_State {
-    public String getShortName() {
-      return "LinJ";
-    }
-
-    public LinearJ_State getNaNState() {
-      return new LinearJ_State(Double.NaN);
-    }
-
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record LinearPV_State(double m, double mPs) implements Linear, PosVel_State {
-    public String getShortName() {
-      return "LinPV";
-    }
-
-    public LinearPV_State getNaNState() {
-      return new LinearPV_State(Double.NaN, Double.NaN);
-    }
-
+    @Override
     public double pos() {
-      return this.m();
+      return m;
     }
 
+    @Override
     public double vel() {
-      return this.mPs();
+      return mPs;
+    }
+
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {
+        StateValue.create(m, logNames[0], Meters),
+        StateValue.create(mPs, logNames[1], MetersPerSecond)
+      };
     }
   }
 
-  public record LinearPA_State(double m, double mPs2) implements Linear, PosAcc_State {
-    public String getShortName() {
-      return "LinPA";
+  // public record LinearPA_State(double m, double mPs2) implements Linear, PosAcc_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Meters, MetersPerSecondPerSecond};
+  //   }
+
+  //   public double pos() {
+  //     return this.m();
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+  // }
+
+  // public record LinearPJ_State(double m, double mPs3) implements Linear, PosJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Meters, MetersPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double pos() {
+  //     return this.m();
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  // public record LinearVA_State(double mPs, double mPs2) implements Linear, VelAcc_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {MetersPerSecond, MetersPerSecondPerSecond};
+  //   }
+
+  //   public double vel() {
+  //     return this.mPs();
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+  // }
+
+  // public record LinearVJ_State(double mPs, double mPs3) implements Linear, VelJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {MetersPerSecond, MetersPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double vel() {
+  //     return this.mPs();
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  // public record LinearAJ_State(double mPs2, double mPs3) implements Linear, AccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {MetersPerSecondPerSecond, MetersPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  // public record LinearPVA_State(double m, double mPs, double mPs2)
+  //     implements Linear, PosVelAcc_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Meters, MetersPerSecond, MetersPerSecondPerSecond};
+  //   }
+
+  //   public double pos() {
+  //     return this.m();
+  //   }
+
+  //   public double vel() {
+  //     return this.mPs();
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+  // }
+
+  // public record LinearPVJ_State(double m, double mPs, double mPs3)
+  //     implements Linear, PosVelJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Meters, MetersPerSecond, MetersPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double pos() {
+  //     return this.m();
+  //   }
+
+  //   public double vel() {
+  //     return this.mPs();
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  // public record LinearPAJ_State(double m, double mPs2, double mPs3)
+  //     implements Linear, PosAccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Meters, MetersPerSecondPerSecond, MetersPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double pos() {
+  //     return this.m();
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  // public record LinearVAJ_State(double mPs, double mPs2, double mPs3)
+  //     implements Linear, VelAccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {
+  //       MetersPerSecond, MetersPerSecondPerSecond, MetersPerSecondPerSecond.per(Second)
+  //     };
+  //   }
+
+  //   public double vel() {
+  //     return this.mPs();
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  // public record LinearPVAJ_State(double m, double mPs, double mPs2, double mPs3)
+  //     implements Linear, PosVelAccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {
+  //       Meters, MetersPerSecond, MetersPerSecondPerSecond, MetersPerSecondPerSecond.per(Second)
+  //     };
+  //   }
+
+  //   public double pos() {
+  //     return this.m();
+  //   }
+
+  //   public double vel() {
+  //     return this.mPs();
+  //   }
+
+  //   public double acc() {
+  //     return this.mPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.mPs3();
+  //   }
+  // }
+
+  public static class AngularP_State implements Angular, Pos_State {
+    private final double rad;
+    private final String logName;
+
+    public AngularP_State(double rad) {
+      this(rad, "");
     }
 
-    public LinearPA_State getNaNState() {
-      return new LinearPA_State(Double.NaN, Double.NaN);
+    public AngularP_State(double rad, String logName) {
+      this.rad = rad;
+      this.logName = logName;
     }
 
+    public double rad() {
+      return rad;
+    }
+
+    @Override
     public double pos() {
-      return this.m();
+      return rad;
     }
 
-    public double acc() {
-      return this.mPs2();
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {StateValue.create(rad, logName, Radians)};
     }
   }
 
-  public record LinearPJ_State(double m, double mPs3) implements Linear, PosJerk_State {
-    public String getShortName() {
-      return "LinPJ";
+  public static class AngularV_State implements Angular, Vel_State {
+    private final double radPs;
+    private final String logName;
+
+    public AngularV_State(double radPs) {
+      this(radPs, "");
     }
 
-    public LinearPJ_State getNaNState() {
-      return new LinearPJ_State(Double.NaN, Double.NaN);
+    public AngularV_State(double radPs, String logName) {
+      this.radPs = radPs;
+      this.logName = logName;
     }
 
+    public double rad() {
+      return radPs;
+    }
+
+    @Override
+    public double vel() {
+      return radPs;
+    }
+
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {StateValue.create(radPs, logName, RadiansPerSecond)};
+    }
+  }
+
+  // public record AngularA_State(double radPs2) implements Angular, Acc_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {RadiansPerSecondPerSecond};
+  //   }
+
+  //   public double acc() {
+  //     return this.radPs2();
+  //   }
+  // }
+
+  // public record AngularJ_State(double radPs3) implements Angular, Jerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {RadiansPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
+
+  public static class AngularPV_State implements Angular, PosVel_State {
+    private final double rad;
+    private final double radPs;
+    private final String[] logNames;
+
+    public AngularPV_State(double rad, double radPs) {
+      this(rad, radPs, "", "");
+    }
+
+    public AngularPV_State(double rad, double radPs, String... logNames) {
+      this.rad = rad;
+      this.radPs = radPs;
+      this.logNames = logNames;
+    }
+
+    public double rad() {
+      return rad;
+    }
+
+    public double radPs() {
+      return radPs;
+    }
+
+    @Override
     public double pos() {
-      return this.m();
+      return rad;
     }
 
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record LinearVA_State(double mPs, double mPs2) implements Linear, VelAcc_State {
-    public String getShortName() {
-      return "LinVA";
-    }
-
-    public LinearVA_State getNaNState() {
-      return new LinearVA_State(Double.NaN, Double.NaN);
-    }
-
+    @Override
     public double vel() {
-      return this.mPs();
+      return radPs;
     }
 
-    public double acc() {
-      return this.mPs2();
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {
+        StateValue.create(rad, logNames[0], Radians),
+        StateValue.create(radPs, logNames[1], RadiansPerSecond)
+      };
     }
   }
 
-  public record LinearVJ_State(double mPs, double mPs3) implements Linear, VelJerk_State {
-    public String getShortName() {
-      return "LinVJ";
+  // public record AngularPA_State(double rad, double radPs2) implements Angular, PosAcc_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Radians, RadiansPerSecondPerSecond};
+  //   }
+
+  //   public double pos() {
+  //     return this.rad();
+  //   }
+
+  //   public double acc() {
+  //     return this.radPs2();
+  //   }
+  // }
+
+  // public record AngularPJ_State(double rad, double radPs3) implements Angular, PosJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Radians, RadiansPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double pos() {
+  //     return this.rad();
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
+
+  public class AngularVA_State implements Angular, VelAcc_State {
+    private final double radPs;
+    private final double radPs2;
+    private final String[] logNames;
+
+    public AngularVA_State(double radPs, double radPs2) {
+      this(radPs, radPs2, "", "");
     }
 
-    public LinearVJ_State getNaNState() {
-      return new LinearVJ_State(Double.NaN, Double.NaN);
+    public AngularVA_State(double radPs, double radPs2, String... logNames) {
+      this.radPs = radPs;
+      this.radPs2 = radPs2;
+      this.logNames = logNames;
     }
 
+    public double rad() {
+      return radPs;
+    }
+
+    public double radPs() {
+      return radPs2;
+    }
+
+    @Override
     public double vel() {
-      return this.mPs();
+      return radPs;
     }
 
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record LinearAJ_State(double mPs2, double mPs3) implements Linear, AccJerk_State {
-    public String getShortName() {
-      return "LinAJ";
-    }
-
-    public LinearAJ_State getNaNState() {
-      return new LinearAJ_State(Double.NaN, Double.NaN);
-    }
-
+    @Override
     public double acc() {
-      return this.mPs2();
+      return radPs2;
     }
 
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record LinearPVA_State(double m, double mPs, double mPs2)
-      implements Linear, PosVelAcc_State {
-    public String getShortName() {
-      return "LinPVA";
-    }
-
-    public LinearPVA_State getNaNState() {
-      return new LinearPVA_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.m();
-    }
-
-    public double vel() {
-      return this.mPs();
-    }
-
-    public double acc() {
-      return this.mPs2();
+    @Override
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {
+        StateValue.create(radPs, logNames[0], RadiansPerSecond),
+        StateValue.create(radPs2, logNames[1], RadiansPerSecondPerSecond)
+      };
     }
   }
 
-  public record LinearPVJ_State(double m, double mPs, double mPs3)
-      implements Linear, PosVelJerk_State {
-    public String getShortName() {
-      return "LinPVJ";
-    }
-
-    public LinearPVJ_State getNaNState() {
-      return new LinearPVJ_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.m();
-    }
-
-    public double vel() {
-      return this.mPs();
-    }
-
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record LinearPAJ_State(double m, double mPs2, double mPs3)
-      implements Linear, PosAccJerk_State {
-    public String getShortName() {
-      return "LinPAJ";
-    }
-
-    public LinearPAJ_State getNaNState() {
-      return new LinearPAJ_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.m();
-    }
-
-    public double acc() {
-      return this.mPs2();
-    }
-
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record LinearVAJ_State(double mPs, double mPs2, double mPs3)
-      implements Linear, VelAccJerk_State {
-    public String getShortName() {
-      return "LinVAJ";
-    }
-
-    public LinearVAJ_State getNaNState() {
-      return new LinearVAJ_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double vel() {
-      return this.mPs();
-    }
-
-    public double acc() {
-      return this.mPs2();
-    }
-
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record LinearPVAJ_State(double m, double mPs, double mPs2, double mPs3)
-      implements Linear, PosVelAccJerk_State {
-    public String getShortName() {
-      return "LinPVAJ";
-    }
-
-    public LinearPVAJ_State getNaNState() {
-      return new LinearPVAJ_State(Double.NaN, Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.m();
-    }
-
-    public double vel() {
-      return this.mPs();
-    }
-
-    public double acc() {
-      return this.mPs2();
-    }
-
-    public double jerk() {
-      return this.mPs3();
-    }
-  }
-
-  public record AngularP_State(double rad) implements Angular, Pos_State {
-    public String getShortName() {
-      return "AngP";
-    }
-
-    public AngularP_State getNaNState() {
-      return new AngularP_State(Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-  }
-
-  public record AngularV_State(double radPs) implements Angular, Vel_State {
-    public String getShortName() {
-      return "AngV";
-    }
-
-    public AngularV_State getNaNState() {
-      return new AngularV_State(Double.NaN);
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-  }
-
-  public record AngularA_State(double radPs2) implements Angular, Acc_State {
-    public String getShortName() {
-      return "AngA";
-    }
-
-    public AngularA_State getNaNState() {
-      return new AngularA_State(Double.NaN);
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-  }
-
-  public record AngularJ_State(double radPs3) implements Angular, Jerk_State {
-    public String getShortName() {
-      return "AngJ";
-    }
-
-    public AngularJ_State getNaNState() {
-      return new AngularJ_State(Double.NaN);
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
-
-  public record AngularPV_State(double rad, double radPs) implements Angular, PosVel_State {
-    public String getShortName() {
-      return "AngPV";
-    }
-
-    public AngularPV_State getNaNState() {
-      return new AngularPV_State(Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-  }
-
-  public record AngularPA_State(double rad, double radPs2) implements Angular, PosAcc_State {
-    public String getShortName() {
-      return "AngPA";
-    }
-
-    public AngularPA_State getNaNState() {
-      return new AngularPA_State(Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-  }
-
-  public record AngularPJ_State(double rad, double radPs3) implements Angular, PosJerk_State {
-    public String getShortName() {
-      return "AngPJ";
-    }
-
-    public AngularPJ_State getNaNState() {
-      return new AngularPJ_State(Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
-
-  public record AngularVA_State(double radPs, double radPs2) implements Angular, VelAcc_State {
-    public String getShortName() {
-      return "AngVA";
-    }
-
-    public AngularVA_State getNaNState() {
-      return new AngularVA_State(Double.NaN, Double.NaN);
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-  }
-
-  public record AngularVJ_State(double radPs, double radPs3) implements Angular, VelJerk_State {
-    public String getShortName() {
-      return "AngVJ";
-    }
-
-    public AngularVJ_State getNaNState() {
-      return new AngularVJ_State(Double.NaN, Double.NaN);
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
-
-  public record AngularAJ_State(double radPs2, double radPs3) implements Angular, AccJerk_State {
-    public String getShortName() {
-      return "AngAJ";
-    }
-
-    public AngularAJ_State getNaNState() {
-      return new AngularAJ_State(Double.NaN, Double.NaN);
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
-
-  public record AngularPVA_State(double rad, double radPs, double radPs2)
-      implements Angular, PosVelAcc_State {
-    public String getShortName() {
-      return "AngPVA";
-    }
-
-    public AngularPVA_State getNaNState() {
-      return new AngularPVA_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-  }
-
-  public record AngularPVJ_State(double rad, double radPs, double radPs3)
-      implements Angular, PosVelJerk_State {
-    public String getShortName() {
-      return "AngPVJ";
-    }
-
-    public AngularPVJ_State getNaNState() {
-      return new AngularPVJ_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
-
-  public record AngularPAJ_State(double rad, double radPs2, double radPs3)
-      implements Angular, PosAccJerk_State {
-    public String getShortName() {
-      return "AngPAJ";
-    }
-
-    public AngularPAJ_State getNaNState() {
-      return new AngularPAJ_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
-
-  public record AngularVAJ_State(double radPs, double radPs2, double radPs3)
-      implements Angular, VelAccJerk_State {
-    public String getShortName() {
-      return "AngVAJ";
-    }
-
-    public AngularVAJ_State getNaNState() {
-      return new AngularVAJ_State(Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
-
-  public record AngularPVAJ_State(double rad, double radPs, double radPs2, double radPs3)
-      implements Angular, PosVelAccJerk_State {
-    public String getShortName() {
-      return "AngPVAJ";
-    }
-
-    public AngularPVAJ_State getNaNState() {
-      return new AngularPVAJ_State(Double.NaN, Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public double pos() {
-      return this.rad();
-    }
-
-    public double vel() {
-      return this.radPs();
-    }
-
-    public double acc() {
-      return this.radPs2();
-    }
-
-    public double jerk() {
-      return this.radPs3();
-    }
-  }
+  // public record AngularVJ_State(double radPs, double radPs3) implements Angular, VelJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {RadiansPerSecond, RadiansPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double vel() {
+  //     return this.radPs();
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
+
+  // public record AngularAJ_State(double radPs2, double radPs3) implements Angular, AccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {RadiansPerSecondPerSecond, RadiansPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double acc() {
+  //     return this.radPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
+
+  // public record AngularPVA_State(double rad, double radPs, double radPs2)
+  //     implements Angular, PosVelAcc_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Radians, RadiansPerSecond, RadiansPerSecondPerSecond};
+  //   }
+
+  //   public double pos() {
+  //     return this.rad();
+  //   }
+
+  //   public double vel() {
+  //     return this.radPs();
+  //   }
+
+  //   public double acc() {
+  //     return this.radPs2();
+  //   }
+  // }
+
+  // public record AngularPVJ_State(double rad, double radPs, double radPs3)
+  //     implements Angular, PosVelJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Radians, RadiansPerSecond, RadiansPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double pos() {
+  //     return this.rad();
+  //   }
+
+  //   public double vel() {
+  //     return this.radPs();
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
+
+  // public record AngularPAJ_State(double rad, double radPs2, double radPs3)
+  //     implements Angular, PosAccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {Radians, RadiansPerSecondPerSecond,
+  // RadiansPerSecondPerSecond.per(Second)};
+  //   }
+
+  //   public double pos() {
+  //     return this.rad();
+  //   }
+
+  //   public double acc() {
+  //     return this.radPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
+
+  // public record AngularVAJ_State(double radPs, double radPs2, double radPs3)
+  //     implements Angular, VelAccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {
+  //       RadiansPerSecond, RadiansPerSecondPerSecond, RadiansPerSecondPerSecond.per(Second)
+  //     };
+  //   }
+
+  //   public double vel() {
+  //     return this.radPs();
+  //   }
+
+  //   public double acc() {
+  //     return this.radPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
+
+  // public record AngularPVAJ_State(double rad, double radPs, double radPs2, double radPs3)
+  //     implements Angular, PosVelAccJerk_State {
+  //   @Override
+  //   public Unit[] getUnits() {
+  //     return new Unit[] {
+  //       Radians, RadiansPerSecond, RadiansPerSecondPerSecond,
+  // RadiansPerSecondPerSecond.per(Second)
+  //     };
+  //   }
+
+  //   public double pos() {
+  //     return this.rad();
+  //   }
+
+  //   public double vel() {
+  //     return this.radPs();
+  //   }
+
+  //   public double acc() {
+  //     return this.radPs2();
+  //   }
+
+  //   public double jerk() {
+  //     return this.radPs3();
+  //   }
+  // }
 }

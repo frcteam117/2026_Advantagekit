@@ -1,40 +1,88 @@
 package frc.robot.util.components.bases;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import frc.robot.util.States.State;
+import frc.robot.util.States.StateValue;
 
 public class ComponentStates {
 
   public static interface ComponentState extends State {}
 
-  public static record AbsoluteEncoder_State(double rad) implements ComponentState {
+  public static class AbsoluteEncoder_State implements ComponentState {
+    private final double rad;
+    private final String logName;
 
-    @Override
-    public String getShortName() {
-      // TODO Auto-generated method stub
-      throw new UnsupportedOperationException("Unimplemented method 'getShortName'");
+    public AbsoluteEncoder_State(double rad) {
+      this(rad, "Abs");
+    }
+
+    public AbsoluteEncoder_State(double rad, String logName) {
+      this.rad = rad;
+      this.logName = logName;
+    }
+
+    public double rad() {
+      return rad;
     }
 
     @Override
-    public State getNaNState() {
-      // TODO Auto-generated method stub
-      throw new UnsupportedOperationException("Unimplemented method 'getNaNState'");
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {StateValue.create(rad, logName, Radians)};
     }
   }
 
-  public static record Motor_State(
-      double rad, double radPs, double motor_V, double motor_A, double supply_A)
-      implements ComponentState {
+  public static class Motor_State implements ComponentState {
+    private final double[] values;
+    private final String[] logNames;
 
-    @Override
-    public String getShortName() {
-      // TODO Auto-generated method stub
-      throw new UnsupportedOperationException("Unimplemented method 'getShortName'");
+    public Motor_State(double rad, double radPs, double motor_V, double motor_A, double supply_A) {
+      this(rad, radPs, motor_V, motor_A, supply_A, "Motor", "Motor", "Motor", "Motor", "Supply");
+    }
+
+    public Motor_State(
+        double rad,
+        double radPs,
+        double motor_V,
+        double motor_A,
+        double supply_A,
+        String... logNames) {
+      this.values = new double[] {rad, radPs, motor_V, motor_A, supply_A};
+      this.logNames = logNames;
+    }
+
+    public double rad() {
+      return values[0];
+    }
+
+    public double radPs() {
+      return values[1];
+    }
+
+    public double motor_V() {
+      return values[2];
+    }
+
+    public double motor_A() {
+      return values[3];
+    }
+
+    public double supply_A() {
+      return values[4];
     }
 
     @Override
-    public State getNaNState() {
-      // TODO Auto-generated method stub
-      throw new UnsupportedOperationException("Unimplemented method 'getNaNState'");
+    public StateValue<?>[] getValues() {
+      return new StateValue[] {
+        StateValue.create(values[0], logNames[0], Radians),
+        StateValue.create(values[1], logNames[1], RadiansPerSecond),
+        StateValue.create(values[2], logNames[2], Volts),
+        StateValue.create(values[3], logNames[3], Amps),
+        StateValue.create(values[4], logNames[4], Amps)
+      };
     }
   }
 

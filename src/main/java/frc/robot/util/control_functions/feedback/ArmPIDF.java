@@ -4,7 +4,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import frc.robot.util.States.AngularP_State;
 import frc.robot.util.States.PosVel_State;
-import frc.robot.util.States.Voltage_State;
+import frc.robot.util.States.Volt_State;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.LogUtil;
 import frc.robot.util.mechanisms.MechanismConstants;
@@ -68,8 +68,8 @@ public class ArmPIDF extends ControlFunctionBase {
     LogUtil.createTunableFF(config.tuningLogName + "/" + name + "/", ff, () -> enableTuning);
   }
 
-  public Voltage_State calculate(PosVel_State next_State, PosVel_State mechanism_State) {
-    Voltage_State voltage = new Voltage_State(ff.calculateWithVelocities(
+  public Volt_State calculate(PosVel_State next_State, PosVel_State mechanism_State) {
+    Volt_State voltage = new Volt_State(ff.calculateWithVelocities(
             mechanism_State.pos() + cmOffset_rad, lastNext_State.vel(), next_State.vel())
         + pid.calculate(mechanism_State.pos(), lastNext_State.pos()));
     lastNext_State = next_State;

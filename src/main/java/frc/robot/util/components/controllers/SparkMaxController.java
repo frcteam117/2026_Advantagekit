@@ -6,7 +6,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import frc.robot.util.States.Voltage_State;
+import frc.robot.util.States.Volt_State;
 import frc.robot.util.components.bases.ComponentControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;
@@ -67,7 +67,7 @@ public class SparkMaxController extends ComponentControllerBase {
     }
   }
 
-  public void setInput(Voltage_State V_State) {
+  public void setInput(Volt_State V_State) {
     sparkMaxes[0].setVoltage(V_State.V());
   }
 

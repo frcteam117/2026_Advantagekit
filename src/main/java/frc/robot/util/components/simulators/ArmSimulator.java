@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.util.States.PosVel_State;
 import frc.robot.util.States.Pos_State;
 import frc.robot.util.States.Vel_State;
-import frc.robot.util.States.Voltage_State;
+import frc.robot.util.States.Volt_State;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;
@@ -80,7 +80,7 @@ public class ArmSimulator extends ComponentSimControllerBase {
         ((Pos_State) config.start_State).pos() + config.cmOffset_Pos.pos());
   }
 
-  public void setInput(Voltage_State voltage_State) {
+  public void setInput(Volt_State voltage_State) {
     motorVoltage_V = voltage_State.V();
     sim.setInputVoltage(motorVoltage_V);
   }
