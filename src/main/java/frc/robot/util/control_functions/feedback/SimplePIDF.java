@@ -2,8 +2,8 @@ package frc.robot.util.control_functions.feedback;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import frc.robot.util.States.PosVel_State;
-import frc.robot.util.States.Volt_State;
+import frc.robot.util.StateUtil.PosVel_State;
+import frc.robot.util.StateUtil.Volt_State;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.LogUtil;
 import frc.robot.util.mechanisms.MechanismConstants;

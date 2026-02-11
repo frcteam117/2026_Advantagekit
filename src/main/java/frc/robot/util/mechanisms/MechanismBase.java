@@ -4,17 +4,21 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import edu.wpi.first.units.Unit;
+import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.WPISerializable;
 import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
-import frc.robot.util.States.State;
-import frc.robot.util.States.StateValue;
-import frc.robot.util.States.Volt_State;
+import frc.robot.util.StateUtil;
+import frc.robot.util.StateUtil.BaseState;
+import frc.robot.util.StateUtil.State;
+import frc.robot.util.StateUtil.StateValue;
+import frc.robot.util.StateUtil.Volt_State;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.components.bases.ComponentBase;
@@ -23,15 +27,19 @@ import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.ComponentState;
 import frc.robot.util.control_functions.ControlFunctionBase;
-import frc.robot.util.logging.LogUtil;
 import frc.robot.util.logging.TunableBoolean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
+import java.util.function.LongSupplier;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 
 public class MechanismBase<Output_State extends State> {
   private final List<ComponentBase> components;
@@ -47,9 +55,9 @@ public class MechanismBase<Output_State extends State> {
   private final ControlFunctionBase[] feedbacks;
   private int activeProfile = 0;
   private int activeFeedback = 0;
-  private Class<State> goalStateUnits;
-  private Class<State> nextStateUnits;
-  private Class<State> inputStateUnits;
+  private State goal_State = new BaseState();
+  private State next_State = new BaseState();
+  private State input_State = new BaseState();
 
   private final SysIdRoutine sysId;
 
@@ -76,9 +84,6 @@ public class MechanismBase<Output_State extends State> {
       simulators.add(config.simController);
       components =
           simulators.stream().map(simulator -> (ComponentBase) simulator).toList();
-      // if (DCMotorSimulator.class.isInstance(config.simController)) {
-      //   simulators.remove(0);
-      // }
       controller = config.simController;
     }
     componentsToState = config.componentsToState;
@@ -116,25 +121,10 @@ public class MechanismBase<Output_State extends State> {
     }
     Logger.processInputs(logName, componentStatesLogger);
     mechanism_State = componentsToState.apply(componentStates);
-    for (StateValue<?> value : mechanism_State.getValues())
-      Logger.recordOutput(
-          logName + "/State/" + toSuffix(value.getUnit()),
-          value.getClass().cast(value.getValue()));
-    // Logger.recordOutput("Tuning/test", 1);
+    StateUtil.recordOutput(logName + "/0_State/", mechanism_State);
     for (ComponentSimBase simulator : simulators) {
       simulator.updateState(RobotConstants.CODE_PERIOD_s);
     }
-    // MechanismState newMechanismState = componentStateAverager.apply(componentStates);
-    // if (mechanismState == null) {
-    //   mechanismState = newMechanismState;
-    // }
-    // if (!newMechanismState.getClass().isInstance(mechanismState)) {
-    //   Logger.recordOutput(logName + "/State_" + mechanismState.getShortName(), (Record)
-    //       mechanismState.getNaNState());
-    // }
-    // mechanismState = newMechanismState;
-    // Logger.recordOutput(
-    //     logName + "/State_" + mechanismState.getShortName(), (Record) mechanismState);
   }
 
   public void setGoal(State goalState, int usedProfile, int usedFeedback) {
@@ -144,58 +134,36 @@ public class MechanismBase<Output_State extends State> {
   }
 
   public void setGoal(State goal_State) {
-    State next_State = null;
-    State input_State = null;
+    final State oldNext_State = next_State;
+    final State oldInput_State = input_State;
+
+    // Logging goal_State
+    StateUtil.overrideOutput(logName + "/1_Goal/", goal_State, this.goal_State);
+    this.goal_State = goal_State;
+
+    // Calculating and logging next_State
     for (int i = 0; i < profiles.length; i++) {
       if (i == activeProfile) {
         next_State = profiles[i].calculate(goal_State, mechanism_State);
       } else {
         profiles[i].updateState(mechanism_State);
       }
-      // TODO: add check and exception for if no profile is active
     }
+    Logger.recordOutput(logName + "/_Profile", profiles[activeProfile].getControlFunctionName());
+    StateUtil.overrideOutput(logName + "/2_Next/", next_State, oldNext_State);
+
+    // Calculating and logging input_State
     for (int i = 0; i < feedbacks.length; i++) {
       if (i == activeFeedback) {
         input_State = feedbacks[i].calculate(next_State, mechanism_State);
       } else {
         feedbacks[i].updateState(mechanism_State);
       }
-      // TODO: add check and exception for if no feedback is active
     }
-    Logger.recordOutput(
-        logName + "/Active_Profile", profiles[activeProfile].getControlFunctionName());
-    Logger.recordOutput(
-        logName + "/Active_Feedback", feedbacks[activeFeedback].getControlFunctionName());
+    Logger.recordOutput(logName + "/_Feedback", feedbacks[activeFeedback].getControlFunctionName());
+    StateUtil.overrideOutput(logName + "/3_Input/", input_State, oldInput_State);
 
-    for 
-    if (goalStateUnits != goal_State.getUnits()) {
-      for (Unit unit : goalStateUnits) {
-        Logger.recordOutput(logName + "/Goal/" + toSuffix(unit), Double.NaN);
-      }
-      goalStateUnits = goal_State.getUnits();
-    }
-    if (nextStateUnits != next_State.getUnits()) {
-      for (Unit unit : nextStateUnits) {
-        Logger.recordOutput(logName + "/Next/" + toSuffix(unit), Double.NaN);
-      }
-      nextStateUnits = next_State.getUnits();
-    }
-    if (inputStateUnits != input_State.getUnits()) {
-      for (Unit unit : inputStateUnits) {
-        Logger.recordOutput(logName + "/Input/" + toSuffix(unit), Double.NaN);
-      }
-      inputStateUnits = input_State.getUnits();
-    }
-
-    for (int i = 0; i < goalStateUnits.length; i++)
-      Logger.recordOutput(
-          logName + "/Goal" + toSuffix(goalStateUnits[i]), goal_State.getValues()[i]);
-    for (int i = 0; i < nextStateUnits.length; i++)
-      Logger.recordOutput(
-          logName + "/Next" + toSuffix(nextStateUnits[i]), next_State.getValues()[i]);
-    for (int i = 0; i < inputStateUnits.length; i++)
-      Logger.recordOutput(
-          logName + "/Input" + toSuffix(inputStateUnits[i]), input_State.getValues()[i]);
+    // Giving input_State to the controller
     controller.setInput(input_State);
   }
 
@@ -203,16 +171,11 @@ public class MechanismBase<Output_State extends State> {
     Volt_State voltage_State = new Volt_State(V.in(Volts));
     Arrays.stream(profiles).forEach(profile -> profile.updateState(mechanism_State));
     Arrays.stream(feedbacks).forEach(feedback -> feedback.updateState(mechanism_State));
-
-    Logger.recordOutput(logName + "/Active_Profile", "SysIdRoutine");
-    Logger.recordOutput(logName + "/Active_Feedback", "SysIdRoutine");
-    for (int i = 0; i < goalStateUnits.length; i++)
-      Logger.recordOutput(logName + "/Goal" + toSuffix(goalStateUnits[i]), Double.NaN);
-    for (int i = 0; i < nextStateUnits.length; i++)
-      Logger.recordOutput(logName + "/Next" + toSuffix(nextStateUnits[i]), Double.NaN);
-    for (int i = 0; i < inputStateUnits.length; i++)
-      Logger.recordOutput(logName + "/Input" + toSuffix(inputStateUnits[i]), Double.NaN);
-    Logger.recordOutput(logName + "/Input" + toSuffix(Volts), voltage_State.V());
+    Logger.recordOutput(logName + "/_Profile", "SysIdRoutine");
+    Logger.recordOutput(logName + "/_Feedback", "SysIdRoutine");
+    StateUtil.recordNullOutput(logName + "/1_Goal/", goal_State);
+    StateUtil.recordNullOutput(logName + "/2_Next/", next_State);
+    StateUtil.overrideOutput(logName + "/3_Input/", voltage_State, input_State);
     controller.setInput(voltage_State);
   }
 
@@ -224,50 +187,318 @@ public class MechanismBase<Output_State extends State> {
     return mechanism_State;
   }
 
-  private String toSuffix(Unit unit) {
-    return LogUtil.toSuffix(unit.symbol()) + "   " + unit.name();
-  }
+  // private String toSuffix(Unit unit) {
+  //   return LogUtil.toSuffix(unit.symbol()) + "  " + unit.name();
+  // }
 
   public class ComponentStatesLogger implements LoggableInputs {
+    @SuppressWarnings("unchecked")
     @Override
     public void toLog(LogTable table) {
       for (int i = 0; i < componentStates.length; i++) {
-        // make this work for everything compatable with advantagekit
-        if (StructSerializable.class.isAssignableFrom(componentStates[i].getClass())) {
-          table.put(componentNames[i], (StructSerializable) componentStates[i]);
-        } else if (Record.class.isAssignableFrom(componentStates[i].getClass())) {
-          table.put(componentNames[i], (Record) componentStates[i]);
+        for (StateValue value : componentStates[i].getValues()) {
+          String newKey = componentNames[i] + "/" + StateUtil.toSuffix(value);
+          if (value.getValue() instanceof byte[]) {
+            table.put(newKey, (byte[]) value.getValue());
+          } else if (value.getValue() instanceof byte[][]) {
+            table.put(newKey, (byte[][]) value.getValue());
+          } else if (value.getValue() instanceof Boolean) {
+            table.put(newKey, (Boolean) value.getValue());
+          } else if (value.getValue() instanceof BooleanSupplier) {
+            table.put(newKey, ((BooleanSupplier) value.getValue()).getAsBoolean());
+          } else if (value.getValue() instanceof boolean[]) {
+            table.put(newKey, (boolean[]) value.getValue());
+          } else if (value.getValue() instanceof boolean[][]) {
+            table.put(newKey, (boolean[][]) value.getValue());
+          } else if (value.getValue() instanceof Integer) {
+            if (value.getUnit() == null) {
+              table.put(newKey, (Integer) value.getValue());
+            } else {
+              table.put(newKey, (Integer) value.getValue(), value.getUnit().name());
+            }
+          } else if (value.getValue() instanceof IntSupplier) {
+            table.put(newKey, ((IntSupplier) value.getValue()).getAsInt());
+          } else if (value.getValue() instanceof int[]) {
+            table.put(newKey, (int[]) value.getValue());
+          } else if (value.getValue() instanceof int[][]) {
+            table.put(newKey, (int[][]) value.getValue());
+          } else if (value.getValue() instanceof Long) {
+            if (value.getUnit() == null) {
+              table.put(newKey, (Long) value.getValue());
+            } else {
+              table.put(newKey, (Long) value.getValue(), value.getUnit().name());
+            }
+          } else if (value.getValue() instanceof LongSupplier) {
+            table.put(newKey, ((LongSupplier) value.getValue()).getAsLong());
+          } else if (value.getValue() instanceof long[]) {
+            table.put(newKey, (long[]) value.getValue());
+          } else if (value.getValue() instanceof long[][]) {
+            table.put(newKey, (long[][]) value.getValue());
+          } else if (value.getValue() instanceof Float) {
+            if (value.getUnit() == null) {
+              table.put(newKey, (Float) value.getValue());
+            } else {
+              table.put(newKey, (Float) value.getValue(), value.getUnit().name());
+            }
+          } else if (value.getValue() instanceof float[]) {
+            table.put(newKey, (float[]) value.getValue());
+          } else if (value.getValue() instanceof float[][]) {
+            table.put(newKey, (float[][]) value.getValue());
+          } else if (value.getValue() instanceof Double) {
+            if (value.getUnit() == null) {
+              table.put(newKey, (Double) value.getValue());
+            } else {
+              table.put(newKey, (Double) value.getValue(), value.getUnit().name());
+            }
+          } else if (value.getValue() instanceof DoubleSupplier) {
+            table.put(newKey, ((DoubleSupplier) value.getValue()).getAsDouble());
+          } else if (value.getValue() instanceof double[]) {
+            table.put(newKey, (double[]) value.getValue());
+          } else if (value.getValue() instanceof double[][]) {
+            table.put(newKey, (double[][]) value.getValue());
+          } else if (value.getValue() instanceof String) {
+            table.put(newKey, (String) value.getValue());
+          } else if (value.getValue() instanceof String[]) {
+            table.put(newKey, (String[]) value.getValue());
+          } else if (value.getValue() instanceof String[][]) {
+            table.put(newKey, (String[][]) value.getValue());
+          } else if (value.getValue() instanceof Enum) {
+            table.put(newKey, (Enum.class.cast(value.getValue())));
+          } else if (value.getValue() instanceof Enum[]) {
+            table.put(newKey, (Enum[]) value.getValue());
+          } else if (value.getValue() instanceof Enum[][]) {
+            table.put(newKey, (Enum[][]) value.getValue());
+          } else if (value.getValue() instanceof Measure) {
+            if (value.getUnit() == null) {
+              table.put(newKey, (Measure<?>) value.getValue());
+            } else {
+              table.put(
+                  newKey,
+                  ((Measure<?>) value.getValue()).in(value.getUnit()),
+                  value.getUnit().name());
+            }
+          } else if (value.getValue() instanceof WPISerializable) {
+            table.put(newKey, (WPISerializable) value.getValue());
+          } else if (value.getValue() instanceof StructSerializable) {
+            table.put(newKey, (StructSerializable) value.getValue());
+          } else if (value.getValue() instanceof StructSerializable[]) {
+            table.put(newKey, (StructSerializable[]) value.getValue());
+          } else if (value.getValue() instanceof StructSerializable[][]) {
+            table.put(newKey, (StructSerializable[][]) value.getValue());
+          } else if (value.getValue() instanceof Record) {
+            table.put(newKey, (Record) value.getValue());
+          } else if (value.getValue() instanceof Record[]) {
+            table.put(newKey, (Record[]) value.getValue());
+          } else if (value.getValue() instanceof Record[][]) {
+            table.put(newKey, (Record[][]) value.getValue());
+          } else if (value.getValue() instanceof LoggedMechanism2d) {
+            return;
+          } else if (value.getValue() instanceof Color) {
+            table.put(newKey, (Color) value.getValue());
+          }
         }
       }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void fromLog(LogTable table) {
       for (int i = 0; i < componentStates.length; i++) {
-        if (StructSerializable.class.isAssignableFrom(componentStates[i].getClass())) {
-          componentStates[i] =
-              (State) table.get(componentNames[i], (StructSerializable) componentStates[i]);
-        } else if (Record.class.isAssignableFrom(componentStates[i].getClass())) {
-          componentStates[i] = (State) table.get(componentNames[i], (Record) componentStates[i]);
+        StateValue[] values = componentStates[i].getValues();
+        for (int j = 0; j < values.length; j++) {
+          String newKey = componentNames[i] + "/" + StateUtil.toSuffix(values[j]);
+          if (values[j].getValue() instanceof byte[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (byte[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof byte[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (byte[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Boolean) {
+            values[j] = new StateValue(
+                table.get(newKey, (Boolean) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof BooleanSupplier) {
+            boolean value =
+                table.get(newKey, ((BooleanSupplier) values[j].getValue()).getAsBoolean());
+            values[j] = new StateValue(
+                (BooleanSupplier) () -> value, values[j].getName(), values[j].getUnit());
+          } else if (values[j].getValue() instanceof boolean[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (boolean[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof boolean[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (boolean[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Integer) {
+            values[j] = new StateValue(
+                table.get(newKey, (Integer) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof IntSupplier) {
+            int value = table.get(newKey, ((IntSupplier) values[j].getValue()).getAsInt());
+            values[j] =
+                new StateValue((IntSupplier) () -> value, values[j].getName(), values[j].getUnit());
+          } else if (values[j].getValue() instanceof int[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (int[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof int[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (int[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Long) {
+            values[j] = new StateValue(
+                table.get(newKey, (Long) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof LongSupplier) {
+            long value = table.get(newKey, ((LongSupplier) values[j].getValue()).getAsLong());
+            values[j] = new StateValue(
+                (LongSupplier) () -> value, values[j].getName(), values[j].getUnit());
+          } else if (values[j].getValue() instanceof long[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (long[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof long[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (long[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Float) {
+            values[j] = new StateValue(
+                table.get(newKey, (Float) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof float[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (float[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof float[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (float[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Double) {
+            values[j] = new StateValue(
+                table.get(newKey, (Double) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof DoubleSupplier) {
+            double value = table.get(newKey, ((DoubleSupplier) values[j].getValue()).getAsDouble());
+            values[j] = new StateValue(
+                (DoubleSupplier) () -> value, values[j].getName(), values[j].getUnit());
+          } else if (values[j].getValue() instanceof double[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (double[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof double[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (double[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof String) {
+            values[j] = new StateValue(
+                table.get(newKey, (String) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof String[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (String[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof String[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (String[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Enum) {
+            values[j] = new StateValue(
+                table.get(newKey, (Enum.class.cast(values[j].getValue()))),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Enum[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (Enum[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Enum[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (Enum[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Measure) {
+            if (values[j].getUnit() == null) {
+              values[j] = new StateValue(
+                  table.get(newKey, (Measure<?>) values[j].getValue()),
+                  values[j].getName(),
+                  values[j].getUnit());
+            } else {
+              values[j] = new StateValue(
+                  table.get(newKey, ((Measure<?>) values[j].getValue()).in(values[j].getUnit())),
+                  values[j].getName(),
+                  values[j].getUnit());
+            }
+          } else if (values[j].getValue() instanceof WPISerializable) {
+            values[j] = new StateValue(
+                table.get(newKey, (WPISerializable) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof StructSerializable) {
+            values[j] = new StateValue(
+                table.get(newKey, (StructSerializable) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof StructSerializable[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (StructSerializable[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof StructSerializable[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (StructSerializable[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Record) {
+            values[j] = new StateValue(
+                table.get(newKey, (Record) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Record[]) {
+            values[j] = new StateValue(
+                table.get(newKey, (Record[]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof Record[][]) {
+            values[j] = new StateValue(
+                table.get(newKey, (Record[][]) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          } else if (values[j].getValue() instanceof LoggedMechanism2d) {
+            return;
+          } else if (values[j].getValue() instanceof Color) {
+            values[j] = new StateValue(
+                table.get(newKey, (Color) values[j].getValue()),
+                values[j].getName(),
+                values[j].getUnit());
+          }
         }
+        componentStates[i] = componentStates[i].create(values);
       }
     }
   }
-
-  // public static <T, U, V> Object[] zipMap(T[] arg1, U[] arg2, BiFunction<T, U, V>
-  // mappingFunction) {
-  //   List<V> output = new ArrayList<>(Math.min(arg1.length, arg2.length));
-  //   for (int i = 0; i < Math.min(arg1.length, arg2.length); i++) {
-  //     output.set(i, mappingFunction.apply(arg1[i], arg2[i]));
-  //   }
-  //   return output.toArray();
-  // }
-
-  // public static <T, U> void zip(T[] arg1, U[] arg2, BiConsumer<T, U> mappingFunction) {
-  //   for (int i = 0; i < Math.min(arg1.length, arg2.length); i++) {
-  //     mappingFunction.accept(arg1[i], arg2[i]);
-  //   }
-  // }
 
   public static class MechanismConfig<Output_State> {
     public String logName;
@@ -288,29 +519,5 @@ public class MechanismBase<Output_State extends State> {
     public double sysIdRampRate_VPs = 1;
     public double sysIdStepVoltage_V = 7;
     public double sysIdTimeout_s = 10;
-
-    // // physical constants
-    // public double moi_kgm2;
-    // public double mass_kg;
-    // public int canId;
-    // public double reduction;
-    // public DCMotor gearbox;
-
-    // // software limits
-    // public ProfileConfig<AngularPV_State> profileConfig;
-    // public ComponentSimControllerBase[] componentSimControllers;
-    // public ComponentControllerBase[] componentControllers;
-
-    // public double start_rad;
-    // public double start_radPs;
-    // public double min_rad;
-    // public double max_rad;
-    // public double max_radPs;
-    // public double max_radPs2;
-    // public int maxStator_A;
-    // public SparkMaxConfig motorConfig;
-
-    // public SimpleMotorFeedforward realFF, simFF;
-    // public PIDController realPID, simPID;
   }
 }

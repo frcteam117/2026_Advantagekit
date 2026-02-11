@@ -168,7 +168,7 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   public void periodic() {
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
-    Logger.processInputs("6.Gyro", gyroInputs);
+    Logger.processInputs("6_Gyro", gyroInputs);
     for (var module : modules) {
       module.periodic();
     }

@@ -5,8 +5,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.SubsystemBase2Mech;
-import frc.robot.util.States.AngularPV_State;
-import frc.robot.util.States.State;
+import frc.robot.util.StateUtil.AngularPV_State;
+import frc.robot.util.StateUtil.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
 

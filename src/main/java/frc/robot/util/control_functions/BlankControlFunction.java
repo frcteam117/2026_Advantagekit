@@ -1,6 +1,6 @@
 package frc.robot.util.control_functions;
 
-import frc.robot.util.States.State;
+import frc.robot.util.StateUtil.State;
 
 public class BlankControlFunction extends ControlFunctionBase {
   private final String name;

@@ -33,7 +33,7 @@ import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class DrivetrainConstants {
-  public static final String NAME = "1.Drivetrain";
+  public static final String NAME = "1_Drivetrain";
   public static final LoggedNetworkBoolean tunable =
       new LoggedNetworkBoolean(RobotConstants.TUNING_PREFIX + NAME + "/.Tunable", false);
 

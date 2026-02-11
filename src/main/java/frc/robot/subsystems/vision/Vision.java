@@ -67,7 +67,7 @@ public class Vision extends SubsystemBase {
   public void periodic() {
     for (int i = 0; i < io.length; i++) {
       io[i].updateInputs(inputs[i]);
-      Logger.processInputs("5.Vision/Camera" + Integer.toString(i), inputs[i]);
+      Logger.processInputs("5_Vision/Camera" + Integer.toString(i), inputs[i]);
     }
 
     // Initialize logging values
@@ -145,16 +145,16 @@ public class Vision extends SubsystemBase {
 
       // Log camera datadata
       Logger.recordOutput(
-          "5.Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses",
+          "5_Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses",
           tagPoses.toArray(new Pose3d[tagPoses.size()]));
       Logger.recordOutput(
-          "5.Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPoses",
+          "5_Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPoses",
           robotPoses.toArray(new Pose3d[robotPoses.size()]));
       Logger.recordOutput(
-          "5.Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesAccepted",
+          "5_Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesAccepted",
           robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
       Logger.recordOutput(
-          "5.Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
+          "5_Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
           robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
       allTagPoses.addAll(tagPoses);
       allRobotPoses.addAll(robotPoses);
@@ -164,14 +164,14 @@ public class Vision extends SubsystemBase {
 
     // Log summary data
     Logger.recordOutput(
-        "5.Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));
+        "5_Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));
     Logger.recordOutput(
-        "5.Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
+        "5_Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
     Logger.recordOutput(
-        "5.Vision/Summary/RobotPosesAccepted",
+        "5_Vision/Summary/RobotPosesAccepted",
         allRobotPosesAccepted.toArray(new Pose3d[allRobotPosesAccepted.size()]));
     Logger.recordOutput(
-        "5.Vision/Summary/RobotPosesRejected",
+        "5_Vision/Summary/RobotPosesRejected",
         allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
   }
 

@@ -6,7 +6,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import frc.robot.util.States.Volt_State;
+import frc.robot.util.StateUtil.Volt_State;
 import frc.robot.util.components.bases.ComponentControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;

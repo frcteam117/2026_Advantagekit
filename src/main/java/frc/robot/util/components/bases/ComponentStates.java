@@ -5,8 +5,8 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import frc.robot.util.States.State;
-import frc.robot.util.States.StateValue;
+import frc.robot.util.StateUtil.State;
+import frc.robot.util.StateUtil.StateValue;
 
 public class ComponentStates {
 
@@ -30,8 +30,8 @@ public class ComponentStates {
     }
 
     @Override
-    public StateValue<?>[] getValues() {
-      return new StateValue[] {StateValue.create(rad, logName, Radians)};
+    public StateValue[] getValues() {
+      return new StateValue[] {new StateValue(rad, logName, Radians)};
     }
   }
 
@@ -75,13 +75,13 @@ public class ComponentStates {
     }
 
     @Override
-    public StateValue<?>[] getValues() {
+    public StateValue[] getValues() {
       return new StateValue[] {
-        StateValue.create(values[0], logNames[0], Radians),
-        StateValue.create(values[1], logNames[1], RadiansPerSecond),
-        StateValue.create(values[2], logNames[2], Volts),
-        StateValue.create(values[3], logNames[3], Amps),
-        StateValue.create(values[4], logNames[4], Amps)
+        new StateValue(values[0], logNames[0], Radians),
+        new StateValue(values[1], logNames[1], RadiansPerSecond),
+        new StateValue(values[2], logNames[2], Volts),
+        new StateValue(values[3], logNames[3], Amps),
+        new StateValue(values[4], logNames[4], Amps)
       };
     }
   }

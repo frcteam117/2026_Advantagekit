@@ -2,10 +2,10 @@ package frc.robot.util.components.simulators;
 
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.util.States.PosVel_State;
-import frc.robot.util.States.Pos_State;
-import frc.robot.util.States.Vel_State;
-import frc.robot.util.States.Volt_State;
+import frc.robot.util.StateUtil.PosVel_State;
+import frc.robot.util.StateUtil.Pos_State;
+import frc.robot.util.StateUtil.Vel_State;
+import frc.robot.util.StateUtil.Volt_State;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;

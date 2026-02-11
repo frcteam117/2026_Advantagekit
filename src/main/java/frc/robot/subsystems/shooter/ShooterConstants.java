@@ -8,9 +8,9 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
-import frc.robot.util.States.AngularPV_State;
-import frc.robot.util.States.AngularP_State;
-import frc.robot.util.States.AngularVA_State;
+import frc.robot.util.StateUtil.AngularPV_State;
+import frc.robot.util.StateUtil.AngularP_State;
+import frc.robot.util.StateUtil.AngularVA_State;
 import frc.robot.util.components.bases.ComponentBase;
 import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
@@ -25,7 +25,7 @@ import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
 
 public class ShooterConstants {
-  public static final String LOG_NAME = "4.Shooter";
+  public static final String LOG_NAME = "4_Shooter";
 
   public static final MechanismConstants HOOD_CONSTANTS = new MechanismConstants();
   public static final MechanismConfig<AngularPV_State> HOOD_CONFIG =
@@ -37,7 +37,7 @@ public class ShooterConstants {
 
   static {
     // Miscellaneous
-    HOOD_CONSTANTS.outputsLogName = ShooterConstants.LOG_NAME + "/Hood";
+    HOOD_CONSTANTS.outputsLogName = LOG_NAME + "/Hood";
     HOOD_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + HOOD_CONSTANTS.outputsLogName;
     HOOD_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     HOOD_CONSTANTS.mass_kg = 0.5;
@@ -83,7 +83,7 @@ public class ShooterConstants {
 
   static {
     // Miscellaneous
-    FLYWHEEL_CONSTANTS.outputsLogName = ShooterConstants.LOG_NAME + "/Flywheel";
+    FLYWHEEL_CONSTANTS.outputsLogName = LOG_NAME + "/Flywheel";
     FLYWHEEL_CONSTANTS.tuningLogName =
         RobotConstants.TUNING_PREFIX + FLYWHEEL_CONSTANTS.outputsLogName;
     FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;

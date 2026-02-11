@@ -8,9 +8,9 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
-import frc.robot.util.States.AngularPV_State;
-import frc.robot.util.States.AngularP_State;
-import frc.robot.util.States.AngularVA_State;
+import frc.robot.util.StateUtil.AngularPV_State;
+import frc.robot.util.StateUtil.AngularP_State;
+import frc.robot.util.StateUtil.AngularVA_State;
 import frc.robot.util.components.bases.ComponentBase;
 import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
@@ -25,7 +25,7 @@ import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
 
 public class IntakeConstants {
-  public static final String LOG_NAME = "2.Intake";
+  public static final String LOG_NAME = "2_Intake";
 
   public static final MechanismConstants PIVOT_CONSTANTS = new MechanismConstants();
   public static final MechanismConfig<AngularPV_State> PIVOT_CONFIG = new MechanismConfig<>();

@@ -33,8 +33,8 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
 // import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.*;
-import frc.robot.util.States.AngularP_State;
-import frc.robot.util.States.AngularV_State;
+import frc.robot.util.StateUtil.AngularP_State;
+import frc.robot.util.StateUtil.AngularV_State;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import org.ironmaple.simulation.SimulatedArena;
@@ -235,12 +235,12 @@ public class RobotContainer {
     // Logger.recordOutput("controller/button2", controller.button(2).getAsBoolean());
     // Logger.recordOutput("controller/button3", controller.button(3).getAsBoolean());
     Logger.recordOutput(
-        ".FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
+        "_FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
     Logger.recordOutput(
-        ".FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        "_FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
   }
 
-  @AutoLogOutput(key = "0.Supersystem/ComponentPoses")
+  @AutoLogOutput(key = "0_Supersystem/ComponentPoses")
   private Pose3d[] getSupersystemPose3ds() {
     Pose3d[] intakePoses = intake.getPose3ds();
     return new Pose3d[] {

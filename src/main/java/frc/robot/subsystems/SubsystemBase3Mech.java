@@ -2,7 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.util.States.State;
+import frc.robot.util.StateUtil.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
