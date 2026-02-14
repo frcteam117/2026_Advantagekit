@@ -1,10 +1,10 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.util.StateUtil.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
+import frc.robot.util.states.State;
 
 public class SubsystemBase1Mech<Output0_State extends State> extends AbstractSubsystemBase {
   private final MechanismBase<Output0_State> mechanism0;

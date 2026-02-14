@@ -19,6 +19,7 @@ import edu.wpi.first.math.controller.PIDController;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.SparkUtil;
+import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
@@ -60,29 +61,23 @@ public class ModuleIOSim implements ModuleIO {
     azimuthMotor.requestVoltage(Volts.of(azimuthAppliedVolts));
 
     // Update drive inputs
-    inputs.driveConnected = true;
-    inputs.drivePosition_rad = moduleSimulation.getDriveWheelFinalPosition().in(Radians);
-    inputs.driveVelocity_radPs = moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond);
-    inputs.driveVoltage_V = driveAppliedVolts;
-    inputs.driveStatorCurrent_A =
-        Math.abs(moduleSimulation.getDriveMotorStatorCurrent().in(Amps));
-    inputs.driveSupplyCurrent_A =
-        Math.abs(moduleSimulation.getDriveMotorSupplyCurrent().in(Amps));
+    inputs.driveMotor_State = new Motor_State(
+        moduleSimulation.getDriveWheelFinalPosition().in(Radians),
+        moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond),
+        driveAppliedVolts,
+        Math.abs(moduleSimulation.getDriveMotorStatorCurrent().in(Amps)),
+        Math.abs(moduleSimulation.getDriveMotorSupplyCurrent().in(Amps)));
 
     // Update azimuth inputs
-    inputs.azimuthConnected = true;
-    inputs.azimuthPosition_rad =
-        moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction;
+    inputs.azimuthMotor_State = new Motor_State(
+        moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction,
+        moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond),
+        azimuthAppliedVolts,
+        Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps)),
+        Math.abs(moduleSimulation.getSteerMotorSupplyCurrent().in(Amps)));
     inputs.azimuthAbsolutePosition_rad =
         moduleSimulation.getSteerAbsoluteFacing().getRadians();
-    inputs.azimuthVelocity_radPs =
-        moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
-    currentAzimuthVelocity_radPs = inputs.azimuthVelocity_radPs;
-    inputs.azimuthVoltage_V = azimuthAppliedVolts;
-    inputs.azimuthStatorCurrent_A =
-        Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps));
-    inputs.azimuthSupplyCurrent_A =
-        Math.abs(moduleSimulation.getSteerMotorSupplyCurrent().in(Amps));
+    currentAzimuthVelocity_radPs = inputs.azimuthMotor_State.radPs();
 
     // Update odometry inputs
     inputs.odometryTimestamps = SparkUtil.getSimulationOdometryTimeStamps();

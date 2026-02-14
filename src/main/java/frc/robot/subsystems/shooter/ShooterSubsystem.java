@@ -1,22 +1,24 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Radians;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.SubsystemBase2Mech;
-import frc.robot.util.StateUtil.AngularPV_State;
-import frc.robot.util.StateUtil.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.State;
 
-public class ShooterSubsystem extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
+public class ShooterSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_State> {
 
   public ShooterSubsystem() {
     super(ShooterConstants.HOOD_CONFIG, ShooterConstants.FLYWHEEL_CONFIG);
   }
 
   public Pose3d getPose3d() {
-    return new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -getHoodState().rad(), 0));
+    return new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -getHoodState().pos(Radians), 0));
   }
 
   // Hood
@@ -33,11 +35,11 @@ public class ShooterSubsystem extends SubsystemBase2Mech<AngularPV_State, Angula
     return getMech0SysIdCommand(type);
   }
 
-  public AngularPV_State getHoodState() {
+  public PosVel_State getHoodState() {
     return getMech0State();
   }
 
-  public MechanismBase<AngularPV_State> getHood() {
+  public MechanismBase<PosVel_State> getHood() {
     return getMechanism0();
   }
 
@@ -55,11 +57,11 @@ public class ShooterSubsystem extends SubsystemBase2Mech<AngularPV_State, Angula
     return getMech1SysIdCommand(type);
   }
 
-  public AngularPV_State getFlywheelState() {
+  public PosVel_State getFlywheelState() {
     return getMech1State();
   }
 
-  public MechanismBase<AngularPV_State> getFlywheel() {
+  public MechanismBase<PosVel_State> getFlywheel() {
     return getMechanism1();
   }
 }

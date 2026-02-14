@@ -18,28 +18,28 @@ import static frc.robot.subsystems.drivetrain.DrivetrainConstants.*;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotConstants;
+import frc.robot.subsystems.drivetrain.ModuleIO.ModuleIOInputs;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
   private final ModuleIO io;
-  private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
+  private final ModuleIOInputs inputs = new ModuleIOInputs();
   private final int index;
 
-  private final Alert driveDisconnectedAlert;
-  private final Alert azimuthDisconnectedAlert;
+  // private final Alert driveDisconnectedAlert;
+  // private final Alert azimuthDisconnectedAlert;
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
   private double lastAzimuthAngle_rad = 0.0;
 
   public Module(ModuleIO io, int index) {
     this.io = io;
     this.index = index;
-    driveDisconnectedAlert = new Alert(
-        "Disconnected drive motor on module " + Integer.toString(index) + ".", AlertType.kError);
-    azimuthDisconnectedAlert = new Alert(
-        "Disconnected azimuth motor on module " + Integer.toString(index) + ".", AlertType.kError);
+    // driveDisconnectedAlert = new Alert(
+    //     "Disconnected drive motor on module " + Integer.toString(index) + ".", AlertType.kError);
+    // azimuthDisconnectedAlert = new Alert(
+    //     "Disconnected azimuth motor on module " + Integer.toString(index) + ".",
+    // AlertType.kError);
   }
 
   public void periodic() {
@@ -57,8 +57,8 @@ public class Module {
     }
 
     // Update alerts
-    driveDisconnectedAlert.set(!inputs.driveConnected);
-    azimuthDisconnectedAlert.set(!inputs.azimuthConnected);
+    // driveDisconnectedAlert.set(!inputs.driveConnected);
+    // azimuthDisconnectedAlert.set(!inputs.azimuthConnected);
   }
 
   // /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
@@ -115,12 +115,12 @@ public class Module {
 
   /** Returns the current drive position of the module in meters. */
   public double getPositionMeters() {
-    return inputs.drivePosition_rad * Drive.radius_m;
+    return inputs.driveMotor_State.rad() * Drive.radius_m;
   }
 
   /** Returns the current drive velocity of the module in meters per second. */
   public double getVelocityMetersPerSec() {
-    return inputs.driveVelocity_radPs * Drive.radius_m;
+    return inputs.driveMotor_State.radPs() * Drive.radius_m;
   }
 
   /** Returns the module position (azimuth angle and drive position). */
@@ -145,15 +145,15 @@ public class Module {
 
   /** Returns the module position in radians. */
   public double getWheelRadiusCharacterizationPosition() {
-    return inputs.drivePosition_rad;
+    return inputs.driveMotor_State.rad();
   }
 
   /** Returns the module velocity in rad/sec. */
   public double getFFCharacterizationVelocity() {
-    return inputs.driveVelocity_radPs;
+    return inputs.driveMotor_State.radPs();
   }
 
-  public ModuleIOInputsAutoLogged getInputs() {
+  public ModuleIOInputs getInputs() {
     return inputs;
   }
 }

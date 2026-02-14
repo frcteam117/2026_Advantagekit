@@ -24,6 +24,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
 import frc.robot.util.UnitUtil;
 import frc.robot.util.logging.LogUtil;
@@ -96,7 +97,7 @@ public class DrivetrainConstants {
     public static final int[] canIds = new int[] {3, 5, 1, 7};
 
     public static final double reduction = 6.25666667;
-    public static final DCMotor gearbox = DCMotor.getNeoVortex(1);
+    public static final DCMotor gearbox = DCMotor.getNeoVortex(1).withReduction(reduction);
 
     // software limits
     public static final double max_mPs = Units.feetToMeters(15);
@@ -120,11 +121,13 @@ public class DrivetrainConstants {
       config.canFreq.current = 0.02;
       config.canFreq.fault = 0.02;
 
-      LogUtil.createTunablePID(
-          RobotConstants.TUNING_PREFIX + name + "/real", realPID, tunable::get);
-      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/real", realFF, tunable::get);
-      LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name + "/sim", simPID, tunable::get);
-      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/sim", simFF, tunable::get);
+      if (RobotBase.isReal()) {
+        LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, realPID, tunable::get);
+        LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name, realFF, tunable::get);
+      } else {
+        LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, simPID, tunable::get);
+        LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name, simFF, tunable::get);
+      }
     }
   }
 
@@ -137,7 +140,7 @@ public class DrivetrainConstants {
     public static final int[] canIds = new int[] {4, 6, 2, 8};
 
     public static final double reduction = 25;
-    public static final DCMotor gearbox = DCMotor.getNEO(1);
+    public static final DCMotor gearbox = DCMotor.getNEO(1).withReduction(reduction);
 
     // software limits
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
@@ -161,11 +164,14 @@ public class DrivetrainConstants {
 
       realPID.enableContinuousInput(0, 2 * Math.PI);
       simPID.enableContinuousInput(0, 2 * Math.PI);
-      LogUtil.createTunablePID(
-          RobotConstants.TUNING_PREFIX + name + "/real", realPID, tunable::get);
-      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/real", realFF, tunable::get);
-      LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name + "/sim", simPID, tunable::get);
-      LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name + "/sim", simFF, tunable::get);
+
+      if (RobotBase.isReal()) {
+        LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, realPID, tunable::get);
+        LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name, realFF, tunable::get);
+      } else {
+        LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, simPID, tunable::get);
+        LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name, simFF, tunable::get);
+      }
     }
   }
 

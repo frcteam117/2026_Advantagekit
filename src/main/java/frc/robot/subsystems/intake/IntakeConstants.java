@@ -1,5 +1,9 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -8,9 +12,6 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
-import frc.robot.util.StateUtil.AngularPV_State;
-import frc.robot.util.StateUtil.AngularP_State;
-import frc.robot.util.StateUtil.AngularVA_State;
 import frc.robot.util.components.bases.ComponentBase;
 import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
@@ -23,15 +24,20 @@ import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.Pos_State;
+import frc.robot.util.states.StateValue;
+import frc.robot.util.states.VelAcc_State;
 
 public class IntakeConstants {
   public static final String LOG_NAME = "2_Intake";
 
-  public static final MechanismConstants PIVOT_CONSTANTS = new MechanismConstants();
-  public static final MechanismConfig<AngularPV_State> PIVOT_CONFIG = new MechanismConfig<>();
+  public static final MechanismConstants<PosVel_State> PIVOT_CONSTANTS = new MechanismConstants<>();
+  public static final MechanismConfig<PosVel_State> PIVOT_CONFIG = new MechanismConfig<>();
 
-  public static final MechanismConstants ROLLER_CONSTANTS = new MechanismConstants();
-  public static final MechanismConfig<AngularPV_State> ROLLER_CONFIG = new MechanismConfig<>();
+  public static final MechanismConstants<PosVel_State> ROLLER_CONSTANTS =
+      new MechanismConstants<>();
+  public static final MechanismConfig<PosVel_State> ROLLER_CONFIG = new MechanismConfig<>();
 
   static {
     // Miscellaneous
@@ -39,7 +45,7 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + PIVOT_CONSTANTS.outputsLogName;
     PIVOT_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     PIVOT_CONSTANTS.mass_kg = 0.5;
-    PIVOT_CONSTANTS.cmOffset_Pos = new AngularP_State(-0.2);
+    PIVOT_CONSTANTS.cmOffset_rad = -0.2;
     // Motor
     PIVOT_CONSTANTS.motorCanIds = new int[] {12};
     PIVOT_CONSTANTS.revMotorType = MotorType.kBrushless;
@@ -53,11 +59,13 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(PIVOT_CONSTANTS.reduction);
     PIVOT_CONSTANTS.moi_kgm2 = .3;
     // Profiling
-    PIVOT_CONSTANTS.start_State = new AngularPV_State(0.5, 0);
-    PIVOT_CONSTANTS.min_Pos = new AngularP_State(0.5);
-    PIVOT_CONSTANTS.max_Pos = new AngularP_State(2.1);
-    PIVOT_CONSTANTS.limits_State = new AngularVA_State(4, 12);
-    PIVOT_CONSTANTS.isContinuous = false;
+    PIVOT_CONSTANTS.start_State =
+        PosVel_State.create(new StateValue(0.5, Radians), new StateValue(0, RadiansPerSecond));
+    PIVOT_CONSTANTS.min_Pos = Pos_State.create(new StateValue(0.5, Radians));
+    PIVOT_CONSTANTS.max_Pos = Pos_State.create(new StateValue(2.1, Radians));
+    PIVOT_CONSTANTS.limits_State = VelAcc_State.create(
+        new StateValue(4, RadiansPerSecond), new StateValue(12, RadiansPerSecondPerSecond));
+    PIVOT_CONSTANTS.isLoop = false;
     // Feedback
     PIVOT_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
@@ -66,8 +74,7 @@ public class IntakeConstants {
         ? new ArmFeedforward(0, 0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
         : new ArmFeedforward(0, 0, 0, 0, PIVOT_CONSTANTS.codePeriod_s);
 
-    PIVOT_CONFIG.logName = PIVOT_CONSTANTS.outputsLogName;
-    PIVOT_CONFIG.tuningLogName = PIVOT_CONSTANTS.tuningLogName;
+    PIVOT_CONFIG.constants = PIVOT_CONSTANTS;
     PIVOT_CONFIG.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};
     PIVOT_CONFIG.simComponents = new ComponentSimBase[0]; // {absoluteEncoderSimComponent};
     PIVOT_CONFIG.realController = new SparkMaxController(PIVOT_CONSTANTS);
@@ -75,9 +82,12 @@ public class IntakeConstants {
     PIVOT_CONFIG.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(PIVOT_CONSTANTS)};
     PIVOT_CONFIG.feedbacks = new ControlFunctionBase[] {new ArmPIDF(PIVOT_CONSTANTS)};
-    PIVOT_CONFIG.componentsToState = componentStates -> new AngularPV_State(
-        ((Motor_State) componentStates[0]).rad() / PIVOT_CONSTANTS.reduction,
-        ((Motor_State) componentStates[0]).radPs() / PIVOT_CONSTANTS.reduction);
+    PIVOT_CONFIG.componentsToState = componentStates -> PosVel_State.create(
+        new StateValue(
+            ((Motor_State) componentStates[0]).rad() / PIVOT_CONSTANTS.reduction, Radians),
+        new StateValue(
+            ((Motor_State) componentStates[0]).radPs() / PIVOT_CONSTANTS.reduction,
+            RadiansPerSecond));
   }
 
   static {
@@ -98,11 +108,13 @@ public class IntakeConstants {
     ROLLER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(ROLLER_CONSTANTS.reduction);
     ROLLER_CONSTANTS.moi_kgm2 = .03;
     // Profiling
-    ROLLER_CONSTANTS.start_State = new AngularPV_State(0, 0);
-    ROLLER_CONSTANTS.min_Pos = new AngularP_State(-Double.MAX_VALUE);
-    ROLLER_CONSTANTS.max_Pos = new AngularP_State(Double.MAX_VALUE);
-    ROLLER_CONSTANTS.limits_State = new AngularVA_State(100, 400);
-    ROLLER_CONSTANTS.isContinuous = true;
+    ROLLER_CONSTANTS.start_State =
+        PosVel_State.create(new StateValue(0, Radians), new StateValue(0, RadiansPerSecond));
+    ROLLER_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
+    ROLLER_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
+    ROLLER_CONSTANTS.limits_State = VelAcc_State.create(
+        new StateValue(100, RadiansPerSecond), new StateValue(400, RadiansPerSecondPerSecond));
+    ROLLER_CONSTANTS.isLoop = true;
     // Feedback
     ROLLER_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s)
@@ -111,8 +123,7 @@ public class IntakeConstants {
         ? new SimpleMotorFeedforward(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s);
 
-    ROLLER_CONFIG.logName = ROLLER_CONSTANTS.outputsLogName;
-    ROLLER_CONFIG.tuningLogName = ROLLER_CONSTANTS.tuningLogName;
+    ROLLER_CONFIG.constants = ROLLER_CONSTANTS;
     ROLLER_CONFIG.realComponents = new ComponentBase[0];
     ROLLER_CONFIG.simComponents = new ComponentSimBase[0];
     ROLLER_CONFIG.realController = new SparkMaxController(ROLLER_CONSTANTS);
@@ -120,8 +131,11 @@ public class IntakeConstants {
     ROLLER_CONFIG.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(ROLLER_CONSTANTS)};
     ROLLER_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(ROLLER_CONSTANTS)};
-    ROLLER_CONFIG.componentsToState = componentStates -> new AngularPV_State(
-        ((Motor_State) componentStates[0]).rad() / ROLLER_CONSTANTS.reduction,
-        ((Motor_State) componentStates[0]).radPs() / ROLLER_CONSTANTS.reduction);
+    ROLLER_CONFIG.componentsToState = componentStates -> PosVel_State.create(
+        new StateValue(
+            ((Motor_State) componentStates[0]).rad() / ROLLER_CONSTANTS.reduction, Radians),
+        new StateValue(
+            ((Motor_State) componentStates[0]).radPs() / ROLLER_CONSTANTS.reduction,
+            RadiansPerSecond));
   }
 }

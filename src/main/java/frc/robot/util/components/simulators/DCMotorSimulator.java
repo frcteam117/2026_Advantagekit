@@ -1,29 +1,24 @@
 package frc.robot.util.components.simulators;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.util.StateUtil.PosVel_State;
-import frc.robot.util.StateUtil.Pos_State;
-import frc.robot.util.StateUtil.Vel_State;
-import frc.robot.util.StateUtil.Volt_State;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.Pos_State;
+import frc.robot.util.states.Vel_State;
+import frc.robot.util.states.Voltage_State;
 import java.util.Arrays;
 
 public class DCMotorSimulator extends ComponentSimControllerBase {
   private final DCMotorSim sim;
   private final String[] componentNames;
 
-  public DCMotorSimulator(DCMotorSim dcMotorSim, int... canIds) {
-    componentNames = new String[canIds.length];
-    for (int i = 0; i < componentNames.length; i++) {
-      componentNames[i] = "CAN-" + canIds[i];
-    }
-    sim = dcMotorSim;
-  }
-
-  public DCMotorSimulator(MechanismConstants config) {
+  public DCMotorSimulator(MechanismConstants<?> config) {
     // TODO: add the ability for the user to name the motors and make a more accurate DCMotorSim
     componentNames = new String[config.motorCanIds.length];
     for (int i = 0; i < componentNames.length; i++) {
@@ -39,7 +34,7 @@ public class DCMotorSimulator extends ComponentSimControllerBase {
     sim = dcMotorSim;
   }
 
-  public void setInput(Volt_State voltage_State) {
+  public void setInput(Voltage_State voltage_State) {
     sim.setInputVoltage(voltage_State.V());
   }
 
@@ -49,16 +44,16 @@ public class DCMotorSimulator extends ComponentSimControllerBase {
   }
 
   public void resetState(PosVel_State new_State) {
-    sim.setAngle(new_State.pos());
-    sim.setAngularVelocity(new_State.vel());
+    sim.setAngle(new_State.pos(Radians));
+    sim.setAngularVelocity(new_State.vel(RadiansPerSecond));
   }
 
   public void resetState(Pos_State new_State) {
-    sim.setAngle(new_State.pos());
+    sim.setAngle(new_State.pos(Radians));
   }
 
   public void resetState(Vel_State new_State) {
-    sim.setAngularVelocity(new_State.vel());
+    sim.setAngularVelocity(new_State.vel(RadiansPerSecond));
   }
 
   @Override

@@ -229,6 +229,7 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
    * @param speeds_mps Target speeds in meters/sec
    */
   public void setGoalVelocity(ChassisSpeeds speeds_mps) {
+    Logger.recordOutput("testspeeds", speeds_mps);
     lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, speeds_mps, 0.02);
     // Log unoptimized setpoints
     Logger.recordOutput(DrivetrainConstants.NAME + "/ModuleSetpoints", lastSetpoint.moduleStates());

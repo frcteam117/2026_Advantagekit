@@ -5,8 +5,9 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import frc.robot.util.StateUtil.State;
-import frc.robot.util.StateUtil.StateValue;
+import frc.robot.util.states.State;
+import frc.robot.util.states.StateUtil;
+import frc.robot.util.states.StateValue;
 
 public class ComponentStates {
 
@@ -32,6 +33,12 @@ public class ComponentStates {
     @Override
     public StateValue[] getValues() {
       return new StateValue[] {new StateValue(rad, logName, Radians)};
+    }
+
+    @Override
+    public State createNew(StateValue... values) {
+      return new AbsoluteEncoder_State(
+          StateUtil.getValueAsDouble(values[0], Radians), values[0].getName());
     }
   }
 
@@ -83,6 +90,21 @@ public class ComponentStates {
         new StateValue(values[3], logNames[3], Amps),
         new StateValue(values[4], logNames[4], Amps)
       };
+    }
+
+    @Override
+    public Motor_State createNew(StateValue... values) {
+      return new Motor_State(
+          StateUtil.getValueAsDouble(values[0], Radians),
+          StateUtil.getValueAsDouble(values[1], RadiansPerSecond),
+          StateUtil.getValueAsDouble(values[2], Volts),
+          StateUtil.getValueAsDouble(values[3], Amps),
+          StateUtil.getValueAsDouble(values[4], Amps),
+          values[0].getName(),
+          values[1].getName(),
+          values[2].getName(),
+          values[3].getName(),
+          values[4].getName());
     }
   }
 

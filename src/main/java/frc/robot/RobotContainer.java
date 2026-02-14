@@ -13,6 +13,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -33,10 +36,11 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
 // import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.*;
-import frc.robot.util.StateUtil.AngularP_State;
-import frc.robot.util.StateUtil.AngularV_State;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.states.Pos_State;
+import frc.robot.util.states.StateValue;
+import frc.robot.util.states.Vel_State;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -174,26 +178,41 @@ public class RobotContainer {
         () -> -controller.getLeftX(),
         () -> -controller.getRawAxis(2)));
     shooter.setDefaultCommand(Commands.run(
-        () -> shooter.setMechGoals(new AngularP_State(0), new AngularV_State(0)), shooter));
+        () -> shooter.setMechGoals(
+            Pos_State.create(new StateValue(0.0, Radians)),
+            Vel_State.create(new StateValue(0.0, RadiansPerSecond))),
+        shooter));
     controller
         .button(1)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(.25)), shooter));
+        .onTrue(Commands.run(
+            () -> shooter.setHoodGoal(Pos_State.create(new StateValue(.25, Radians))), shooter));
     controller
         .button(2)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(0.5)), shooter));
+        .onTrue(Commands.run(
+            () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.5, Radians))), shooter));
     controller
         .button(3)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(0.75)), shooter));
+        .onTrue(Commands.run(
+            () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.75, Radians))), shooter));
 
     controller
         .button(4)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(200)), shooter));
+        .onTrue(Commands.run(
+            () ->
+                shooter.setFlywheelGoal(Vel_State.create(new StateValue(200.0, RadiansPerSecond))),
+            shooter));
     controller
         .button(5)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(400)), shooter));
+        .onTrue(Commands.run(
+            () ->
+                shooter.setFlywheelGoal(Vel_State.create(new StateValue(400.0, RadiansPerSecond))),
+            shooter));
     controller
         .button(6)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(600)), shooter));
+        .onTrue(Commands.run(
+            () ->
+                shooter.setFlywheelGoal(Vel_State.create(new StateValue(600.0, RadiansPerSecond))),
+            shooter));
 
     // Reset gyro / odometry
     final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
