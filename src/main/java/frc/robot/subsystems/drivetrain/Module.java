@@ -75,15 +75,16 @@ public class Module {
   /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
   public void setNextState(SwerveModuleState state, double acceleration_mPs2) {
     // Optimize velocity setpoint
-    double acceleration_radPs2 =
-        Math.cos(state.angle.getRadians() - inputs.azimuthAbsolutePosition_rad)
-            * acceleration_mPs2
-            / Drive.radius_m;
-    state.optimize(Rotation2d.fromRadians(inputs.azimuthAbsolutePosition_rad));
-    state.cosineScale(Rotation2d.fromRadians(inputs.azimuthAbsolutePosition_rad));
+    // double acceleration_radPs2 =
+    //     Math.cos(state.angle.getRadians() - inputs.azimuthAbsolutePosition_State.rad())
+    //         * acceleration_mPs2
+    //         / Drive.radius_m;
+    state.optimize(Rotation2d.fromRadians(inputs.azimuthAbsolutePosition_State.rad()));
+    state.cosineScale(Rotation2d.fromRadians(inputs.azimuthAbsolutePosition_State.rad()));
+    // Logger.recordOutput(index + "ModState", state);
 
     // Apply setpoints
-    io.setNextDriveState(state.speedMetersPerSecond / Drive.radius_m, acceleration_radPs2);
+    io.setNextDriveVelocity(state.speedMetersPerSecond / Drive.radius_m);
     io.setNextAzimuthState(
         state.angle.getRadians(),
         (state.angle.getRadians() - lastAzimuthAngle_rad) / RobotConstants.CODE_PERIOD_s);
@@ -110,7 +111,7 @@ public class Module {
 
   /** Returns the current azimuth angle of the module in radians. */
   public double getAngle() {
-    return inputs.azimuthAbsolutePosition_rad;
+    return inputs.azimuthAbsolutePosition_State.rad();
   }
 
   /** Returns the current drive position of the module in meters. */

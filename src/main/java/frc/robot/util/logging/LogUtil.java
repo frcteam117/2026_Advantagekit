@@ -35,7 +35,7 @@ public class LogUtil {
             .replace("u", "µ")
             .replace("*", "·")
             .replace('K', 'k')
-            .replace("/", " ̸ ")
+            .replace("/", "Per") // " ̸ ")
             .replace("<?>", "value");
   }
 

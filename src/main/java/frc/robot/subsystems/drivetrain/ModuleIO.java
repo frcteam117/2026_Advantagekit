@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.drivetrain;
 
+import frc.robot.util.components.bases.ComponentStates.AbsoluteEncoder_State;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.states.LoggableStateInputs;
 import frc.robot.util.states.State;
@@ -20,7 +21,7 @@ import frc.robot.util.states.State;
 public interface ModuleIO {
   public static class ModuleIOInputs implements LoggableStateInputs {
     public Motor_State driveMotor_State = new Motor_State(0, 0, 0, 0, 0);
-    public double azimuthAbsolutePosition_rad = 0.0;
+    public AbsoluteEncoder_State azimuthAbsolutePosition_State = new AbsoluteEncoder_State(0);
     public Motor_State azimuthMotor_State = new Motor_State(0, 0, 0, 0, 0);
 
     public double[] odometryTimestamps = new double[] {};
@@ -29,7 +30,7 @@ public interface ModuleIO {
 
     @Override
     public State[] getStates() {
-      return new State[] {driveMotor_State, azimuthMotor_State};
+      return new State[] {driveMotor_State, azimuthAbsolutePosition_State, azimuthMotor_State};
     }
 
     @Override
@@ -40,7 +41,7 @@ public interface ModuleIO {
 
     @Override
     public String[] getStateNames() {
-      return new String[] {"Drive", "Azimuth"};
+      return new String[] {"Drive", "Absolute", "Azimuth"};
     }
   }
 

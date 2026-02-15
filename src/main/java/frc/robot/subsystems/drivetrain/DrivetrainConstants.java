@@ -18,6 +18,9 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.thethriftybot.devices.ThriftyNova.CurrentType;
+import com.thethriftybot.devices.ThriftyNova.EncoderType;
+import com.thethriftybot.devices.ThriftyNova.ExternalEncoder;
+import com.thethriftybot.devices.ThriftyNova.PIDSlot;
 import com.thethriftybot.devices.ThriftyNova.ThriftyNovaConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -43,7 +46,7 @@ public class DrivetrainConstants {
 
     // physical properties
     public static final double bumperLength_m = UnitUtil.inTom(30.625);
-    public static final double bumperWidth_m = UnitUtil.inTom(30.625);
+    public static final double bumperWidth_m = UnitUtil.inTom(30.625 + 2);
     public static final double trackLength_m = UnitUtil.inTom(21.625 - (2 * 1.6875));
     public static final double trackWidth_m = UnitUtil.inTom(21.625 - (2 * 1.6875) + 2);
     public static final double trackRadius_m = Math.hypot(trackLength_m / 2.0, trackWidth_m / 2.0);
@@ -57,17 +60,22 @@ public class DrivetrainConstants {
     // software limits
     public static final double odometryFrequency_Hz = 100.0;
 
-    public static final RobotConfig ppConfig = new RobotConfig(
-        RobotConstants.MASS_kg,
-        RobotConstants.MOI_kgm2,
-        new ModuleConfig(
-            Drive.radius_m,
-            Drive.max_mPs,
-            Drive.cof,
-            Drive.gearbox.withReduction(Drive.reduction),
-            Drive.config.maxCurrent,
-            1),
-        Chassis.moduleTranslations);
+    public static final RobotConfig ppConfig;
+    static {
+      RobotConfig tempConfig = null;
+      try{
+          tempConfig = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+          // Handle exception as needed
+          e.printStackTrace();
+        }
+      ppConfig = tempConfig;}
+    //  = new RobotConfig(
+    //     RobotConstants.MASS_kg,
+    //     RobotConstants.MOI_kgm2,
+    //     new ModuleConfig(
+    //         Drive.radius_m, Drive.max_mPs, Drive.cof, Drive.gearbox, Drive.config.maxCurrent, 1),
+    //     Chassis.moduleTranslations);
 
     public static final DriveTrainSimulationConfig mapleSimConfig =
         DriveTrainSimulationConfig.Default()
@@ -91,7 +99,7 @@ public class DrivetrainConstants {
     public static final String name = DrivetrainConstants.NAME + "/Drive";
 
     // physical properties
-    public static final double radius_m = Units.inchesToMeters((3.875 - .12) / 2);
+    public static final double radius_m = 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
     public static final double cof = 1.2;
     /** FL, FR, BL, BR */
     public static final int[] canIds = new int[] {3, 5, 1, 7};
@@ -115,11 +123,21 @@ public class DrivetrainConstants {
       config.brakeMode = false;
       config.voltageCompensation = RobotConstants.NOMINAL_V;
       config.currentType = CurrentType.STATOR;
-      config.maxCurrent = 30.0;
+      config.maxCurrent = 50.0;
       config.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
       config.canFreq.control = 0.02;
       config.canFreq.current = 0.02;
       config.canFreq.fault = 0.02;
+      config.pidSlot = PIDSlot.SLOT0;
+      config.pid0.p = 0.0;
+      config.pid0.i = 0.0;
+      config.pid0.d = 0.0;
+      config.pid0.f = 0.0;
+      config.pid0.allowableError = 0.0;
+      config.pid0.iZone = 0.0;
+      config.absoluteWrapping = false;
+      config.inverted = false;
+      config.encoderType = EncoderType.INTERNAL;
 
       if (RobotBase.isReal()) {
         LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, realPID, tunable::get);
@@ -135,7 +153,7 @@ public class DrivetrainConstants {
     public static final String name = DrivetrainConstants.NAME + "/Azimuth";
 
     // physical properties
-    public static final double moi_kgm2 = 0.02;
+    public static final double moi_kgm2 = 0.04;
     /** FL, FR, BL, BR */
     public static final int[] canIds = new int[] {4, 6, 2, 8};
 
@@ -146,7 +164,7 @@ public class DrivetrainConstants {
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
     public static final SimpleMotorFeedforward
-        realFF = new SimpleMotorFeedforward(0.01, 0.051, 0.0, RobotConstants.CODE_PERIOD_s),
+        realFF = new SimpleMotorFeedforward(0.02, 0.051, 0.0, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.004, 0.4960674, 0.006, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
         realPID = new PIDController(0.5, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
@@ -157,10 +175,21 @@ public class DrivetrainConstants {
       config.voltageCompensation = RobotConstants.NOMINAL_V;
       config.currentType = CurrentType.STATOR;
       config.maxCurrent = 30.0;
-      config.canFreq.sensor = Chassis.odometryFrequency_Hz;
-      config.canFreq.control = 50.0;
-      config.canFreq.current = 50.0;
-      config.canFreq.fault = 50.0;
+      config.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
+      config.canFreq.control = 0.02;
+      config.canFreq.current = 0.02;
+      config.canFreq.fault = 0.02;
+      config.pidSlot = PIDSlot.SLOT0;
+      config.pid0.p = 0.0;
+      config.pid0.i = 0.0;
+      config.pid0.d = 0.0;
+      config.pid0.f = 0.0;
+      config.pid0.allowableError = 0.0;
+      config.pid0.iZone = 0.0;
+      config.absoluteWrapping = true;
+      config.externalEncoder = ExternalEncoder.THRIFTY_10_PIN_ENCODER;
+      config.inverted = true;
+      config.encoderType = EncoderType.ABS;
 
       realPID.enableContinuousInput(0, 2 * Math.PI);
       simPID.enableContinuousInput(0, 2 * Math.PI);
