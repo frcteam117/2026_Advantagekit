@@ -13,7 +13,6 @@
 
 package frc.robot.subsystems.drivetrain;
 
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.studica.frc.Navx;
@@ -38,8 +37,8 @@ public class GyroIONavX implements GyroIO {
         false, //      comment to make formatter spread this line out
         false); // comment to make formatter spread this line out
     yawTimestampQueue = NovaOdometryThread.getInstance().makeTimestampQueue();
-    yawPositionQueue =
-        NovaOdometryThread.getInstance().registerSignal(() -> navX.getYaw().in(Radians));
+    yawPositionQueue = NovaOdometryThread.getInstance()
+        .registerSignal(() -> navX.getRotation2d().getRadians());
   }
 
   @Override
@@ -51,7 +50,7 @@ public class GyroIONavX implements GyroIO {
     inputs.odometryYawTimestamps =
         yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryYawPositions = yawPositionQueue.stream()
-        .map((Double value) -> Rotation2d.fromDegrees(-value))
+        .map((Double value) -> Rotation2d.fromRadians(value))
         .toArray(Rotation2d[]::new);
     yawTimestampQueue.clear();
     yawPositionQueue.clear();

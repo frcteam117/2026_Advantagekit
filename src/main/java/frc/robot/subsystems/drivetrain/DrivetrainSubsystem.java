@@ -81,10 +81,8 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   private final Consumer<Pose2d> resetSimulationPoseCallBack;
 
   // Motion Profiling
-  private ChassisSpeeds lastNextChassisSpeeds = new ChassisSpeeds();
-
   private final SwerveSetpointGenerator swerveSetpointGenerator =
-      new SwerveSetpointGenerator(Chassis.ppConfig, 30);
+      new SwerveSetpointGenerator(Chassis.ppConfig, 20);
   private SwerveSetpoint lastSetpoint;
 
   public DrivetrainSubsystem(
@@ -207,9 +205,6 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
     gyroDisconnectedAlert.set(!gyroInputs.connected && RobotConstants.currentMode != Mode.SIM);
   }
 
-  private final double maxLinAcc_mPs2 = 20;
-  private final double maxRotAcc_radPs2 = 14;
-
   /**
    * Runs the drive at the next step to reach the desired velocity. Uses 254's
    * SwerveSetpointGenerator.
@@ -217,61 +212,22 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
    * @param goalSpeeds_mps Target speeds in meters/sec
    */
   public void setGoalVelocity(ChassisSpeeds goalSpeeds_mps) {
-    Logger.recordOutput(DrivetrainConstants.NAME + "/GoalChassisSpeeds", goalSpeeds_mps);
-
-    // manual acceleration limiting
-    // if (Math.abs(goalSpeeds_mps.vxMetersPerSecond) < 0.1
-    //     && Math.abs(goalSpeeds_mps.vyMetersPerSecond) < 0.1) {
-    //   goalSpeeds_mps.vxMetersPerSecond = 0;
-    //   goalSpeeds_mps.vyMetersPerSecond = 0;
-    // }
-    // if (Math.abs(goalSpeeds_mps.omegaRadiansPerSecond) < 0.1) {
-    //   goalSpeeds_mps.omegaRadiansPerSecond = 0;
-    // }
-    // ChassisSpeeds deltaChassis = goalSpeeds_mps.minus(lastNextChassisSpeeds);
-    // double delta_mPs = Math.sqrt(deltaChassis.vxMetersPerSecond * deltaChassis.vxMetersPerSecond
-    //     + deltaChassis.vyMetersPerSecond * deltaChassis.vyMetersPerSecond);
-    // if (delta_mPs != 0 && delta_mPs > RobotConstants.CODE_PERIOD_s * maxLinAcc_mPs2) {
-    //   deltaChassis.vxMetersPerSecond = (deltaChassis.vxMetersPerSecond / delta_mPs)
-    //       * RobotConstants.CODE_PERIOD_s
-    //       * maxLinAcc_mPs2;
-    //   deltaChassis.vyMetersPerSecond = (deltaChassis.vyMetersPerSecond / delta_mPs)
-    //       * RobotConstants.CODE_PERIOD_s
-    //       * maxLinAcc_mPs2;
-    // }
-    // if (Math.abs(deltaChassis.omegaRadiansPerSecond) > RobotConstants.CODE_PERIOD_s *
-    // maxRotAcc_radPs2) {
-    //   deltaChassis.omegaRadiansPerSecond = Math.copySign(
-    //       RobotConstants.CODE_PERIOD_s * maxRotAcc_radPs2, deltaChassis.omegaRadiansPerSecond);
-    // }
-    // lastNextChassisSpeeds = lastNextChassisSpeeds.plus(deltaChassis);
-    // SwerveModuleState[] moduleSetpoints = kinematics.toSwerveModuleStates(
-    //     ChassisSpeeds.discretize(lastNextChassisSpeeds, RobotConstants.CODE_PERIOD_s));
-    // Logger.recordOutput(DrivetrainConstants.NAME + "/NextChassisSpeeds", lastNextChassisSpeeds);
-    // Logger.recordOutput(
-    //     DrivetrainConstants.NAME + "/ModuleSetpoints",
-    //     moduleSetpoints);
-
+    Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
     // swerve setpoint generator
     lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, goalSpeeds_mps, 0.02);
+
     Logger.recordOutput(
-        DrivetrainConstants.NAME + "/NextChassisSpeeds", lastSetpoint.robotRelativeSpeeds());
-    Logger.recordOutput(DrivetrainConstants.NAME + "/ModuleSetpoints", lastSetpoint.moduleStates());
+        DrivetrainConstants.NAME + "/2_Next/Chassis", lastSetpoint.robotRelativeSpeeds());
+    Logger.recordOutput(DrivetrainConstants.NAME + "/2_Next/Modules", lastSetpoint.moduleStates());
+    Logger.recordOutput(
+        DrivetrainConstants.NAME + "/2_Next/Acc_mPs2",
+        lastSetpoint.feedforwards().accelerationsMPSSq());
 
     // Send setpoints to modules
     for (int i = 0; i < 4; i++) {
-      // modules[i].setNextState(moduleSetpoints[i], 0);
       modules[i].setNextState(
           lastSetpoint.moduleStates()[i], lastSetpoint.feedforwards().accelerationsMPSSq()[i]);
     }
-
-    // Log optimized setpoints (runSetpoint mutates each state)
-    // Logger.recordOutput(
-    //     DrivetrainConstants.NAME + "/ModuleSetpointsOptimized",
-    //     moduleSetpoints);
-    // Logger.recordOutput(
-    //     DrivetrainConstants.NAME + "/ModuleSetpointsOptimized",
-    //     lastSetpoint.moduleStates());
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
@@ -318,7 +274,7 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   }
 
   /** Returns the module states (azimuth angles and drive velocities) for all of the modules. */
-  @AutoLogOutput(key = DrivetrainConstants.NAME + "/ModulesMeasured")
+  @AutoLogOutput(key = DrivetrainConstants.NAME + "/0_Measured/Modules")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (int i = 0; i < 4; i++) {
@@ -337,7 +293,7 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   }
 
   /** Returns the measured chassis speeds of the robot. */
-  @AutoLogOutput(key = DrivetrainConstants.NAME + "/ChassisMeasured")
+  @AutoLogOutput(key = DrivetrainConstants.NAME + "/0_Measured/Chassis")
   private ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
   }

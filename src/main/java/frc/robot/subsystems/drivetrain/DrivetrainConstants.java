@@ -15,7 +15,6 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.thethriftybot.devices.ThriftyNova.CurrentType;
 import com.thethriftybot.devices.ThriftyNova.EncoderType;
@@ -61,15 +60,17 @@ public class DrivetrainConstants {
     public static final double odometryFrequency_Hz = 100.0;
 
     public static final RobotConfig ppConfig;
+
     static {
       RobotConfig tempConfig = null;
-      try{
-          tempConfig = RobotConfig.fromGUISettings();
-        } catch (Exception e) {
-          // Handle exception as needed
-          e.printStackTrace();
-        }
-      ppConfig = tempConfig;}
+      try {
+        tempConfig = RobotConfig.fromGUISettings();
+      } catch (Exception e) {
+        // Handle exception as needed
+        e.printStackTrace();
+      }
+      ppConfig = tempConfig;
+    }
     //  = new RobotConfig(
     //     RobotConstants.MASS_kg,
     //     RobotConstants.MOI_kgm2,
@@ -84,8 +85,8 @@ public class DrivetrainConstants {
             .withRobotMass(Kilogram.of(RobotConstants.MASS_kg))
             .withGyro(COTS.ofNav2X())
             .withSwerveModule(new SwerveModuleSimulationConfig(
-                Drive.gearbox,
-                Azimuth.gearbox,
+                DCMotor.getNeoVortex(1),
+                DCMotor.getNEO(1),
                 Drive.reduction,
                 Azimuth.reduction,
                 Volts.of(Drive.realFF.getKs()),
@@ -93,6 +94,22 @@ public class DrivetrainConstants {
                 Meters.of(Drive.radius_m),
                 KilogramSquareMeters.of(Azimuth.moi_kgm2),
                 Drive.cof));
+    // public static final DriveTrainSimulationConfig mapleSimConfig =
+    //     DriveTrainSimulationConfig.Default()
+    //         .withBumperSize(Meters.of(bumperLength_m), Meters.of(bumperWidth_m))
+    //         .withCustomModuleTranslations(Chassis.moduleTranslations)
+    //         .withRobotMass(Kilogram.of(40))
+    //         .withGyro(COTS.ofNav2X())
+    //         .withSwerveModule(new SwerveModuleSimulationConfig(
+    //             DCMotor.getNeoVortex(1),
+    //             DCMotor.getNEO(1),
+    //             Drive.reduction,
+    //             Azimuth.reduction,
+    //             Volts.of(0.02),
+    //             Volts.of(0.02),
+    //             Meters.of(Drive.radius_m),
+    //             KilogramSquareMeters.of(0.08),
+    //             1.2));
   }
 
   public static class Drive {
@@ -104,7 +121,7 @@ public class DrivetrainConstants {
     /** FL, FR, BL, BR */
     public static final int[] canIds = new int[] {3, 5, 1, 7};
 
-    public static final double reduction = 6.25666667;
+    public static final double reduction = 6.23;
     public static final DCMotor gearbox = DCMotor.getNeoVortex(1).withReduction(reduction);
 
     // software limits
@@ -129,10 +146,10 @@ public class DrivetrainConstants {
       config.canFreq.current = 0.02;
       config.canFreq.fault = 0.02;
       config.pidSlot = PIDSlot.SLOT0;
-      config.pid0.p = 0.0;
+      config.pid0.p = 0.001;
       config.pid0.i = 0.0;
       config.pid0.d = 0.0;
-      config.pid0.f = 0.0;
+      config.pid0.f = 0.001;
       config.pid0.allowableError = 0.0;
       config.pid0.iZone = 0.0;
       config.absoluteWrapping = false;
@@ -153,7 +170,7 @@ public class DrivetrainConstants {
     public static final String name = DrivetrainConstants.NAME + "/Azimuth";
 
     // physical properties
-    public static final double moi_kgm2 = 0.04;
+    public static final double moi_kgm2 = 0.02;
     /** FL, FR, BL, BR */
     public static final int[] canIds = new int[] {4, 6, 2, 8};
 
@@ -180,7 +197,7 @@ public class DrivetrainConstants {
       config.canFreq.current = 0.02;
       config.canFreq.fault = 0.02;
       config.pidSlot = PIDSlot.SLOT0;
-      config.pid0.p = 0.0;
+      config.pid0.p = .005;
       config.pid0.i = 0.0;
       config.pid0.d = 0.0;
       config.pid0.f = 0.0;
@@ -213,5 +230,8 @@ public class DrivetrainConstants {
     /** FL, FR, BL, BR. Rotation of each absolute encoder when the wheels face forward */
     public static final double[] zeroRotations_rad =
         new double[] {4.26675, 2.99095, 2.40695, 3.355259};
+
+    /** FL, FR, BL, BR. Rotation of each absolute encoder when the wheels face forward */
+    public static final int[] zeroRotations_ticks = new int[] {1354, 2095, 2559, 1823};
   }
 }

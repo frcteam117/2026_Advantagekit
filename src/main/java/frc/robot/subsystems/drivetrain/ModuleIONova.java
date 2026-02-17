@@ -29,13 +29,6 @@ import java.util.Queue;
  * controller, and Thrifty absolute encoder.
  */
 public class ModuleIONova implements ModuleIO {
-  private final double zeroRotation_rad;
-
-  // Motion profiling
-  private double currentDriveVelocity_radPs = 0.0;
-
-  private double currentAzimuthVelocity_radPs = 0.0;
-
   // Hardware objects
   private final ThriftyNova driveNova;
   private final ThriftyNova azimuthNova;
@@ -46,7 +39,6 @@ public class ModuleIONova implements ModuleIO {
   private final Queue<Double> azimuthPositionQueue;
 
   public ModuleIONova(int module) {
-    zeroRotation_rad = AbsEncoder.zeroRotations_rad[module];
     driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
 
@@ -60,6 +52,7 @@ public class ModuleIONova implements ModuleIO {
     // Configure azimuth motor
     System.out.println(
         "Configuring Azimuth motor. Module: " + module + "  CAN Id: " + Azimuth.canIds[module]);
+    Azimuth.config.absOffset = AbsEncoder.zeroRotations_ticks[module];
     azimuthNova.applyConfig(Azimuth.config);
     System.out.println("Finished configuring Azimuth motor. Module: " + module + "  CAN Id: "
         + Azimuth.canIds[module]);
@@ -113,7 +106,7 @@ public class ModuleIONova implements ModuleIO {
     // Update drive inputs
     inputs.driveMotor_State = new Motor_State(
         UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction),
-        UnitUtil.RPMToradPs(driveNova.getVelocityInternal() / Drive.reduction),
+        2 * Math.PI * driveNova.getVelocityInternal() / Drive.reduction,
         driveNova.getVoltage(),
         driveNova.getStatorCurrent(),
         driveNova.getSupplyCurrent());
@@ -166,7 +159,7 @@ public class ModuleIONova implements ModuleIO {
   @Override
   public void setNextDriveState(double nextVelocity_radPs, double nextAcceleration_radPs2) {
     driveNova.setVelocityInternal(
-        UnitUtil.radPsToRPM(nextVelocity_radPs),
+        nextVelocity_radPs * Drive.reduction / (2 * Math.PI),
         Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
   }
 

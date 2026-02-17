@@ -103,16 +103,17 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        vision = new Vision(
-            drive,
-            new VisionIOPhotonVisionSim(
-                VisionConstants.camera0Name,
-                VisionConstants.robotToCamera0,
-                driveSimulation::getSimulatedDriveTrainPose),
-            new VisionIOPhotonVisionSim(
-                VisionConstants.camera1Name,
-                VisionConstants.robotToCamera1,
-                driveSimulation::getSimulatedDriveTrainPose));
+        vision = null;
+        // vision = new Vision(
+        //     drive,
+        //     new VisionIOPhotonVisionSim(
+        //         VisionConstants.camera0Name,
+        //         VisionConstants.robotToCamera0,
+        //         driveSimulation::getSimulatedDriveTrainPose),
+        //     new VisionIOPhotonVisionSim(
+        //         VisionConstants.camera1Name,
+        //         VisionConstants.robotToCamera1,
+        //         driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
         // Replayed robot, disable IO implementations
@@ -123,7 +124,8 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             (pose) -> {});
-        vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
+        vision = null;
+        // vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
         break;
     }
     intake = null;
@@ -169,6 +171,12 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
+    // drive.setDefaultCommand(DriveCommands.joystickDriveAtAngle(
+    //     drive,
+    //     () -> -controller.getLeftY(),
+    //     () -> -controller.getLeftX(),
+    //     () -> Rotation2d.fromRadians(
+    //         Math.atan2(-controller.getRawAxis(3), -controller.getRawAxis(2)))));
     drive.setDefaultCommand(DriveCommands.joystickDrive(
         drive,
         () -> -controller.getLeftY(),

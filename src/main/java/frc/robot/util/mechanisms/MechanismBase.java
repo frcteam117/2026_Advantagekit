@@ -31,7 +31,7 @@ import java.util.function.Function;
 import org.littletonrobotics.junction.Logger;
 
 public class MechanismBase<Output_State extends State> {
-  public static String mechanismStateLogName = "0_State";
+  public static String mechanismStateLogName = "0_Measured";
   public static String goalStateLogName = "1_Goal";
   public static String nextStateLogName = "2_Next";
   public static String inputStateLogName = "3_Input";
