@@ -329,7 +329,7 @@ public class SubsystemCommands {
       SmartDashboard.putNumber("robot pose from tag Y", robotY);
       return robotPose;
     } else {
-      return null;
+      return new Pose2d();
     }
   }
 

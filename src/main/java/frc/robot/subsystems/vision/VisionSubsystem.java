@@ -45,7 +45,7 @@ public class VisionSubsystem {
     AprilTagPoses = Arrays.asList();
     kPVision_Turn = -.03;
     targetYaw = (0.0);
-    RobotContainer.getDrivetrain()
+    RobotContainer.getDrivetrain() // will this ever run right if its at init?
         .resetOdometry(RobotContainer.getSubsystemCommands()
             .GetStartPoseFromVisibleAprilTags(drivetrain, camera0, camera2));
     // camera0 = new PhotonCamera("PC_Camera0");
