@@ -27,6 +27,9 @@ import frc.robot.RobotContainer;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import frc.robot.subsystems.indexer.*;
+import frc.robot.subsystems.intake.Pivot;
+import frc.robot.subsystems.intake.PivotConstants;
+import frc.robot.subsystems.intake.Roller;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
@@ -107,7 +110,7 @@ public class SubsystemCommands {
       });
   }*/
   // ^^^ from previous code branch, not sure setX is useful here but i'm keeping it till im sure
-  public Command AlignToTag(
+  public static Command AlignToTag(
       DrivetrainSubsystem drivetrain,
       VisionSubsystem vision,
       PhotonCamera camera0,
@@ -133,16 +136,6 @@ public class SubsystemCommands {
   }
 
   /*// non-drivetrain subsystem commands:
-  public static Command ExpandHopper() {
-      return Commands.runOnce( () -> {
-          hopperSubsystem.setAngle(HopperConstants.EXPANDED_ANGLE);
-      });
-  }
-  public static Command RetractHopper() {
-      return Commands.runOnce( () -> {
-          hopperSubsystem.setAngle(HopperConstants.RETRACTED_ANGLE);
-      });
-  }
   //===
   public static Command SetHoodAngleManual(Angle angle) {
       return Commands.runOnce( () -> {
@@ -169,33 +162,40 @@ public class SubsystemCommands {
           // put auto figure out how far from hopper code here???
       });
   }
-  //===
-  public static Command DeployIntake() {
-      return Commands.runOnce( () -> {
-          intakeSubsystem.setIntakeDeployAngle(ClimberConstants.FULLY_DEPLOYED_ANGLE);
-      });
+  */
+
+  public static Command DeployIntake(Pivot pivot) {
+    return Commands.runOnce(() -> {
+      pivot.setAngleWithRioProfile(PivotConstants.MechanismConstants.kMaxSoftLimit);
+    });
   }
-  public static Command UndeployIntake() {// should this be RetractIntake instead?
-      return Commands.runOnce( () -> {
-          intakeSubsystem.setIntakeDeployAngle(ClimberConstants.FULLY_UNDEPLOYED_ANGLE);
-      });
+
+  public static Command UndeployIntake(Pivot pivot) { // should this be RetractIntake instead?
+    return Commands.runOnce(() -> {
+      pivot.setAngleWithRioProfile(
+          PivotConstants.MechanismConstants
+              .kMinSoftLimit); // should this be the hardlimit or something else?
+    });
   }
-  public static Command IntakeFuel() { //
-      return Commands.runOnce( () -> {
-          intakeSubsystem.setIntakeDutyCycle(1);
-      });
+
+  public static Command IntakeFuel(Roller roller) { //
+    return Commands.runOnce(() -> {
+      roller.set(1); // set to adjust for distance and everything
+    });
   }
-  public static Command OuttakeFuel() { //
-      return Commands.runOnce( () -> {
-          intakeSubsystem.setIntakeDutyCycle(-1);
-      });
+
+  public static Command OuttakeFuel(Roller roller) { //
+    return Commands.runOnce(() -> {
+      roller.set(-1);
+    });
   }
-  public static Command StopIntake() { //
-      return Commands.runOnce( () -> {
-          intakeSubsystem.setIntakeDutyCycle(0);
-      });
+
+  public static Command StopIntake(Roller roller) { //
+    return Commands.runOnce(() -> {
+      roller.set(0); // run PID on all of this so it doesn't break? or is that already happening?
+    });
   }
-  //===
+  /*
   public static Command RunKicker() { //
       return Commands.runOnce( () -> {
           //intakeSubsystem.setIntakeDutyCycle(0);

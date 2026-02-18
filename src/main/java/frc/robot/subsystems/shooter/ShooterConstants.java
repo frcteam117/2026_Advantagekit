@@ -56,7 +56,7 @@ public class ShooterConstants {
     HOOD_CONSTANTS.mass_kg = 0.5;
     HOOD_CONSTANTS.cmOffset_Pos = new AngularP_State(-0.1);
     // Motor
-    HOOD_CONSTANTS.motorCanIds = new int[] {9};
+    HOOD_CONSTANTS.motorCanIds = new int[] {17};
     HOOD_CONSTANTS.revMotorType = MotorType.kBrushless;
     HOOD_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     HOOD_CONSTANTS
@@ -101,7 +101,9 @@ public class ShooterConstants {
         RobotConstants.TUNING_PREFIX + FLYWHEEL_CONSTANTS.outputsLogName;
     FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {10, 11};
+    FLYWHEEL_CONSTANTS.motorCanIds =
+        new int[] {13, 15}; // 14,16 were supposed to be the followers respectively,
+    // - but only 2 motors listed here. ask max later
     FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true};
     FLYWHEEL_CONSTANTS.revMotorType = MotorType.kBrushless;
     FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();

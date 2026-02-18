@@ -19,7 +19,6 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,8 +30,10 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.PathCommands;
 import frc.robot.commands.SubsystemCommands;
 import frc.robot.subsystems.drivetrain.*;
-import frc.robot.subsystems.indexer.IndexerSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.indexer.BottomHopper;
+import frc.robot.subsystems.indexer.TopHopper;
+import frc.robot.subsystems.intake.Pivot;
+import frc.robot.subsystems.intake.Roller;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIO;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -46,7 +47,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.photonvision.PhotonCamera;
@@ -61,8 +61,10 @@ public class RobotContainer {
   // Subsystems
   public static DrivetrainSubsystem drive;
   public final VisionSubsystem vision;
-  public final IntakeSubsystem intake;
-  public final IndexerSubsystem indexer;
+  public final Pivot pivot;
+  public final Roller roller;
+  public final BottomHopper bottomHopper;
+  public final TopHopper topHopper;
   public final ShooterSubsystem shooter;
   public static final SubsystemCommands subsystemCommands = new SubsystemCommands();
   public static final PathCommands pathCommands =
@@ -138,8 +140,10 @@ public class RobotContainer {
             (pose) -> {});
         break;
     }
-    intake = new IntakeSubsystem();
-    indexer = new IndexerSubsystem();
+    pivot = new Pivot();
+    roller = new Roller();
+    bottomHopper = new BottomHopper();
+    topHopper = new TopHopper();
     shooter = new ShooterSubsystem();
     vision = new VisionSubsystem(drive, camera0, camera1);
 
@@ -215,7 +219,20 @@ public class RobotContainer {
     // other buttons
     controller
         .button(7)
-        .onTrue(subsystemCommands.AlignToTag(drive, vision, camera0, camera1, pathCommands));
+        .onTrue(SubsystemCommands.AlignToTag(drive, vision, camera0, camera1, pathCommands));
+    controller.button(8).onTrue(SubsystemCommands.DeployIntake(pivot));
+    controller // there probably aren't actually this many buttons on the controller but we'll
+        // figure
+        // - that out later
+        .button(9)
+        .onTrue(SubsystemCommands.UndeployIntake(pivot));
+    controller
+        .button(10)
+        .whileTrue(SubsystemCommands.IntakeFuel(
+            roller)); // make sure there's a way for the intake to stop moving
+    // - when the button isn't being pressed if that's what we want, and if not find when intake
+    // should be moving
+    controller.button(8).whileTrue(SubsystemCommands.OuttakeFuel(roller));
 
     // Reset gyro / odometry
     final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
@@ -262,7 +279,7 @@ public class RobotContainer {
         ".FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
   }
 
-  @AutoLogOutput(key = "0.Supersystem/ComponentPoses")
+  /*@AutoLogOutput(key = "0.Supersystem/ComponentPoses")
   private Pose3d[] getSupersystemPose3ds() {
     Pose3d[] intakePoses = intake.getPose3ds();
     return new Pose3d[] {
@@ -273,7 +290,7 @@ public class RobotContainer {
       intakePoses[4],
       new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -shooter.getHoodState().pos(), 0))
     };
-  }
+  }*/
 
   //
   public static DrivetrainSubsystem getDrivetrain() {
