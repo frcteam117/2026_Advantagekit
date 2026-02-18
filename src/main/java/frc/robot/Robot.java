@@ -144,6 +144,9 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+
+    // subsystemCommands.RunAdjustShooterForDistanceFromHub(shooter,
+    // pathCommands.getDistanceFromHub(drivetrain));
   }
 
   /** This function is called periodically during operator control. */

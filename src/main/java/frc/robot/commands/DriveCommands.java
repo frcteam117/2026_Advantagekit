@@ -13,10 +13,6 @@
 
 package frc.robot.commands;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -38,7 +34,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -283,7 +278,7 @@ public class DriveCommands {
     double gyroDelta = 0.0;
   }
 
-  public static Command pathToReef(Supplier<Pose2d> poseSupplier, BooleanSupplier getButton) {
+  /*public static Command pathToReef(Supplier<Pose2d> poseSupplier, BooleanSupplier getButton) {
     Pose2d waypoint;
     Pose2d waypoint1;
     Pose2d waypoint2;
@@ -434,5 +429,6 @@ public class DriveCommands {
     //         .until(pathAuto.nearFieldPosition(waypoint1.getTranslation(), 0.65))
     //         .onlyWhile(getButton);
     return AutoBuilder.pathfindThenFollowPath(path, constraints).onlyWhile(getButton);
-  }
+  }*/
+  // TODO: USE TS AS A BASE FOR YOUR AUTOS!!!
 }

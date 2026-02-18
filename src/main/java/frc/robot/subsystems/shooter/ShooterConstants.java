@@ -5,6 +5,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
@@ -34,7 +35,19 @@ public class ShooterConstants {
   public static final MechanismConstants FLYWHEEL_CONSTANTS = new MechanismConstants();
   public static final MechanismConfig<AngularPV_State> FLYWHEEL_CONFIG =
       new MechanismConfig<AngularPV_State>();
+  public static final InterpolatingDoubleTreeMap lerpTable = new InterpolatingDoubleTreeMap();
+  // position from hub (meters) : angle of hood/speed of motor in radians/second (~ [-600,600] its
+  // RPM*pi/30)
+  double factor = 600.0; // just using 600.0 for simplicity, can change l8r ig :)
 
+  public ShooterConstants() { // last years field was wxh 17x7, check current field dimensions!!!
+    lerpTable.put(0.0, 0.3 * factor);
+    lerpTable.put(2.0, 0.35 * factor);
+    lerpTable.put(5.0, 0.5 * factor);
+    lerpTable.put(10.0, 0.6 * factor);
+    lerpTable.put(20.0, 0.7 * factor);
+  }
+  // ...
   static {
     // Miscellaneous
     HOOD_CONSTANTS.outputsLogName = ShooterConstants.LOG_NAME + "/Hood";

@@ -14,17 +14,22 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.PathCommands;
+import frc.robot.commands.SubsystemCommands;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
@@ -37,11 +42,14 @@ import frc.robot.util.States.AngularP_State;
 import frc.robot.util.States.AngularV_State;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import java.util.ArrayList;
+import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.photonvision.PhotonCamera;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -51,21 +59,29 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  private final DrivetrainSubsystem drive;
-  private final Vision vision;
+  public static DrivetrainSubsystem drive;
+  public final VisionSubsystem vision;
   public final IntakeSubsystem intake;
   public final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
-  private SwerveDriveSimulation driveSimulation = null;
-
+  public static final SubsystemCommands subsystemCommands = new SubsystemCommands();
+  public static final PathCommands pathCommands =
+      new PathCommands(); // is this the right place to init them? idkkkk
+  private SwerveDriveSimulation driveSimulation = null; // change from null?
+  public static final PhotonCamera camera0 = new PhotonCamera(VisionConstants.camera0Name);
+  public static final PhotonCamera camera1 = new PhotonCamera(VisionConstants.camera1Name);
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
+  AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  public static List<Pose3d> AprilTagPoses = new ArrayList<>();
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
     switch (RobotConstants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -76,11 +92,6 @@ public class RobotContainer {
             new ModuleIONova(2),
             new ModuleIONova(3),
             (pose) -> {});
-
-        this.vision = new Vision(
-            drive,
-            new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-            new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -105,16 +116,16 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        vision = new Vision(
-            drive,
-            new VisionIOPhotonVisionSim(
-                VisionConstants.camera0Name,
-                VisionConstants.robotToCamera0,
-                driveSimulation::getSimulatedDriveTrainPose),
-            new VisionIOPhotonVisionSim(
-                VisionConstants.camera1Name,
-                VisionConstants.robotToCamera1,
-                driveSimulation::getSimulatedDriveTrainPose));
+        /*vision = new Vision(
+        drive,
+        new VisionIOPhotonVisionSim(
+            VisionConstants.camera0Name,
+            VisionConstants.robotToCamera0,
+            driveSimulation::getSimulatedDriveTrainPose),
+        new VisionIOPhotonVisionSim(
+            VisionConstants.camera1Name,
+            VisionConstants.robotToCamera1,
+            driveSimulation::getSimulatedDriveTrainPose));*/
         break;
       default:
         // Replayed robot, disable IO implementations
@@ -125,13 +136,20 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             (pose) -> {});
-        vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
         break;
     }
     intake = new IntakeSubsystem();
     indexer = new IndexerSubsystem();
     shooter = new ShooterSubsystem();
+    vision = new VisionSubsystem(drive, camera0, camera1);
 
+    for (int i = 1; i < 33; i++) { // 33 because 32 tags, index 0 will return a safe Null
+      Pose3d tagPose = kTagLayout.getTagPose(i).orElse(new Pose3d());
+      SmartDashboard.putNumber("tagPose X", tagPose.getX());
+      SmartDashboard.putString("tagpose", tagPose.toString());
+      SmartDashboard.putNumber("tagpose adding i", i);
+      AprilTagPoses.add(tagPose);
+    }
     SysIdUtil.registerController(controller);
 
     // Set up auto routines
@@ -194,6 +212,10 @@ public class RobotContainer {
     controller
         .button(6)
         .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(600)), shooter));
+    // other buttons
+    controller
+        .button(7)
+        .onTrue(subsystemCommands.AlignToTag(drive, vision, camera0, camera1, pathCommands));
 
     // Reset gyro / odometry
     final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
@@ -252,4 +274,16 @@ public class RobotContainer {
       new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -shooter.getHoodState().pos(), 0))
     };
   }
+
+  //
+  public static DrivetrainSubsystem getDrivetrain() {
+    return drive;
+  }
+
+  public static SubsystemCommands getSubsystemCommands() {
+    return subsystemCommands;
+  }
+  // public static Shooter getShooter() {
+  // return shooter;
+  // }
 }
