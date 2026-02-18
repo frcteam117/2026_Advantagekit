@@ -23,9 +23,6 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
-import edu.wpi.first.hal.FRCNetComm.tInstances;
-import edu.wpi.first.hal.FRCNetComm.tResourceType;
-import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -85,21 +82,8 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
 
   // Motion Profiling
   private final SwerveSetpointGenerator swerveSetpointGenerator =
-      new SwerveSetpointGenerator(Chassis.ppConfig, Drive.max_mPs / Chassis.trackRadius_m);
-  private SwerveSetpoint lastSetpoint = new SwerveSetpoint(
-      new ChassisSpeeds(),
-      new SwerveModuleState[] {
-        new SwerveModuleState(0, Rotation2d.kZero),
-        new SwerveModuleState(0, Rotation2d.kZero),
-        new SwerveModuleState(0, Rotation2d.kZero),
-        new SwerveModuleState(0, Rotation2d.kZero)
-      },
-      new DriveFeedforwards(
-          new double[] {0, 0, 0, 0},
-          new double[] {0, 0, 0, 0},
-          new double[] {0, 0, 0, 0},
-          new double[] {0, 0, 0, 0},
-          new double[] {0, 0, 0, 0}));
+      new SwerveSetpointGenerator(Chassis.ppConfig, 20);
+  private SwerveSetpoint lastSetpoint;
 
   public DrivetrainSubsystem(
       GyroIO gyroIO,
@@ -115,13 +99,12 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
     modules[2] = new Module(blModuleIO, 2);
     modules[3] = new Module(brModuleIO, 3);
 
-    // Usage reporting for swerve template
-    HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
-
     // Start odometry thread
     NovaOdometryThread.getInstance().start();
 
     // Configure AutoBuilder for PathPlanner
+    lastSetpoint =
+        new SwerveSetpoint(getChassisSpeeds(), getModuleStates(), DriveFeedforwards.zeros(4));
     AutoBuilder.configure(
         this::getPose,
         this::resetOdometry,
@@ -168,7 +151,7 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   public void periodic() {
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
-    Logger.processInputs("6.Gyro", gyroInputs);
+    Logger.processInputs("6_Gyro", gyroInputs);
     for (var module : modules) {
       module.periodic();
     }
@@ -226,25 +209,25 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
    * Runs the drive at the next step to reach the desired velocity. Uses 254's
    * SwerveSetpointGenerator.
    *
-   * @param speeds_mps Target speeds in meters/sec
+   * @param goalSpeeds_mps Target speeds in meters/sec
    */
-  public void setGoalVelocity(ChassisSpeeds speeds_mps) {
-    lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, speeds_mps, 0.02);
-    // Log unoptimized setpoints
-    Logger.recordOutput(DrivetrainConstants.NAME + "/ModuleSetpoints", lastSetpoint.moduleStates());
+  public void setGoalVelocity(ChassisSpeeds goalSpeeds_mps) {
+    Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
+    // swerve setpoint generator
+    lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, goalSpeeds_mps, 0.02);
+
     Logger.recordOutput(
-        DrivetrainConstants.NAME + "/ChassisSetpoint", lastSetpoint.robotRelativeSpeeds());
+        DrivetrainConstants.NAME + "/2_Next/Chassis", lastSetpoint.robotRelativeSpeeds());
+    Logger.recordOutput(DrivetrainConstants.NAME + "/2_Next/Modules", lastSetpoint.moduleStates());
+    Logger.recordOutput(
+        DrivetrainConstants.NAME + "/2_Next/Acc_mPs2",
+        lastSetpoint.feedforwards().accelerationsMPSSq());
 
     // Send setpoints to modules
     for (int i = 0; i < 4; i++) {
       modules[i].setNextState(
           lastSetpoint.moduleStates()[i], lastSetpoint.feedforwards().accelerationsMPSSq()[i]);
     }
-
-    // Log optimized setpoints (runSetpoint mutates each state)
-    Logger.recordOutput(
-        DrivetrainConstants.NAME + "/ModuleSetpointsOptimized", lastSetpoint.moduleStates());
-    // Logger.recordOutput("SwerveSetpoint", lastSetpoint);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
@@ -291,7 +274,7 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   }
 
   /** Returns the module states (azimuth angles and drive velocities) for all of the modules. */
-  @AutoLogOutput(key = DrivetrainConstants.NAME + "/ModulesMeasured")
+  @AutoLogOutput(key = DrivetrainConstants.NAME + "/0_Measured/Modules")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (int i = 0; i < 4; i++) {
@@ -310,7 +293,7 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   }
 
   /** Returns the measured chassis speeds of the robot. */
-  @AutoLogOutput(key = DrivetrainConstants.NAME + "/ChassisMeasured")
+  @AutoLogOutput(key = DrivetrainConstants.NAME + "/0_Measured/Chassis")
   private ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
   }

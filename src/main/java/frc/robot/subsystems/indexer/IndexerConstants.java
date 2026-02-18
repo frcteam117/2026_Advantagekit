@@ -1,5 +1,9 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
@@ -7,9 +11,6 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
-import frc.robot.util.States.AngularPV_State;
-import frc.robot.util.States.AngularP_State;
-import frc.robot.util.States.AngularVA_State;
 import frc.robot.util.components.bases.ComponentBase;
 import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
@@ -20,17 +21,23 @@ import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.Pos_State;
+import frc.robot.util.states.StateValue;
+import frc.robot.util.states.VelAcc_State;
 
 public class IndexerConstants {
-  public static final String LOG_NAME = "3.Indexer";
+  public static final String LOG_NAME = "3_Indexer";
 
-  public static final MechanismConstants HOPPER_CONSTANTS = new MechanismConstants();
-  public static final MechanismConfig<AngularPV_State> HOPPER_CONFIG =
-      new MechanismConfig<AngularPV_State>();
+  public static final MechanismConstants<PosVel_State> HOPPER_CONSTANTS =
+      new MechanismConstants<>();
+  public static final MechanismConfig<PosVel_State> HOPPER_CONFIG =
+      new MechanismConfig<PosVel_State>();
 
-  public static final MechanismConstants KICKER_CONSTANTS = new MechanismConstants();
-  public static final MechanismConfig<AngularPV_State> KICKER_CONFIG =
-      new MechanismConfig<AngularPV_State>();
+  public static final MechanismConstants<PosVel_State> KICKER_CONSTANTS =
+      new MechanismConstants<>();
+  public static final MechanismConfig<PosVel_State> KICKER_CONFIG =
+      new MechanismConfig<PosVel_State>();
 
   static {
     // Miscellaneous
@@ -50,11 +57,13 @@ public class IndexerConstants {
     HOPPER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(HOPPER_CONSTANTS.reduction);
     HOPPER_CONSTANTS.moi_kgm2 = .03;
     // Profiling
-    HOPPER_CONSTANTS.start_State = new AngularPV_State(0, 0);
-    HOPPER_CONSTANTS.min_Pos = new AngularP_State(-Double.MAX_VALUE);
-    HOPPER_CONSTANTS.max_Pos = new AngularP_State(Double.MAX_VALUE);
-    HOPPER_CONSTANTS.limits_State = new AngularVA_State(200, 500);
-    HOPPER_CONSTANTS.isContinuous = true;
+    HOPPER_CONSTANTS.start_State =
+        PosVel_State.create(new StateValue(0, Radians), new StateValue(0, RadiansPerSecond));
+    HOPPER_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
+    HOPPER_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
+    HOPPER_CONSTANTS.limits_State = VelAcc_State.create(
+        new StateValue(200, RadiansPerSecond), new StateValue(500, RadiansPerSecondPerSecond));
+    HOPPER_CONSTANTS.isLoop = true;
     // Feedback
     HOPPER_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, HOPPER_CONSTANTS.codePeriod_s)
@@ -63,8 +72,7 @@ public class IndexerConstants {
         ? new SimpleMotorFeedforward(0, 0, 0, HOPPER_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, HOPPER_CONSTANTS.codePeriod_s);
 
-    HOPPER_CONFIG.logName = HOPPER_CONSTANTS.outputsLogName;
-    HOPPER_CONFIG.tuningLogName = HOPPER_CONSTANTS.tuningLogName;
+    HOPPER_CONFIG.constants = HOPPER_CONSTANTS;
     HOPPER_CONFIG.realComponents = new ComponentBase[0];
     HOPPER_CONFIG.simComponents = new ComponentSimBase[0];
     HOPPER_CONFIG.realController = new SparkMaxController(HOPPER_CONSTANTS);
@@ -72,9 +80,12 @@ public class IndexerConstants {
     HOPPER_CONFIG.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(HOPPER_CONSTANTS)};
     HOPPER_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(HOPPER_CONSTANTS)};
-    HOPPER_CONFIG.componentsToState = componentStates -> new AngularPV_State(
-        ((Motor_State) componentStates[0]).rad() / HOPPER_CONSTANTS.reduction,
-        ((Motor_State) componentStates[0]).radPs() / HOPPER_CONSTANTS.reduction);
+    HOPPER_CONFIG.componentsToState = componentStates -> PosVel_State.create(
+        new StateValue(
+            ((Motor_State) componentStates[0]).rad() / HOPPER_CONSTANTS.reduction, Radians),
+        new StateValue(
+            ((Motor_State) componentStates[0]).radPs() / HOPPER_CONSTANTS.reduction,
+            RadiansPerSecond));
   }
 
   static {
@@ -95,11 +106,13 @@ public class IndexerConstants {
     KICKER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(KICKER_CONSTANTS.reduction);
     KICKER_CONSTANTS.moi_kgm2 = .03;
     // Profiling
-    KICKER_CONSTANTS.start_State = new AngularPV_State(0, 0);
-    KICKER_CONSTANTS.min_Pos = new AngularP_State(-Double.MAX_VALUE);
-    KICKER_CONSTANTS.max_Pos = new AngularP_State(Double.MAX_VALUE);
-    KICKER_CONSTANTS.limits_State = new AngularVA_State(200, 500);
-    KICKER_CONSTANTS.isContinuous = true;
+    KICKER_CONSTANTS.start_State =
+        PosVel_State.create(new StateValue(0, Radians), new StateValue(0, RadiansPerSecond));
+    KICKER_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
+    KICKER_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
+    KICKER_CONSTANTS.limits_State = VelAcc_State.create(
+        new StateValue(200, RadiansPerSecond), new StateValue(500, RadiansPerSecondPerSecond));
+    KICKER_CONSTANTS.isLoop = true;
     // Feedback
     KICKER_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, KICKER_CONSTANTS.codePeriod_s)
@@ -108,8 +121,7 @@ public class IndexerConstants {
         ? new SimpleMotorFeedforward(0, 0, 0, KICKER_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, KICKER_CONSTANTS.codePeriod_s);
 
-    KICKER_CONFIG.logName = KICKER_CONSTANTS.outputsLogName;
-    KICKER_CONFIG.tuningLogName = KICKER_CONSTANTS.tuningLogName;
+    KICKER_CONFIG.constants = KICKER_CONSTANTS;
     KICKER_CONFIG.realComponents = new ComponentBase[0];
     KICKER_CONFIG.simComponents = new ComponentSimBase[0];
     KICKER_CONFIG.realController = new SparkMaxController(KICKER_CONSTANTS);
@@ -117,8 +129,11 @@ public class IndexerConstants {
     KICKER_CONFIG.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(KICKER_CONSTANTS)};
     KICKER_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(KICKER_CONSTANTS)};
-    KICKER_CONFIG.componentsToState = componentStates -> new AngularPV_State(
-        ((Motor_State) componentStates[0]).rad() / KICKER_CONSTANTS.reduction,
-        ((Motor_State) componentStates[0]).radPs() / KICKER_CONSTANTS.reduction);
+    KICKER_CONFIG.componentsToState = componentStates -> PosVel_State.create(
+        new StateValue(
+            ((Motor_State) componentStates[0]).rad() / KICKER_CONSTANTS.reduction, Radians),
+        new StateValue(
+            ((Motor_State) componentStates[0]).radPs() / KICKER_CONSTANTS.reduction,
+            RadiansPerSecond));
   }
 }

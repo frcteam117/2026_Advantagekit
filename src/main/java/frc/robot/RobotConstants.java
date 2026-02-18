@@ -24,7 +24,7 @@ public final class RobotConstants {
   public static final String TUNING_PREFIX = "Tuning/";
   public static final double CODE_PERIOD_s = 0.02;
   public static final double NOMINAL_V = 12.0;
-  public static final double MASS_kg = 18.35;
+  public static final double MASS_kg = 40.0;
   public static final double MOI_kgm2 = 4.883;
 
   public static final Mode simMode = Mode.SIM;

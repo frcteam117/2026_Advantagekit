@@ -107,6 +107,7 @@ public class Robot extends LoggedRobot {
     LogUtil.getInstance().runUpdateMethods();
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);
+    Logger.recordOutput("test", (((Object) ((Double) 0d)) instanceof Double));
   }
 
   /** This function is called once when the robot is disabled. */

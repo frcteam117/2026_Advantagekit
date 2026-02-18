@@ -15,9 +15,7 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,13 +31,10 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
 // import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.*;
-import frc.robot.util.States.AngularP_State;
-import frc.robot.util.States.AngularV_State;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -77,10 +72,13 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        this.vision = new Vision(
-            drive,
-            new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-            new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+        this.vision = null;
+        // new Vision(
+        //     drive,
+        //     new VisionIOPhotonVision(VisionConstants.camera0Name,
+        // VisionConstants.robotToCamera0),
+        //     new VisionIOPhotonVision(VisionConstants.camera1Name,
+        // VisionConstants.robotToCamera1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -105,16 +103,17 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        vision = new Vision(
-            drive,
-            new VisionIOPhotonVisionSim(
-                VisionConstants.camera0Name,
-                VisionConstants.robotToCamera0,
-                driveSimulation::getSimulatedDriveTrainPose),
-            new VisionIOPhotonVisionSim(
-                VisionConstants.camera1Name,
-                VisionConstants.robotToCamera1,
-                driveSimulation::getSimulatedDriveTrainPose));
+        vision = null;
+        // vision = new Vision(
+        //     drive,
+        //     new VisionIOPhotonVisionSim(
+        //         VisionConstants.camera0Name,
+        //         VisionConstants.robotToCamera0,
+        //         driveSimulation::getSimulatedDriveTrainPose),
+        //     new VisionIOPhotonVisionSim(
+        //         VisionConstants.camera1Name,
+        //         VisionConstants.robotToCamera1,
+        //         driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
         // Replayed robot, disable IO implementations
@@ -125,12 +124,16 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             (pose) -> {});
-        vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
+        vision = null;
+        // vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
         break;
     }
-    intake = new IntakeSubsystem();
-    indexer = new IndexerSubsystem();
-    shooter = new ShooterSubsystem();
+    intake = null;
+    indexer = null;
+    shooter = null;
+    // intake = new IntakeSubsystem();
+    // indexer = new IndexerSubsystem();
+    // shooter = new ShooterSubsystem();
 
     SysIdUtil.registerController(controller);
 
@@ -168,32 +171,57 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
+    // drive.setDefaultCommand(DriveCommands.joystickDriveAtAngle(
+    //     drive,
+    //     () -> -controller.getLeftY(),
+    //     () -> -controller.getLeftX(),
+    //     () -> Rotation2d.fromRadians(
+    //         Math.atan2(-controller.getRawAxis(3), -controller.getRawAxis(2)))));
     drive.setDefaultCommand(DriveCommands.joystickDrive(
         drive,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
         () -> -controller.getRawAxis(2)));
-    shooter.setDefaultCommand(Commands.run(
-        () -> shooter.setMechGoals(new AngularP_State(0), new AngularV_State(0)), shooter));
-    controller
-        .button(1)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(.25)), shooter));
-    controller
-        .button(2)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(0.5)), shooter));
-    controller
-        .button(3)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(0.75)), shooter));
+    // shooter.setDefaultCommand(Commands.run(
+    //     () -> shooter.setMechGoals(
+    //         Pos_State.create(new StateValue(0.0, Radians)),
+    //         Vel_State.create(new StateValue(0.0, RadiansPerSecond))),
+    //     shooter));
+    // controller
+    //     .button(1)
+    //     .onTrue(Commands.run(
+    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(.25, Radians))), shooter));
+    // controller
+    //     .button(2)
+    //     .onTrue(Commands.run(
+    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.5, Radians))), shooter));
+    // controller
+    //     .button(3)
+    //     .onTrue(Commands.run(
+    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.75, Radians))),
+    // shooter));
 
-    controller
-        .button(4)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(200)), shooter));
-    controller
-        .button(5)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(400)), shooter));
-    controller
-        .button(6)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(600)), shooter));
+    // controller
+    //     .button(4)
+    //     .onTrue(Commands.run(
+    //         () ->
+    //             shooter.setFlywheelGoal(Vel_State.create(new StateValue(200.0,
+    // RadiansPerSecond))),
+    //         shooter));
+    // controller
+    //     .button(5)
+    //     .onTrue(Commands.run(
+    //         () ->
+    //             shooter.setFlywheelGoal(Vel_State.create(new StateValue(400.0,
+    // RadiansPerSecond))),
+    //         shooter));
+    // controller
+    //     .button(6)
+    //     .onTrue(Commands.run(
+    //         () ->
+    //             shooter.setFlywheelGoal(Vel_State.create(new StateValue(600.0,
+    // RadiansPerSecond))),
+    //         shooter));
 
     // Reset gyro / odometry
     final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
@@ -235,21 +263,21 @@ public class RobotContainer {
     // Logger.recordOutput("controller/button2", controller.button(2).getAsBoolean());
     // Logger.recordOutput("controller/button3", controller.button(3).getAsBoolean());
     Logger.recordOutput(
-        ".FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
+        "_FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
     Logger.recordOutput(
-        ".FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        "_FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
   }
 
-  @AutoLogOutput(key = "0.Supersystem/ComponentPoses")
-  private Pose3d[] getSupersystemPose3ds() {
-    Pose3d[] intakePoses = intake.getPose3ds();
-    return new Pose3d[] {
-      intakePoses[0],
-      intakePoses[1],
-      intakePoses[2],
-      intakePoses[3],
-      intakePoses[4],
-      new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -shooter.getHoodState().pos(), 0))
-    };
-  }
+  //   @AutoLogOutput(key = "0_Supersystem/ComponentPoses")
+  //   private Pose3d[] getSupersystemPose3ds() {
+  //     Pose3d[] intakePoses = intake.getPose3ds();
+  //     return new Pose3d[] {
+  //       intakePoses[0],
+  //       intakePoses[1],
+  //       intakePoses[2],
+  //       intakePoses[3],
+  //       intakePoses[4],
+  //       new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -shooter.getHoodState().pos(), 0))
+  //     };
+  //   }
 }

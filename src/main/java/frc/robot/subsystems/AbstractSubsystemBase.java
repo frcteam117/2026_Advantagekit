@@ -1,9 +1,9 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.util.States.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
+import frc.robot.util.states.State;
 
 public abstract class AbstractSubsystemBase extends edu.wpi.first.wpilibj2.command.SubsystemBase {
   @Override

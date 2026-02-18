@@ -1,13 +1,15 @@
 package frc.robot.util.control_functions.feedback;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
-import frc.robot.util.States.AngularP_State;
-import frc.robot.util.States.PosVel_State;
-import frc.robot.util.States.Voltage_State;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.LogUtil;
 import frc.robot.util.mechanisms.MechanismConstants;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.Voltage_State;
 
 public class ArmPIDF extends ControlFunctionBase {
   private String name = "ArmPIDF";
@@ -17,36 +19,11 @@ public class ArmPIDF extends ControlFunctionBase {
   private PosVel_State lastNext_State;
   private boolean enableTuning = false;
 
-  public ArmPIDF(
-      PIDController pid,
-      ArmFeedforward ff,
-      PosVel_State startingState,
-      double cmOffset_rad,
-      String mechanismTuningLogName,
-      String name) {
-    this(pid, ff, startingState, cmOffset_rad, mechanismTuningLogName);
-    this.name = name;
-  }
-
-  public ArmPIDF(
-      PIDController pid,
-      ArmFeedforward ff,
-      PosVel_State startingState,
-      double cmOffset_rad,
-      String mechanismTuningLogName) {
-    this.pid = pid;
-    this.ff = ff;
-    this.cmOffset_rad = cmOffset_rad;
-    lastNext_State = startingState;
-    LogUtil.createTunablePID(mechanismTuningLogName + "/" + name + "/", pid, () -> enableTuning);
-    LogUtil.createTunableFF(mechanismTuningLogName + "/" + name + "/", ff, () -> enableTuning);
-  }
-
-  public ArmPIDF(MechanismConstants config) {
+  public ArmPIDF(MechanismConstants<?> config) {
     this(config, "ArmPIDF");
   }
 
-  public ArmPIDF(MechanismConstants config, String profileName) {
+  public ArmPIDF(MechanismConstants<?> config, String profileName) {
     name = profileName;
     if (config.pid == null) {
       // TODO: make this an exception
@@ -54,8 +31,8 @@ public class ArmPIDF extends ControlFunctionBase {
     if (config.armFF == null) {
       // TODO: make this an exception
     }
-    if (config.cmOffset_Pos == null) {
-      config.cmOffset_Pos = new AngularP_State(0);
+    if (config.cmOffset_rad == null) {
+      config.cmOffset_rad = 0d;
     }
     if (!PosVel_State.class.isAssignableFrom(config.start_State.getClass())) {
       // TODO: make this an exception
@@ -63,14 +40,16 @@ public class ArmPIDF extends ControlFunctionBase {
     pid = config.pid;
     ff = config.armFF;
     lastNext_State = (PosVel_State) config.start_State;
-    cmOffset_rad = config.cmOffset_Pos.pos();
-    LogUtil.createTunablePID(config.tuningLogName + "/" + name + "/", pid, () -> enableTuning);
-    LogUtil.createTunableFF(config.tuningLogName + "/" + name + "/", ff, () -> enableTuning);
+    cmOffset_rad = config.cmOffset_rad;
+    LogUtil.createTunablePID(config.tuningLogName + "/" + name, pid, () -> enableTuning);
+    LogUtil.createTunableFF(config.tuningLogName + "/" + name, ff, () -> enableTuning);
   }
 
   public Voltage_State calculate(PosVel_State next_State, PosVel_State mechanism_State) {
     Voltage_State voltage = new Voltage_State(ff.calculateWithVelocities(
-            mechanism_State.pos() + cmOffset_rad, lastNext_State.vel(), next_State.vel())
+            mechanism_State.pos(Radians) + cmOffset_rad,
+            lastNext_State.vel(RadiansPerSecond),
+            next_State.vel(Radians))
         + pid.calculate(mechanism_State.pos(), lastNext_State.pos()));
     lastNext_State = next_State;
     return voltage;

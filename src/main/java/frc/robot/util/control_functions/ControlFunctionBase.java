@@ -1,6 +1,6 @@
 package frc.robot.util.control_functions;
 
-import frc.robot.util.States.State;
+import frc.robot.util.states.State;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;

@@ -3,12 +3,12 @@ package frc.robot.subsystems.indexer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.SubsystemBase2Mech;
-import frc.robot.util.States.AngularPV_State;
-import frc.robot.util.States.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.State;
 
-public class IndexerSubsystem extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
+public class IndexerSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_State> {
   public IndexerSubsystem() {
     super(IndexerConstants.HOPPER_CONFIG, IndexerConstants.KICKER_CONFIG);
   }
@@ -31,11 +31,11 @@ public class IndexerSubsystem extends SubsystemBase2Mech<AngularPV_State, Angula
     return getMech0SysIdCommand(type);
   }
 
-  public AngularPV_State getHopperState() {
+  public PosVel_State getHopperState() {
     return getMech0State();
   }
 
-  public MechanismBase<AngularPV_State> getHopper() {
+  public MechanismBase<PosVel_State> getHopper() {
     return getMechanism0();
   }
 
@@ -53,11 +53,11 @@ public class IndexerSubsystem extends SubsystemBase2Mech<AngularPV_State, Angula
     return getMech1SysIdCommand(type);
   }
 
-  public AngularPV_State getKickerState() {
+  public PosVel_State getKickerState() {
     return getMech1State();
   }
 
-  public MechanismBase<AngularPV_State> getKicker() {
+  public MechanismBase<PosVel_State> getKicker() {
     return getMechanism1();
   }
 }

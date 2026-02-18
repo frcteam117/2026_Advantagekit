@@ -1,22 +1,24 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Radians;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.SubsystemBase2Mech;
-import frc.robot.util.States.AngularPV_State;
-import frc.robot.util.States.State;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.State;
 
-public class IntakeSubsystem extends SubsystemBase2Mech<AngularPV_State, AngularPV_State> {
+public class IntakeSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_State> {
   public IntakeSubsystem() {
     super(IntakeConstants.PIVOT_CONFIG, IntakeConstants.ROLLER_CONFIG);
   }
 
   public Pose3d[] getPose3ds() {
-    return getIntakePose(getPivotState().rad());
+    return getIntakePose(getPivotState().pos(Radians));
   }
 
   // Pivot
@@ -33,11 +35,11 @@ public class IntakeSubsystem extends SubsystemBase2Mech<AngularPV_State, Angular
     return getMech0SysIdCommand(type);
   }
 
-  public AngularPV_State getPivotState() {
+  public PosVel_State getPivotState() {
     return getMech0State();
   }
 
-  public MechanismBase<AngularPV_State> getPivot() {
+  public MechanismBase<PosVel_State> getPivot() {
     return getMechanism0();
   }
 
@@ -55,11 +57,11 @@ public class IntakeSubsystem extends SubsystemBase2Mech<AngularPV_State, Angular
     return getMech1SysIdCommand(type);
   }
 
-  public AngularPV_State getRollerState() {
+  public PosVel_State getRollerState() {
     return getMech1State();
   }
 
-  public MechanismBase<AngularPV_State> getRoller() {
+  public MechanismBase<PosVel_State> getRoller() {
     return getMechanism1();
   }
 
