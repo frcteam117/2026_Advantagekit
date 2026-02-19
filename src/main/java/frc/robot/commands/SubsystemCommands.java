@@ -128,11 +128,23 @@ public class SubsystemCommands {
       ShooterSubsystem shooter, Double distanceFromHub) {
     return Commands.run(() -> {
       double dutyCycle = ShooterConstants.lerpTable.get(distanceFromHub);
-      shooter.setFlywheelGoal(
-          new AngularV_State(200)); // does this adjust for differences between the two wheels?
+      shooter.setFlywheelGoal( // use 600 as radians baseline, ask if this is ok
+          new AngularV_State(
+              dutyCycle)); // does this adjust for differences between the two wheels?
       // TODO: ask max how this works
       // shooter.setRightShooterDutyCycle(dutyCycle);
     });
+  } // figure out the command start/finish parameter thingies ig
+
+  public Command FireStartFuel(ShooterSubsystem shooter) {
+    return Commands.run(() -> {
+          shooter.setFlywheelGoal( // use 600 as radians baseline, ask if this is ok
+              new AngularV_State(
+                  600 * 0.7)); // does this adjust for differences between the two wheels?
+          // TODO: ask max how this works, also make a constants file for these values?
+          // shooter.setRightShooterDutyCycle(dutyCycle);
+        })
+        .withTimeout(5); // is time the best way to manage this? idk: ASK
   }
 
   /*// non-drivetrain subsystem commands:

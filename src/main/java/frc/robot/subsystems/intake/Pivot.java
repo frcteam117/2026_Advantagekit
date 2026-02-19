@@ -25,6 +25,25 @@ import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.local.SparkWrapper;
 
 public class Pivot extends SubsystemBase {
+  public Pivot() {
+    spark = new SparkMax(HardwareConstants.canId, HardwareConstants.motorType);
+    // TODO: change "spark" to "pivotMotor"
+    sparkSmartMotorController = new SparkWrapper(spark, HardwareConstants.motor, smcConfig);
+    armCfg = new ArmConfig(sparkSmartMotorController)
+        // Soft limit is applied to the SmartMotorControllers PID
+        .withSoftLimits(MechanismConstants.kMinSoftLimit, MechanismConstants.kMaxSoftLimit)
+        // Hard limit is applied to the simulation.
+        .withHardLimit(MechanismConstants.kMinHardLimit, MechanismConstants.kMaxHardLimit)
+        // Starting position is where your arm starts
+        .withStartingPosition(MechanismConstants.kStartingPosition)
+        // Length and mass of your arm for sim.
+        .withLength(MechanismConstants.kArmLength)
+        .withMass(MechanismConstants.kArmMass)
+        // Telemetry name and verbosity for the arm.
+        .withTelemetry(TelemetryConstants.kArmName, TelemetryConstants.kTelemetryVerbosity);
+    arm = new Arm(armCfg);
+  }
+
   private final ArmFeedforward m_feedforward =
       new ArmFeedforward(PIDConstants.kS, PIDConstants.kG, PIDConstants.kV, PIDConstants.kA);
 
@@ -60,23 +79,23 @@ public class Pivot extends SubsystemBase {
       PIDConstants.rioD,
       new TrapezoidProfile.Constraints(
           ProfileConstants.kRioMaxVelocity, ProfileConstants.kRioMaxAcceleration));
-  private SparkMax spark = new SparkMax(HardwareConstants.canId, HardwareConstants.motorType);
-  private SmartMotorController sparkSmartMotorController =
-      new SparkWrapper(spark, HardwareConstants.motor, smcConfig);
+  private SparkMax spark; // = new SparkMax(HardwareConstants.canId, HardwareConstants.motorType);
+  private SmartMotorController sparkSmartMotorController; // sparkSmartMotorController =
+  // new SparkWrapper(spark, HardwareConstants.motor, smcConfig);
 
-  private ArmConfig armCfg = new ArmConfig(sparkSmartMotorController)
-      // Soft limit is applied to the SmartMotorControllers PID
-      .withSoftLimits(MechanismConstants.kMinSoftLimit, MechanismConstants.kMaxSoftLimit)
-      // Hard limit is applied to the simulation.
-      .withHardLimit(MechanismConstants.kMinHardLimit, MechanismConstants.kMaxHardLimit)
-      // Starting position is where your arm starts
-      .withStartingPosition(MechanismConstants.kStartingPosition)
-      // Length and mass of your arm for sim.
-      .withLength(MechanismConstants.kArmLength)
-      .withMass(MechanismConstants.kArmMass)
-      // Telemetry name and verbosity for the arm.
-      .withTelemetry(TelemetryConstants.kArmName, TelemetryConstants.kTelemetryVerbosity);
-  private Arm arm = new Arm(armCfg);
+  private ArmConfig armCfg; // = new ArmConfig(sparkSmartMotorController)
+  //// Soft limit is applied to the SmartMotorControllers PID
+  // .withSoftLimits(MechanismConstants.kMinSoftLimit, MechanismConstants.kMaxSoftLimit)
+  // Hard limit is applied to the simulation.
+  // .withHardLimit(MechanismConstants.kMinHardLimit, MechanismConstants.kMaxHardLimit)
+  // Starting position is where your arm starts
+  // .withStartingPosition(MechanismConstants.kStartingPosition)
+  // Length and mass of your arm for sim.
+  // .withLength(MechanismConstants.kArmLength)
+  // .withMass(MechanismConstants.kArmMass)
+  // Telemetry name and verbosity for the arm.
+  // .withTelemetry(TelemetryConstants.kArmName, TelemetryConstants.kTelemetryVerbosity);
+  private Arm arm; // = new Arm(armCfg);
 
   public Command setAngle(Angle angle) {
     return setAngleWithRioProfile(angle);

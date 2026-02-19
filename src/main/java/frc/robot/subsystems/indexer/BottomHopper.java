@@ -19,6 +19,23 @@ import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.local.SparkWrapper;
 
 public class BottomHopper extends SubsystemBase {
+  public BottomHopper() { // change bottom & top hopper to different names?
+    spark = new SparkMax(HardwareConstants.canId, HardwareConstants.motorType);
+    sparkSmartMotorController = new SparkWrapper(spark, HardwareConstants.motor, smcConfig);
+    hopperConfig = new FlyWheelConfig(sparkSmartMotorController)
+        // Diameter of the flywheel.
+        .withDiameter(MechanismConstants.kDiameter)
+        // Mass of the flywheel.
+        .withMass(MechanismConstants.kMass)
+        // Maximum speed of the hopper.
+        .withUpperSoftLimit(MechanismConstants.kMaxSpeed)
+        // Telemetry name and verbosity for the arm.
+        .withTelemetry(
+            TelemetryConstants.kHopperName, TelemetryConstants.kHopperTelemetryVerbosity);
+
+    // hopper Mechanism
+    hopper = new FlyWheel(hopperConfig);
+  }
 
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(HardwareConstants.kControlMode)
@@ -47,23 +64,23 @@ public class BottomHopper extends SubsystemBase {
       .withIdleMode(HardwareConstants.kIdleMode)
       .withStatorCurrentLimit(SafetyConstants.kCurrentLimit);
   // Vendor motor controller object
-  private SparkMax spark = new SparkMax(HardwareConstants.canId, HardwareConstants.motorType);
+  private SparkMax spark; // = new SparkMax(HardwareConstants.canId, HardwareConstants.motorType);
 
   // Create our SmartMotorController from our Spark and config with the NEO.
-  private SmartMotorController sparkSmartMotorController =
-      new SparkWrapper(spark, HardwareConstants.motor, smcConfig);
-  private final FlyWheelConfig hopperConfig = new FlyWheelConfig(sparkSmartMotorController)
-      // Diameter of the flywheel.
-      .withDiameter(MechanismConstants.kDiameter)
-      // Mass of the flywheel.
-      .withMass(MechanismConstants.kMass)
-      // Maximum speed of the hopper.
-      .withUpperSoftLimit(MechanismConstants.kMaxSpeed)
-      // Telemetry name and verbosity for the arm.
-      .withTelemetry(TelemetryConstants.kHopperName, TelemetryConstants.kHopperTelemetryVerbosity);
+  private SmartMotorController sparkSmartMotorController; // =
+  // new SparkWrapper(spark, HardwareConstants.motor, smcConfig);
+  private final FlyWheelConfig hopperConfig; // = new FlyWheelConfig(sparkSmartMotorController)
+  // Diameter of the flywheel.
+  // .withDiameter(MechanismConstants.kDiameter)
+  // Mass of the flywheel.
+  // .withMass(MechanismConstants.kMass)
+  // Maximum speed of the hopper.
+  // .withUpperSoftLimit(MechanismConstants.kMaxSpeed)
+  // Telemetry name and verbosity for the arm.
+  // .withTelemetry(TelemetryConstants.kHopperName, TelemetryConstants.kHopperTelemetryVerbosity);
 
   // hopper Mechanism
-  private FlyWheel hopper = new FlyWheel(hopperConfig);
+  private FlyWheel hopper; // = new FlyWheel(hopperConfig);
 
   /**
    * Gets the current velocity of the hopper.

@@ -32,6 +32,9 @@ public class AutoPoses { // WILL THIS EVEN WORK IDFK
     // String trenchOrBumpEnd) { // this assumes all autos will behave the same
     // - with the same differentiation (IDK IF THATS TRUE)
     // put a lot of these poses in a constants file bc they may be useful outside of auto too????
+    // USE PATHPLANNER FOR ALL OF THIS!!! and it auto flips it for alliance sides, so thats a lot of
+    // stuff that
+    // -  you don't have to do
     int startGoalTagID = 0;
     int offsetSign = 0;
     double fromHubOffsetX = 2.5; // ADD THESE IN A CONSTANTS FILE TOO???

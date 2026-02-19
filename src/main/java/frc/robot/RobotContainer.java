@@ -14,6 +14,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,10 +31,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.PathCommands;
 import frc.robot.commands.SubsystemCommands;
 import frc.robot.subsystems.drivetrain.*;
-import frc.robot.subsystems.indexer.BottomHopper;
-import frc.robot.subsystems.indexer.TopHopper;
 import frc.robot.subsystems.intake.Pivot;
-import frc.robot.subsystems.intake.Roller;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIO;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -62,9 +60,9 @@ public class RobotContainer {
   public static DrivetrainSubsystem drive;
   public final VisionSubsystem vision;
   public final Pivot pivot;
-  public final Roller roller;
-  public final BottomHopper bottomHopper;
-  public final TopHopper topHopper;
+  // public final Roller roller;
+  // public final BottomHopper bottomHopper;
+  // public final TopHopper topHopper;
   public final ShooterSubsystem shooter;
   public static final SubsystemCommands subsystemCommands = new SubsystemCommands();
   public static final PathCommands pathCommands =
@@ -141,9 +139,9 @@ public class RobotContainer {
         break;
     }
     pivot = new Pivot();
-    roller = new Roller();
-    bottomHopper = new BottomHopper();
-    topHopper = new TopHopper();
+    // roller = new Roller();
+    // bottomHopper = new BottomHopper();
+    // topHopper = new TopHopper();
     shooter = new ShooterSubsystem();
     vision = new VisionSubsystem(drive, camera0, camera1);
 
@@ -155,7 +153,12 @@ public class RobotContainer {
       AprilTagPoses.add(tagPose);
     }
     SysIdUtil.registerController(controller);
+    // PathPlanner NamedCommands vvv
+    // NamedCommands.registerCommand("autoBalance", shooter.fireStartFuel()); // fire 8 initial fuel
+    NamedCommands.registerCommand("FireStartFuel", subsystemCommands.FireStartFuel(shooter));
+    // NamedCommands.registerCommand("someOtherCommand", new SomeOtherCommand());
 
+    //
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -226,13 +229,13 @@ public class RobotContainer {
         // - that out later
         .button(9)
         .onTrue(SubsystemCommands.UndeployIntake(pivot));
-    controller
-        .button(10)
-        .whileTrue(SubsystemCommands.IntakeFuel(
-            roller)); // make sure there's a way for the intake to stop moving
+    // controller
+    //  .button(10)
+    // .whileTrue(SubsystemCommands.IntakeFuel(
+    //  roller)); // make sure there's a way for the intake to stop moving
     // - when the button isn't being pressed if that's what we want, and if not find when intake
     // should be moving
-    controller.button(8).whileTrue(SubsystemCommands.OuttakeFuel(roller));
+    // controller.button(8).whileTrue(SubsystemCommands.OuttakeFuel(roller));
 
     // Reset gyro / odometry
     final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
@@ -244,7 +247,7 @@ public class RobotContainer {
             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
     controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
     controller
-        .button(1)
+        .button(0) // WHY IS THIS LINKED TO A BUTTON??????
         .onTrue(Commands.runOnce(() -> {})
             .finallyDo(() -> CommandScheduler.getInstance().schedule(getAutonomousCommand())));
   }
