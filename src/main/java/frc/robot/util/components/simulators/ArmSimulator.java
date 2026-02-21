@@ -17,10 +17,10 @@ import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;
-import frc.robot.util.states.PosVel_State;
-import frc.robot.util.states.Pos_State;
-import frc.robot.util.states.Vel_State;
-import frc.robot.util.states.Voltage_State;
+import frc.robot.util.states.bases.PosVel_State;
+import frc.robot.util.states.bases.Pos_State;
+import frc.robot.util.states.bases.Vel_State;
+import frc.robot.util.states.premade.Voltage_State;
 import java.util.Arrays;
 
 public class ArmSimulator extends ComponentSimControllerBase {

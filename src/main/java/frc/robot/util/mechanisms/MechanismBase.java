@@ -22,11 +22,12 @@ import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.states.LoggableStateInputs;
 import frc.robot.util.states.State;
 import frc.robot.util.states.StateUtil;
-import frc.robot.util.states.Voltage_State;
+import frc.robot.util.states.premade.Voltage_State;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import org.littletonrobotics.junction.Logger;
 
@@ -56,6 +57,7 @@ public class MechanismBase<Output_State extends State> {
   private final SysIdRoutine sysId;
 
   private final String logName;
+  private final BooleanSupplier tunable;
   private final ComponentStatesLogger componentStatesLogger = new ComponentStatesLogger();
 
   public MechanismBase(MechanismConfig<Output_State> config, Subsystem subsystem) {
@@ -100,10 +102,11 @@ public class MechanismBase<Output_State extends State> {
             (state) -> Logger.recordOutput(logName + "/SysIdState", state.toString())),
         new SysIdRoutine.Mechanism((voltage) -> setVoltageSysId(voltage), null, subsystem));
 
-    new TunableBoolean(config.constants.tuningLogName + "/.Tunable", false, () -> true, value -> {
-      Arrays.stream(profiles).forEach(profile -> profile.setTunable(value));
-      Arrays.stream(feedbacks).forEach(feedback -> feedback.setTunable(value));
-    });
+    tunable = new TunableBoolean(
+        config.constants.tuningLogName + "/.Tunable", false, () -> true, value -> {
+          Arrays.stream(profiles).forEach(profile -> profile.setTunable(value));
+          Arrays.stream(feedbacks).forEach(feedback -> feedback.setTunable(value));
+        });
   }
 
   public void update() {
@@ -186,6 +189,10 @@ public class MechanismBase<Output_State extends State> {
 
   public Output_State getState() {
     return mechanism_State;
+  }
+
+  public boolean getTunable() {
+    return tunable.getAsBoolean();
   }
 
   public class ComponentStatesLogger implements LoggableStateInputs {

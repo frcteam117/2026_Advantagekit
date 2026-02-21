@@ -19,13 +19,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drivetrain.*;
+import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.intake.IntakeCommands;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIO;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -54,7 +56,7 @@ public class RobotContainer {
   private SwerveDriveSimulation driveSimulation = null;
 
   // Controller
-  private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandPS5Controller controller = new CommandPS5Controller(0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -128,12 +130,12 @@ public class RobotContainer {
         // vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
         break;
     }
-    intake = null;
-    indexer = null;
-    shooter = null;
-    // intake = new IntakeSubsystem();
-    // indexer = new IndexerSubsystem();
-    // shooter = new ShooterSubsystem();
+    // intake = null;
+    // indexer = null;
+    // shooter = null;
+    intake = new IntakeSubsystem();
+    indexer = new IndexerSubsystem();
+    shooter = new ShooterSubsystem();
 
     SysIdUtil.registerController(controller);
 
@@ -181,7 +183,18 @@ public class RobotContainer {
         drive,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRawAxis(2)));
+        () -> -controller.getRightX()));
+
+    controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
+    controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
+
+    indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
+    controller.R1().onTrue(IndexerCommands.runForwardCommand(indexer));
+    controller.L1().onTrue(IndexerCommands.runBackwardCommand(indexer));
+
+    shooter.setDefaultCommand(ShooterCommands.stopCommand(shooter));
+    controller.triangle().onTrue(ShooterCommands.runCommand(shooter));
+    controller.triangle().onFalse(ShooterCommands.stopCommand(shooter));
     // shooter.setDefaultCommand(Commands.run(
     //     () -> shooter.setMechGoals(
     //         Pos_State.create(new StateValue(0.0, Radians)),
@@ -231,11 +244,11 @@ public class RobotContainer {
         // simulation
         : () -> drive.resetOdometry(
             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
-    controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-    controller
-        .button(1)
-        .onTrue(Commands.runOnce(() -> {})
-            .finallyDo(() -> CommandScheduler.getInstance().schedule(getAutonomousCommand())));
+    controller.square().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+    // controller
+    //     .button(1)
+    //     .onTrue(Commands.runOnce(() -> {})
+    //         .finallyDo(() -> CommandScheduler.getInstance().schedule(getAutonomousCommand())));
   }
 
   /**

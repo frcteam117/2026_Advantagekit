@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.SubsystemBase2Mech;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
-import frc.robot.util.states.PosVel_State;
 import frc.robot.util.states.State;
+import frc.robot.util.states.bases.PosVel_State;
 
 public class IntakeSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_State> {
   public IntakeSubsystem() {

@@ -21,10 +21,10 @@ import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
-import frc.robot.util.states.PosVel_State;
-import frc.robot.util.states.Pos_State;
 import frc.robot.util.states.StateValue;
-import frc.robot.util.states.VelAcc_State;
+import frc.robot.util.states.bases.PosVel_State;
+import frc.robot.util.states.bases.Pos_State;
+import frc.robot.util.states.bases.VelAcc_State;
 
 public class IndexerConstants {
   public static final String LOG_NAME = "3_Indexer";
@@ -45,7 +45,7 @@ public class IndexerConstants {
     HOPPER_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + HOPPER_CONSTANTS.outputsLogName;
     HOPPER_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    HOPPER_CONSTANTS.motorCanIds = new int[] {14};
+    HOPPER_CONSTANTS.motorCanIds = new int[] {9};
     HOPPER_CONSTANTS.revMotorType = MotorType.kBrushless;
     HOPPER_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     HOPPER_CONSTANTS
@@ -94,7 +94,7 @@ public class IndexerConstants {
     KICKER_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + KICKER_CONSTANTS.outputsLogName;
     KICKER_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    KICKER_CONSTANTS.motorCanIds = new int[] {15};
+    KICKER_CONSTANTS.motorCanIds = new int[] {10};
     KICKER_CONSTANTS.revMotorType = MotorType.kBrushless;
     KICKER_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     KICKER_CONSTANTS

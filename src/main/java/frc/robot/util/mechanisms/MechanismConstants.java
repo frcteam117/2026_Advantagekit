@@ -9,8 +9,8 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.util.states.Pos_State;
 import frc.robot.util.states.State;
+import frc.robot.util.states.bases.Pos_State;
 
 public class MechanismConstants<Output_State extends State> {
   // Physical constraints

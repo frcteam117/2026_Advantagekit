@@ -1,8 +1,11 @@
-package frc.robot.util.states;
+package frc.robot.util.states.premade;
 
 import static edu.wpi.first.units.Units.Amps;
 
 import edu.wpi.first.units.CurrentUnit;
+import frc.robot.util.states.State;
+import frc.robot.util.states.StateUtil;
+import frc.robot.util.states.StateValue;
 import java.security.InvalidParameterException;
 
 public class Current_State implements State {

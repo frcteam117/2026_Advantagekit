@@ -1,10 +1,34 @@
 package frc.robot.subsystems.shooter;
 
+import static frc.robot.subsystems.shooter.ShooterConstants.*;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.logging.TunableDouble;
+import frc.robot.util.states.premade.RadVel_State;
+import java.util.function.DoubleSupplier;
 
 public class ShooterCommands {
+  private static final DoubleSupplier targetSpeed_radPs =
+      new TunableDouble(FLYWHEEL_CONSTANTS.tuningLogName + "/_radPs", 0, () -> true);
+
+  public static Command stopCommand(ShooterSubsystem instance) {
+    return Commands.run(
+        () -> {
+          instance.setFlywheelGoal(new RadVel_State(0));
+        },
+        instance);
+  }
+
+  public static Command runCommand(ShooterSubsystem instance) {
+    return Commands.run(
+        () -> {
+          instance.setFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+        },
+        instance);
+  }
+
   public static Command hoodSysId(ShooterSubsystem shooter, SysIdType type) {
     return Commands.run(() -> {}, shooter)
         .withTimeout(1)
