@@ -189,12 +189,20 @@ public class RobotContainer {
     controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
-    controller.R1().onTrue(IndexerCommands.runForwardCommand(indexer));
-    controller.L1().onTrue(IndexerCommands.runBackwardCommand(indexer));
+    controller
+        .R1()
+        .onTrue(IndexerCommands.runForwardCommand(indexer))
+        .onFalse(IndexerCommands.stopCommand(indexer));
+    controller
+        .L1()
+        .onTrue(IndexerCommands.runBackwardCommand(indexer))
+        .onFalse(IndexerCommands.stopCommand(indexer));
 
     shooter.setDefaultCommand(ShooterCommands.stopCommand(shooter));
-    controller.triangle().onTrue(ShooterCommands.runCommand(shooter));
-    controller.triangle().onFalse(ShooterCommands.stopCommand(shooter));
+    controller
+        .triangle()
+        .onTrue(ShooterCommands.runCommand(shooter))
+        .onFalse(ShooterCommands.stopCommand(shooter));
     // shooter.setDefaultCommand(Commands.run(
     //     () -> shooter.setMechGoals(
     //         Pos_State.create(new StateValue(0.0, Radians)),

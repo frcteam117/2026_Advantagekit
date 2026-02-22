@@ -119,7 +119,7 @@ public class DrivetrainConstants {
     public static final double radius_m = 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
     public static final double cof = 1.2;
     /** FL, FR, BL, BR */
-    public static final int[] canIds = new int[] {3, 5, 1, 7};
+    public static final int[] canIds = new int[] {7, 1, 5, 3};
 
     public static final double reduction = 6.23;
     public static final DCMotor gearbox = DCMotor.getNeoVortex(1).withReduction(reduction);
@@ -172,7 +172,7 @@ public class DrivetrainConstants {
     // physical properties
     public static final double moi_kgm2 = 0.02;
     /** FL, FR, BL, BR */
-    public static final int[] canIds = new int[] {4, 6, 2, 8};
+    public static final int[] canIds = new int[] {8, 2, 6, 4};
 
     public static final double reduction = 25;
     public static final DCMotor gearbox = DCMotor.getNEO(1).withReduction(reduction);
@@ -224,14 +224,14 @@ public class DrivetrainConstants {
   public static class AbsEncoder {
     public static final String name = DrivetrainConstants.NAME + "/AbsEncoder";
 
-    /** FL, FR, BL, BR */
-    public static final int[] analogPorts = new int[] {0, 1, 2, 3};
+    // /** FL, FR, BL, BR */
+    // public static final int[] analogPorts = new int[] {0, 1, 2, 3};
+
+    // /** FL, FR, BL, BR. Rotation of each absolute encoder when the wheels face forward */
+    // public static final double[] zeroRotations_rad =
+    //     new double[] {4.26675, 2.99095, 2.40695, 3.355259};
 
     /** FL, FR, BL, BR. Rotation of each absolute encoder when the wheels face forward */
-    public static final double[] zeroRotations_rad =
-        new double[] {4.26675, 2.99095, 2.40695, 3.355259};
-
-    /** FL, FR, BL, BR. Rotation of each absolute encoder when the wheels face forward */
-    public static final int[] zeroRotations_ticks = new int[] {1354, 2095, 2559, 1823};
+    public static final int[] zeroRotations_ticks = new int[] {3402, 47, 511, 3871};
   }
 }

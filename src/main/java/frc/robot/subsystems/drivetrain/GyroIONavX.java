@@ -28,11 +28,12 @@ public class GyroIONavX implements GyroIO {
   public GyroIONavX() {
     navX.enableOptionalMessages(
         true, //           comment to make formatter spread this line out
+        true, //         comment to make formatter spread this line out
         false, //       comment to make formatter spread this line out
         false, //       comment to make formatter spread this line out
         false, //   comment to make formatter spread this line out
-        false, //    comment to make formatter spread this line out
-        true, //    comment to make formatter spread this line out
+        true, //     comment to make formatter spread this line out
+        false, //   comment to make formatter spread this line out
         false, //  comment to make formatter spread this line out
         false, //      comment to make formatter spread this line out
         false); // comment to make formatter spread this line out
