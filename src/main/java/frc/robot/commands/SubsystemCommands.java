@@ -29,7 +29,7 @@ import frc.robot.subsystems.intake.Roller;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
-import frc.robot.util.States.AngularV_State;
+import frc.robot.util.states.premade.RadVel_State;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -127,8 +127,7 @@ public class SubsystemCommands {
     return Commands.run(() -> {
       double dutyCycle = ShooterConstants.lerpTable.get(distanceFromHub);
       shooter.setFlywheelGoal( // use 600 as radians baseline, ask if this is ok
-          new AngularV_State(
-              dutyCycle)); // does this adjust for differences between the two wheels?
+          new RadVel_State(dutyCycle)); // does this adjust for differences between the two wheels?
       // TODO: ask max how this works
       // shooter.setRightShooterDutyCycle(dutyCycle);
     });
@@ -137,7 +136,7 @@ public class SubsystemCommands {
   public Command FireStartFuel(ShooterSubsystem shooter) {
     return Commands.run(() -> {
           shooter.setFlywheelGoal( // use 600 as radians baseline, ask if this is ok
-              new AngularV_State(
+              new RadVel_State(
                   600 * 0.7)); // does this adjust for differences between the two wheels?
           // TODO: ask max how this works, also make a constants file for these values?
           // shooter.setRightShooterDutyCycle(dutyCycle);
@@ -256,15 +255,15 @@ public class SubsystemCommands {
   */
   // ADJUST FOR CAMERA POSITION. CHECK WHICH CAMERA AND ADD OFFSET FOR CAMERA POSEs!!!!!
   public List<Optional<EstimatedRobotPose>> GetEstimatedRobotPoseFromVisibleAprilTags(
-      DrivetrainSubsystem drivetrain,
-      PhotonCamera camera0,
-      PhotonCamera camera2,
-      PhotonPoseEstimator estimatorCam0,
-      PhotonPoseEstimator
-          estimatorCam1) { // List<List<PhotonPipelineResult>> results) { // (only from start for
+      VisionSubsystem
+          vision) { // List<List<PhotonPipelineResult>> results) { // (only from start for
     // now)
     // change to be for any point in game by making it dependent on the alliance side if
     // - at start and the odometry robot pose at any other point???
+    PhotonCamera camera0 = vision.m_camera0;
+    PhotonCamera camera2 = vision.m_camera2;
+    PhotonPoseEstimator estimatorCam0 = vision.m_estimatorCam0;
+    PhotonPoseEstimator estimatorCam1 = vision.m_estimatorCam1;
     var results = Arrays.asList(camera0.getAllUnreadResults(), camera2.getAllUnreadResults());
     List<Optional<EstimatedRobotPose>> visionEstimates = Arrays.asList();
 
@@ -292,105 +291,6 @@ public class SubsystemCommands {
     return visionEstimates;
   }
 
-  /*public Command LogStartPoseFromVisibleAprilTags(
-      DrivetrainSubsystem drivetrain,
-      PhotonCamera camera0,
-      PhotonCamera
-          camera2) { // List<List<PhotonPipelineResult>> results) { // (only from start for now)
-    // change to be for any point in game by making it dependent on the alliance side if
-    // - at start and the odometry robot pose at any other point???
-    // System.out.println(17171717);
-    return Commands.runOnce(() -> {
-      var results = Arrays.asList(
-          camera2
-              .getAllUnreadResults()); // (camera0.getAllUnreadResults(),camera2.getAllUnreadResults());
-      // change to not use camera0 while its not on robot?
-      Pose2d robotPose = null;
-      int curAprilTagID;
-      double targetYaw;
-      double targetRange;
-      double robotX = 0;
-      double robotY = 0;
-      Rotation2d robotHeading = new Rotation2d();
-      for (int i = 0; i < results.size(); i++) {
-        SmartDashboard.putNumber("visionCheck", 0.555);
-
-        // looping through results of each camera, with this system camera2 has priority, see if you
-        // need to coordinate
-        // - it so all cameras combine results or if this system works - THIS IS THE PROBLEM THIS
-        // NEVER RETURNS TARGET AND VISIBLE <---------
-        if (!results.get(i).isEmpty()) { // Camera processed a new frame since last
-          // Get the last one in the list.
-          SmartDashboard.putNumber("visionCheck", 222);
-          var result = results.get(i).get(results.get(i).size() - 1); // get latest result
-          SmartDashboard.putNumber("visionCheck", 222.555);
-          // SmartDashboard.putNumber("Target tag ID",
-          // (result.getTargets().get(result.getTargets().size)-1));
-          SmartDashboard.putBoolean("result.hasTargets()", result.hasTargets());
-          SmartDashboard.putString("camera result", result.toString());
-
-          // TO DEBUG: camera IS getting results for the tag, but this isnt working for some
-          // reason :(
-          if (result.hasTargets()) { // PROBLEM HERE PROBLEM HERE PROBLEM HERE
-            SmartDashboard.putNumber("visionCheck", 333);
-
-            // At least one AprilTag was seen by the camera - should be getting thru to here on/off
-            // but still yes
-            for (var target : result.getTargets()) {
-              SmartDashboard.putString("camera result target(s)", target.toString());
-              SmartDashboard.putNumber("visionCheck", 444);
-              // if (aprilTagIDs.contains(target.getFiducialId())) {
-              // found one of the tags in aprilTagIDs
-              curAprilTagID = target.getFiducialId();
-              targetYaw = target.getYaw();
-              SmartDashboard.putNumber("Target tag ID", curAprilTagID);
-              SmartDashboard.putNumber("tag vis on camera #", i);
-              System.out.println(target.getYaw());
-              targetRange =
-                  PhotonUtils.calculateDistanceToTargetMeters( // THESE NEED TO BE TUNED???
-                      0.5, // Measured with a tape measure, or in CAD.
-                      RobotContainer.AprilTagPoses.get(curAprilTagID).getZ(),
-                      Units.degreesToRadians(-30.0), // Measured with a protractor, or in CAD.
-                      Units.degreesToRadians(target.getPitch()));
-              //
-
-              if (true) {
-                SmartDashboard.putBoolean("alliance present", true);
-                if (allianceColor == "red") { // if on red side, add x,y,rot
-                  robotX = (drivetrain.getPose().getX() + (targetRange * Math.sin(targetYaw)));
-                  robotY = (drivetrain.getPose().getX() + (targetRange * Math.cos(targetYaw)));
-                  robotHeading = Rotation2d.fromDegrees(0 - targetYaw);
-                } else if (allianceColor == "blue") { // if on blue side, subtract x,y,rot
-                  robotX = (drivetrain.getPose().getX() - (targetRange * Math.sin(targetYaw)));
-                  robotY = (drivetrain.getPose().getX() - (targetRange * Math.cos(targetYaw)));
-                  robotHeading = Rotation2d.fromDegrees(180 - targetYaw);
-                }
-              } else {
-                SmartDashboard.putBoolean("alliance present", false);
-              }
-
-              robotPose = new Pose2d(robotX, robotY, robotHeading);
-            }
-          } else {
-          }
-          // }
-        } else {
-        }
-      }
-
-      //
-      if (robotPose != null) {
-        SmartDashboard.putNumber("robot pose from tag X", robotX);
-        SmartDashboard.putNumber("robot pose from tag Y", robotY);
-        // return robotPose;
-      } else {
-        // return null;
-      }
-    });
-  }
-  //*/
-
-  //
   public Command ExampleSequence() {
     return Commands.sequence(Commands.run(() -> {}));
   }
