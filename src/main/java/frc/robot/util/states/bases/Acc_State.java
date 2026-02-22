@@ -1,8 +1,11 @@
-package frc.robot.util.states;
+package frc.robot.util.states.bases;
 
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.Unit;
+import frc.robot.util.states.State;
+import frc.robot.util.states.StateUtil;
+import frc.robot.util.states.StateValue;
 import java.security.InvalidParameterException;
 
 public interface Acc_State extends State {

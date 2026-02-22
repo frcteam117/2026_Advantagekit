@@ -1,4 +1,4 @@
-package frc.robot.util.states;
+package frc.robot.util.states.bases;
 
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularAccelerationUnit;
@@ -6,6 +6,8 @@ import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.LinearVelocityUnit;
+import frc.robot.util.states.StateUtil;
+import frc.robot.util.states.StateValue;
 import java.security.InvalidParameterException;
 
 public interface PosVelAcc_State extends PosVel_State, PosAcc_State, VelAcc_State {

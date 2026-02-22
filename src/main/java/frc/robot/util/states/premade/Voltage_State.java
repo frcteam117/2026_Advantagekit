@@ -1,8 +1,11 @@
-package frc.robot.util.states;
+package frc.robot.util.states.premade;
 
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.units.VoltageUnit;
+import frc.robot.util.states.State;
+import frc.robot.util.states.StateUtil;
+import frc.robot.util.states.StateValue;
 import java.security.InvalidParameterException;
 
 public class Voltage_State implements State {

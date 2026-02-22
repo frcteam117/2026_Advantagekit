@@ -5,19 +5,21 @@ import com.revrobotics.spark.SparkMax;
 import frc.robot.util.components.bases.ComponentControllerBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.mechanisms.MechanismConstants;
-import frc.robot.util.states.Voltage_State;
+import frc.robot.util.states.premade.Voltage_State;
 
 public class SparkMaxController extends ComponentControllerBase {
   private final SparkMax[] sparkMaxes;
   private final RelativeEncoder[] relativeEncoders;
   private final String[] componentNames;
   private final String controllerName;
+  // private final SparkClosedLoopController closedLoopSpark;
 
   public SparkMaxController(MechanismConstants<?> config) {
     sparkMaxes = new SparkMax[config.motorCanIds.length];
     relativeEncoders = new RelativeEncoder[config.motorCanIds.length];
     componentNames = new String[config.motorCanIds.length];
     controllerName = config.outputsLogName;
+    // closedLoopSpark = sparkMaxes[0].getClosedLoopController();
 
     for (int i = 0; i < config.motorCanIds.length; i++) {
       componentNames[i] = "CAN-" + config.motorCanIds[i];
@@ -41,6 +43,10 @@ public class SparkMaxController extends ComponentControllerBase {
   public void setInput(Voltage_State V_State) {
     sparkMaxes[0].setVoltage(V_State.V());
   }
+
+  // public void setInput(Pos_State V_State) {
+  //   closedLoopSpark.setSetpoint();
+  // }
 
   @Override
   public Motor_State[] getState() {

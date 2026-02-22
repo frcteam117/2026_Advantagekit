@@ -25,10 +25,10 @@ import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
-import frc.robot.util.states.PosVel_State;
-import frc.robot.util.states.Pos_State;
 import frc.robot.util.states.StateValue;
-import frc.robot.util.states.VelAcc_State;
+import frc.robot.util.states.bases.PosVel_State;
+import frc.robot.util.states.bases.Pos_State;
+import frc.robot.util.states.bases.VelAcc_State;
 
 public class ShooterConstants {
   public static final String LOG_NAME = "4_Shooter";
@@ -111,10 +111,8 @@ public class ShooterConstants {
         RobotConstants.TUNING_PREFIX + FLYWHEEL_CONSTANTS.outputsLogName;
     FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    FLYWHEEL_CONSTANTS.motorCanIds =
-        new int[] {13, 15}; // 14,16 were supposed to be the followers respectively,
-    // - but only 2 motors listed here. ask max later
-    FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true};
+    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {13, 14, 15, 16};
+    FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true, false, true};
     FLYWHEEL_CONSTANTS.revMotorType = MotorType.kBrushless;
     FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     FLYWHEEL_CONSTANTS
@@ -132,7 +130,7 @@ public class ShooterConstants {
     FLYWHEEL_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
     FLYWHEEL_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
     FLYWHEEL_CONSTANTS.limits_State = VelAcc_State.create(
-        new StateValue(628, RadiansPerSecond), new StateValue(2000, RadiansPerSecondPerSecond));
+        new StateValue(628, RadiansPerSecond), new StateValue(200, RadiansPerSecondPerSecond));
     FLYWHEEL_CONSTANTS.isLoop = true;
     // Feedback
     FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
@@ -157,4 +155,29 @@ public class ShooterConstants {
             ((Motor_State) componentStates[0]).radPs() / FLYWHEEL_CONSTANTS.reduction,
             RadiansPerSecond));
   }
+
+  //   static {
+  //     R_FLYWHEEL_CONSTANTS = L_FLYWHEEL_CONSTANTS;
+  //     R_FLYWHEEL_CONSTANTS.outputsLogName = LOG_NAME + "/R Flywheel";
+  //     R_FLYWHEEL_CONSTANTS.tuningLogName =
+  //         RobotConstants.TUNING_PREFIX + R_FLYWHEEL_CONSTANTS.outputsLogName;
+  //     R_FLYWHEEL_CONSTANTS.motorCanIds = new int[] {15, 16};
+
+  //     R_FLYWHEEL_CONFIG.constants = R_FLYWHEEL_CONSTANTS;
+  //     R_FLYWHEEL_CONFIG.realComponents = new ComponentBase[0];
+  //     R_FLYWHEEL_CONFIG.simComponents = new ComponentSimBase[0];
+  //     R_FLYWHEEL_CONFIG.realController = new SparkMaxController(R_FLYWHEEL_CONSTANTS);
+  //     R_FLYWHEEL_CONFIG.simController = new DCMotorSimulator(R_FLYWHEEL_CONSTANTS);
+  //     R_FLYWHEEL_CONFIG.profiles =
+  //         new ControlFunctionBase[] {new TrapezoidProfileFunction(R_FLYWHEEL_CONSTANTS)};
+  //     R_FLYWHEEL_CONFIG.feedbacks = new ControlFunctionBase[] {new
+  // SimplePIDF(R_FLYWHEEL_CONSTANTS)};
+  //     R_FLYWHEEL_CONFIG.componentsToState = componentStates -> PosVel_State.create(
+  //         new StateValue(
+  //             ((Motor_State) componentStates[0]).rad() / R_FLYWHEEL_CONSTANTS.reduction,
+  // Radians),
+  //         new StateValue(
+  //             ((Motor_State) componentStates[0]).radPs() / R_FLYWHEEL_CONSTANTS.reduction,
+  //             RadiansPerSecond));
+  //   }
 }

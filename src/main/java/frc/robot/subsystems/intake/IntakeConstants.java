@@ -24,10 +24,11 @@ import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
-import frc.robot.util.states.PosVel_State;
-import frc.robot.util.states.Pos_State;
 import frc.robot.util.states.StateValue;
-import frc.robot.util.states.VelAcc_State;
+import frc.robot.util.states.bases.PosVel_State;
+import frc.robot.util.states.bases.VelAcc_State;
+import frc.robot.util.states.premade.RadPosVel_State;
+import frc.robot.util.states.premade.RadPos_State;
 
 public class IntakeConstants {
   public static final String LOG_NAME = "2_Intake";
@@ -45,7 +46,7 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + PIVOT_CONSTANTS.outputsLogName;
     PIVOT_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     PIVOT_CONSTANTS.mass_kg = 0.5;
-    PIVOT_CONSTANTS.cmOffset_rad = -0.2;
+    PIVOT_CONSTANTS.cmOffset_rad = .3 - ((1.43256625 + 1.54566358557) / 2);
     // Motor
     PIVOT_CONSTANTS.motorCanIds = new int[] {12};
     PIVOT_CONSTANTS.revMotorType = MotorType.kBrushless;
@@ -53,16 +54,17 @@ public class IntakeConstants {
     PIVOT_CONSTANTS
         .baseSparkConfig
         .voltageCompensation(RobotConstants.NOMINAL_V)
-        .smartCurrentLimit(30);
+        .smartCurrentLimit(30)
+        .inverted(true);
     // Motor properties
-    PIVOT_CONSTANTS.reduction = 30d;
+    PIVOT_CONSTANTS.reduction = 23.80952381;
     PIVOT_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(PIVOT_CONSTANTS.reduction);
     PIVOT_CONSTANTS.moi_kgm2 = .3;
     // Profiling
-    PIVOT_CONSTANTS.start_State =
-        PosVel_State.create(new StateValue(0.5, Radians), new StateValue(0, RadiansPerSecond));
-    PIVOT_CONSTANTS.min_Pos = Pos_State.create(new StateValue(0.5, Radians));
-    PIVOT_CONSTANTS.max_Pos = Pos_State.create(new StateValue(2.1, Radians));
+    PIVOT_CONSTANTS.start_State = new RadPosVel_State(
+        0, 0); // 5.643, 5.929, -0.214, 0.214 rotor rotations with positive being farther down
+    PIVOT_CONSTANTS.min_Pos = new RadPos_State(-1.54566358557);
+    PIVOT_CONSTANTS.max_Pos = new RadPos_State(0);
     PIVOT_CONSTANTS.limits_State = VelAcc_State.create(
         new StateValue(4, RadiansPerSecond), new StateValue(12, RadiansPerSecondPerSecond));
     PIVOT_CONSTANTS.isLoop = false;
@@ -82,12 +84,9 @@ public class IntakeConstants {
     PIVOT_CONFIG.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(PIVOT_CONSTANTS)};
     PIVOT_CONFIG.feedbacks = new ControlFunctionBase[] {new ArmPIDF(PIVOT_CONSTANTS)};
-    PIVOT_CONFIG.componentsToState = componentStates -> PosVel_State.create(
-        new StateValue(
-            ((Motor_State) componentStates[0]).rad() / PIVOT_CONSTANTS.reduction, Radians),
-        new StateValue(
-            ((Motor_State) componentStates[0]).radPs() / PIVOT_CONSTANTS.reduction,
-            RadiansPerSecond));
+    PIVOT_CONFIG.componentsToState = componentStates -> new RadPosVel_State(
+        ((Motor_State) componentStates[0]).rad() / PIVOT_CONSTANTS.reduction,
+        ((Motor_State) componentStates[0]).radPs() / PIVOT_CONSTANTS.reduction);
   }
 
   static {
@@ -96,7 +95,7 @@ public class IntakeConstants {
     ROLLER_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + ROLLER_CONSTANTS.outputsLogName;
     ROLLER_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    ROLLER_CONSTANTS.motorCanIds = new int[] {13};
+    ROLLER_CONSTANTS.motorCanIds = new int[] {11};
     ROLLER_CONSTANTS.revMotorType = MotorType.kBrushless;
     ROLLER_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     ROLLER_CONSTANTS
@@ -110,8 +109,8 @@ public class IntakeConstants {
     // Profiling
     ROLLER_CONSTANTS.start_State =
         PosVel_State.create(new StateValue(0, Radians), new StateValue(0, RadiansPerSecond));
-    ROLLER_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
-    ROLLER_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
+    ROLLER_CONSTANTS.min_Pos = new RadPos_State(-Double.MAX_VALUE);
+    ROLLER_CONSTANTS.max_Pos = new RadPos_State(Double.MAX_VALUE);
     ROLLER_CONSTANTS.limits_State = VelAcc_State.create(
         new StateValue(100, RadiansPerSecond), new StateValue(400, RadiansPerSecondPerSecond));
     ROLLER_CONSTANTS.isLoop = true;
@@ -131,11 +130,8 @@ public class IntakeConstants {
     ROLLER_CONFIG.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(ROLLER_CONSTANTS)};
     ROLLER_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(ROLLER_CONSTANTS)};
-    ROLLER_CONFIG.componentsToState = componentStates -> PosVel_State.create(
-        new StateValue(
-            ((Motor_State) componentStates[0]).rad() / ROLLER_CONSTANTS.reduction, Radians),
-        new StateValue(
-            ((Motor_State) componentStates[0]).radPs() / ROLLER_CONSTANTS.reduction,
-            RadiansPerSecond));
+    ROLLER_CONFIG.componentsToState = componentStates -> new RadPosVel_State(
+        ((Motor_State) componentStates[0]).rad() / ROLLER_CONSTANTS.reduction,
+        ((Motor_State) componentStates[0]).radPs() / ROLLER_CONSTANTS.reduction);
   }
 }

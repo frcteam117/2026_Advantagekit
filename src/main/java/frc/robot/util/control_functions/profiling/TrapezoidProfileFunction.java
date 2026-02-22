@@ -6,11 +6,11 @@ import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import frc.robot.util.mechanisms.MechanismConstants;
-import frc.robot.util.states.PosVel_State;
-import frc.robot.util.states.Pos_State;
 import frc.robot.util.states.StateValue;
-import frc.robot.util.states.VelAcc_State;
-import frc.robot.util.states.Vel_State;
+import frc.robot.util.states.bases.PosVel_State;
+import frc.robot.util.states.bases.Pos_State;
+import frc.robot.util.states.bases.VelAcc_State;
+import frc.robot.util.states.bases.Vel_State;
 
 public class TrapezoidProfileFunction extends ControlFunctionBase {
   private final String profileName;

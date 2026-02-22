@@ -13,6 +13,11 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -25,14 +30,17 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.PathCommands;
 import frc.robot.commands.SubsystemCommands;
 import frc.robot.subsystems.drivetrain.*;
-import frc.robot.subsystems.intake.Pivot;
+import frc.robot.subsystems.indexer.IndexerCommands;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.intake.IntakeCommands;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIO;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -40,6 +48,7 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.states.premade.RadVel_State;
 import java.util.ArrayList;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
@@ -59,10 +68,12 @@ public class RobotContainer {
   // Subsystems
   public static DrivetrainSubsystem drive;
   public final VisionSubsystem vision;
-  public final Pivot pivot;
+  // public final Pivot pivot;
   // public final Roller roller;
   // public final BottomHopper bottomHopper;
   // public final TopHopper topHopper;
+  public final IndexerSubsystem indexer;
+  public final IntakeSubsystem intake;
   public final ShooterSubsystem shooter;
   public static final SubsystemCommands subsystemCommands = new SubsystemCommands();
   public static final PathCommands pathCommands =
@@ -71,18 +82,18 @@ public class RobotContainer {
   public static final PhotonCamera camera0 = new PhotonCamera(VisionConstants.camera0Name);
   public static final PhotonCamera camera1 = new PhotonCamera(VisionConstants.camera1Name);
   // Controller
-  private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandPS5Controller controller = new CommandPS5Controller(0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  static AprilTagFieldLayout kTagLayout =
+  public static AprilTagFieldLayout kTagLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
   public static List<Pose3d> AprilTagPoses = new ArrayList<>();
-  static Transform3d kRobotToCam0 = VisionConstants.robotToCamera0;
+  public static Transform3d kRobotToCam0 = VisionConstants.robotToCamera0;
   public static final PhotonPoseEstimator photonEstimatorCam0 =
       new PhotonPoseEstimator(kTagLayout, kRobotToCam0);
-  static Transform3d kRobotToCam1 = VisionConstants.robotToCamera0;
+  public static Transform3d kRobotToCam1 = VisionConstants.robotToCamera0;
   public static final PhotonPoseEstimator photonEstimatorCam1 =
       new PhotonPoseEstimator(kTagLayout, kRobotToCam1);
 
@@ -99,6 +110,10 @@ public class RobotContainer {
             new ModuleIONova(2),
             new ModuleIONova(3),
             (pose) -> {});
+        this.vision = new VisionSubsystem(
+            drive::accept,
+            new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+            new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -123,34 +138,33 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        /*vision = new Vision(
-        drive,
-        new VisionIOPhotonVisionSim(
-            VisionConstants.camera0Name,
-            VisionConstants.robotToCamera0,
-            driveSimulation::getSimulatedDriveTrainPose),
-        new VisionIOPhotonVisionSim(
-            VisionConstants.camera1Name,
-            VisionConstants.robotToCamera1,
-            driveSimulation::getSimulatedDriveTrainPose));*/
-        vision = null;
-        // vision = new Vision(
-        //     drive,
-        //     new VisionIOPhotonVisionSim(
-        //         VisionConstants.camera0Name,
-        //         VisionConstants.robotToCamera0,
-        //         driveSimulation::getSimulatedDriveTrainPose),
-        //     new VisionIOPhotonVisionSim(
-        //         VisionConstants.camera1Name,
-        //         VisionConstants.robotToCamera1,
+        vision = new VisionSubsystem(
+            drive::accept,
+            new VisionIOPhotonVisionSim(
+                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+            new VisionIOPhotonVisionSim(
+                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+        break;
+      default:
+        // Replayed robot, disable IO implementations
+        drive = new DrivetrainSubsystem(
+            new GyroIO() {},
+            new ModuleIO() {},
+            new ModuleIO() {},
+            new ModuleIO() {},
+            new ModuleIO() {},
+            (pose) -> {});
+        vision = new VisionSubsystem(drive::accept, new VisionIO() {}, new VisionIO() {});
         break;
     }
-    pivot = new Pivot();
-    // roller = new Roller();
-    // bottomHopper = new BottomHopper();
-    // topHopper = new TopHopper();
+    // intake = null;
+    // indexer = null;
+    // shooter = null;
+    intake = new IntakeSubsystem();
+    indexer = new IndexerSubsystem();
     shooter = new ShooterSubsystem();
-    vision = new VisionSubsystem(drive, camera0, camera1, photonEstimatorCam0, photonEstimatorCam1);
+    // vision = new VisionSubsystem(drive, camera0, camera0, photonEstimatorCam0,
+    // photonEstimatorCam1);
 
     for (int i = 1; i < 33; i++) { // 33 because 32 tags, index 0 will return a safe Null
       Pose3d tagPose = kTagLayout.getTagPose(i).orElse(new Pose3d());
@@ -211,7 +225,18 @@ public class RobotContainer {
         drive,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRawAxis(2)));
+        () -> -controller.getRightX()));
+
+    controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
+    controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
+
+    indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
+    controller.R1().onTrue(IndexerCommands.runForwardCommand(indexer));
+    controller.L1().onTrue(IndexerCommands.runBackwardCommand(indexer));
+
+    shooter.setDefaultCommand(ShooterCommands.stopCommand(shooter));
+    controller.triangle().onTrue(ShooterCommands.runCommand(shooter));
+    controller.triangle().onFalse(ShooterCommands.stopCommand(shooter));
     // shooter.setDefaultCommand(Commands.run(
     //     () -> shooter.setMechGoals(
     //         Pos_State.create(new StateValue(0.0, Radians)),
@@ -233,23 +258,23 @@ public class RobotContainer {
 
     controller
         .button(4)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(200)), shooter));
+        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new RadVel_State(200)), shooter));
     controller
         .button(5)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(400)), shooter));
+        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new RadVel_State(400)), shooter));
     controller
         .button(6)
-        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new AngularV_State(600)), shooter));
+        .onTrue(Commands.run(() -> shooter.setFlywheelGoal(new RadVel_State(600)), shooter));
     // other buttons
     controller
         .button(7)
         .onTrue(SubsystemCommands.AlignToTag(drive, vision, camera0, camera1, pathCommands));
-    controller.button(8).onTrue(SubsystemCommands.DeployIntake(pivot));
+    controller.button(8).onTrue(IntakeCommands.raiseCommand(intake));
     controller // there probably aren't actually this many buttons on the controller but we'll
         // figure
         // - that out later
         .button(9)
-        .onTrue(SubsystemCommands.UndeployIntake(pivot));
+        .onTrue(IntakeCommands.lowerCommand(intake));
     // controller
     //  .button(10)
     // .whileTrue(SubsystemCommands.IntakeFuel(
@@ -266,11 +291,11 @@ public class RobotContainer {
         // simulation
         : () -> drive.resetOdometry(
             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
-    controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-    controller
-        .button(0) // WHY IS THIS LINKED TO A BUTTON??????
-        .onTrue(Commands.runOnce(() -> {})
-            .finallyDo(() -> CommandScheduler.getInstance().schedule(getAutonomousCommand())));
+    controller.square().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+    // controller
+    //     .button(1)
+    //     .onTrue(Commands.runOnce(() -> {})
+    //         .finallyDo(() -> CommandScheduler.getInstance().schedule(getAutonomousCommand())));
   }
 
   /**

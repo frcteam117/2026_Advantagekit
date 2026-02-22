@@ -56,6 +56,23 @@ public class LogUtil {
         min -> pidController.setIntegratorRange(min, maxIntegral.getAsDouble()));
   }
 
+  // public static void createTunablePID(
+  //     String key, SparkBase spark, BooleanSupplier shouldPublish) {
+  //   new TunableDouble(key + "/0 P", spark.configure, shouldPublish, pidController::setP);
+  //   new TunableDouble(key + "/1 I", pidController.getI(), shouldPublish, pidController::setI);
+  //   new TunableDouble(key + "/2 D", pidController.getD(), shouldPublish, pidController::setD);
+  //   new TunableDouble(
+  //       key + "/3 IZone", pidController.getIZone(), shouldPublish, pidController::setIZone);
+  //   TunableDouble minIntegral = new TunableDouble(key + "/4 MinIntegral", -1, shouldPublish);
+  //   TunableDouble maxIntegral = new TunableDouble(
+  //       key + "/5 MaxIntegral",
+  //       1,
+  //       shouldPublish,
+  //       max -> pidController.setIntegratorRange(minIntegral.getAsDouble(), max));
+  //   minIntegral.runOnChange(
+  //       min -> pidController.setIntegratorRange(min, maxIntegral.getAsDouble()));
+  // }
+
   public static void createTunableFF(
       String key, SimpleMotorFeedforward ff, BooleanSupplier shouldPublish) {
     new TunableDouble(key + "/6 S", ff.getKs(), shouldPublish, ff::setKs);

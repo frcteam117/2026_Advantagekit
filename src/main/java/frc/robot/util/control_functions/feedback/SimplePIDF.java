@@ -5,8 +5,8 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.LogUtil;
 import frc.robot.util.mechanisms.MechanismConstants;
-import frc.robot.util.states.PosVel_State;
-import frc.robot.util.states.Voltage_State;
+import frc.robot.util.states.bases.PosVel_State;
+import frc.robot.util.states.premade.Voltage_State;
 
 public class SimplePIDF extends ControlFunctionBase {
   private String name = "SimplePIDF";
