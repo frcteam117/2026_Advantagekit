@@ -14,6 +14,7 @@ import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import java.util.List;
 import java.util.Optional;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 
 public final class Autos {
   Pose2d robotStartPose;
@@ -24,11 +25,15 @@ public final class Autos {
       DrivetrainSubsystem drivetrain,
       SubsystemCommands subsystemCommands,
       PhotonCamera camera0,
-      PhotonCamera camera2) {
+      PhotonCamera camera2,
+      PhotonPoseEstimator estimatorCam0,
+      PhotonPoseEstimator estimatorCam1) {
     // throw new UnsupportedOperationException("don't use this dummy");
-    robotStartPose =
-        subsystemCommands.GetStartPoseFromVisibleAprilTags(drivetrain, camera0, camera2);
-    drivetrain.resetOdometry(robotStartPose);
+    //robotStartPose =
+    // this is handled in vision periodic:
+    //    subsystemCommands.GetEstimatedRobotPoseFromVisibleAprilTags(
+    //        drivetrain, camera0, camera2, estimatorCam0, estimatorCam1);
+    //drivetrain.resetOdometry(robotStartPose);
     //
     alliance = DriverStation.getAlliance();
     if (alliance.isPresent()) {

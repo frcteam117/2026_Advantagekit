@@ -20,6 +20,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -48,6 +49,7 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -76,8 +78,12 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  static AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
   public static List<Pose3d> AprilTagPoses = new ArrayList<>();
+  static Transform3d kRobotToCam0 = VisionConstants.robotToCamera0;
+  public static final PhotonPoseEstimator photonEstimatorCam0 = new PhotonPoseEstimator(kTagLayout, kRobotToCam0);
+  static Transform3d kRobotToCam1 = VisionConstants.robotToCamera0;
+  public static final PhotonPoseEstimator photonEstimatorCam1 = new PhotonPoseEstimator(kTagLayout, kRobotToCam1);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -143,7 +149,7 @@ public class RobotContainer {
     // bottomHopper = new BottomHopper();
     // topHopper = new TopHopper();
     shooter = new ShooterSubsystem();
-    vision = new VisionSubsystem(drive, camera0, camera1);
+    vision = new VisionSubsystem(drive, camera0, camera1, photonEstimatorCam0, photonEstimatorCam1);
 
     for (int i = 1; i < 33; i++) { // 33 because 32 tags, index 0 will return a safe Null
       Pose3d tagPose = kTagLayout.getTagPose(i).orElse(new Pose3d());
@@ -160,6 +166,7 @@ public class RobotContainer {
 
     //
     // Set up auto routines
+
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up SysId routines
@@ -302,6 +309,9 @@ public class RobotContainer {
 
   public static SubsystemCommands getSubsystemCommands() {
     return subsystemCommands;
+  }
+  public VisionSubsystem getVisionSubsystem() {
+    return vision; // these should be named the same probably
   }
   // public static Shooter getShooter() {
   // return shooter;

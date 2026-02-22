@@ -2,6 +2,7 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -10,7 +11,10 @@ import frc.robot.RobotContainer;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import java.util.Arrays;
 import java.util.List;
+
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 
@@ -39,15 +43,30 @@ public class VisionSubsystem {
   public double kPVision_Turn = 0.0;
   public double targetRange = 0.0;
   public boolean targetVisible = false;
+  public int updateNum = 1;
+  //
+  DrivetrainSubsystem m_drivetrain;
+  PhotonCamera m_camera0;
+  PhotonCamera m_camera2;
+  PhotonPoseEstimator m_estimatorCam0;
+  PhotonPoseEstimator m_estimatorCam1;
 
+  //
   public VisionSubsystem(
-      DrivetrainSubsystem drivetrain, PhotonCamera camera0, PhotonCamera camera2) {
+      DrivetrainSubsystem drivetrain, 
+      PhotonCamera camera0, 
+      PhotonCamera camera2, 
+      PhotonPoseEstimator estimatorCam0,
+      PhotonPoseEstimator estimatorCam1) {
+
     AprilTagPoses = Arrays.asList();
     kPVision_Turn = -.03;
     targetYaw = (0.0);
-    RobotContainer.getDrivetrain() // will this ever run right if its at init?
-        .resetOdometry(RobotContainer.getSubsystemCommands()
-            .GetStartPoseFromVisibleAprilTags(drivetrain, camera0, camera2));
+    m_drivetrain = drivetrain;
+    m_camera0 = camera0;
+    m_camera2 = camera2;
+    m_estimatorCam0 = estimatorCam0;
+    m_estimatorCam1 = estimatorCam1;
     // camera0 = new PhotonCamera("PC_Camera0");
     // camera2 = new PhotonCamera("PC_Camera2");
     // Rotation2d originRot = new Rotation2d(0);
@@ -112,4 +131,29 @@ public class VisionSubsystem {
     return new cameraData(
         curAprilTagID, cameraNumber, targetYaw, targetVisible, targetRange, kPVision_Turn);
   }
+
+  //
+  public void VisionPeriodic() { // updateNum > 0
+    if (updateNum > 2) {
+      updateNum = 1;
+    }
+    var visionEst = RobotContainer.getSubsystemCommands()
+            .GetEstimatedRobotPoseFromVisibleAprilTags(
+              m_drivetrain, m_camera0, m_camera2, m_estimatorCam0, m_estimatorCam1);
+    if (!visionEst.isEmpty()) {
+      var optionalEst = visionEst.get(updateNum-1); // add fallback for index errors?
+      if (!optionalEst.isEmpty()) {
+        EstimatedRobotPose est = 
+          visionEst.get(updateNum-1).
+          orElse(new EstimatedRobotPose(null, 0.0, null));
+        Pose3d visionEstPose3d = est.estimatedPose;
+        Pose2d visionEstPose2d = new Pose2d(
+          visionEstPose3d.getX(), visionEstPose3d.getY(), visionEstPose3d.getRotation().toRotation2d());
+        //
+        RobotContainer.getDrivetrain().resetOdometry(visionEstPose2d);
+        updateNum += 1;
+      }
+    }
+  }
+  //
 }
