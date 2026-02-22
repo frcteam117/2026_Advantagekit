@@ -29,11 +29,11 @@ public final class Autos {
       PhotonPoseEstimator estimatorCam0,
       PhotonPoseEstimator estimatorCam1) {
     // throw new UnsupportedOperationException("don't use this dummy");
-    //robotStartPose =
+    // robotStartPose =
     // this is handled in vision periodic:
     //    subsystemCommands.GetEstimatedRobotPoseFromVisibleAprilTags(
     //        drivetrain, camera0, camera2, estimatorCam0, estimatorCam1);
-    //drivetrain.resetOdometry(robotStartPose);
+    // drivetrain.resetOdometry(robotStartPose);
     //
     alliance = DriverStation.getAlliance();
     if (alliance.isPresent()) {

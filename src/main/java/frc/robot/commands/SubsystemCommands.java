@@ -13,18 +13,13 @@
 
 package frc.robot.commands;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.studica.frc.Navx;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotContainer;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import frc.robot.subsystems.indexer.*;
@@ -38,11 +33,9 @@ import frc.robot.util.States.AngularV_State;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonUtils;
 
 public class SubsystemCommands {
   private static final double DEADBAND = 0.1;
@@ -267,36 +260,36 @@ public class SubsystemCommands {
       PhotonCamera camera0,
       PhotonCamera camera2,
       PhotonPoseEstimator estimatorCam0,
-      PhotonPoseEstimator estimatorCam1) { // List<List<PhotonPipelineResult>> results) { // (only from start for now)
+      PhotonPoseEstimator
+          estimatorCam1) { // List<List<PhotonPipelineResult>> results) { // (only from start for
+    // now)
     // change to be for any point in game by making it dependent on the alliance side if
     // - at start and the odometry robot pose at any other point???
     var results = Arrays.asList(camera0.getAllUnreadResults(), camera2.getAllUnreadResults());
     List<Optional<EstimatedRobotPose>> visionEstimates = Arrays.asList();
 
     for (int i = 0; i < results.size(); i++) {
-        if (!results.get(i).isEmpty()) { // Camera processed a new frame since last
-          // Get the last one in the list.
-          PhotonPoseEstimator estimator;
-          if (i == 0) {
-            estimator = estimatorCam0;
-          }
-          else {
-            estimator = estimatorCam1;
-          }
-          var result = results.get(i).get(results.get(i).size() - 1);
-          Optional<EstimatedRobotPose> visionEst = estimator.estimateCoprocMultiTagPose(result);
-          if (visionEst.isEmpty()) {
-            visionEst = estimator.estimateLowestAmbiguityPose(result);
-          }
-          visionEstimates.add(visionEst);
+      if (!results.get(i).isEmpty()) { // Camera processed a new frame since last
+        // Get the last one in the list.
+        PhotonPoseEstimator estimator;
+        if (i == 0) {
+          estimator = estimatorCam0;
+        } else {
+          estimator = estimatorCam1;
         }
+        var result = results.get(i).get(results.get(i).size() - 1);
+        Optional<EstimatedRobotPose> visionEst = estimator.estimateCoprocMultiTagPose(result);
+        if (visionEst.isEmpty()) {
+          visionEst = estimator.estimateLowestAmbiguityPose(result);
+        }
+        visionEstimates.add(visionEst);
       }
+    }
     //
-    
-      //SmartDashboard.putNumber("robot pose from tag X", robotX);
-      //SmartDashboard.putNumber("robot pose from tag Y", robotY);
-      return visionEstimates;
-    
+
+    // SmartDashboard.putNumber("robot pose from tag X", robotX);
+    // SmartDashboard.putNumber("robot pose from tag Y", robotY);
+    return visionEstimates;
   }
 
   /*public Command LogStartPoseFromVisibleAprilTags(

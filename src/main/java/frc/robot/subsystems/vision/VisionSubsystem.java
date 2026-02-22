@@ -11,7 +11,6 @@ import frc.robot.RobotContainer;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import java.util.Arrays;
 import java.util.List;
-
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -53,9 +52,9 @@ public class VisionSubsystem {
 
   //
   public VisionSubsystem(
-      DrivetrainSubsystem drivetrain, 
-      PhotonCamera camera0, 
-      PhotonCamera camera2, 
+      DrivetrainSubsystem drivetrain,
+      PhotonCamera camera0,
+      PhotonCamera camera2,
       PhotonPoseEstimator estimatorCam0,
       PhotonPoseEstimator estimatorCam1) {
 
@@ -138,17 +137,18 @@ public class VisionSubsystem {
       updateNum = 1;
     }
     var visionEst = RobotContainer.getSubsystemCommands()
-            .GetEstimatedRobotPoseFromVisibleAprilTags(
-              m_drivetrain, m_camera0, m_camera2, m_estimatorCam0, m_estimatorCam1);
+        .GetEstimatedRobotPoseFromVisibleAprilTags(
+            m_drivetrain, m_camera0, m_camera2, m_estimatorCam0, m_estimatorCam1);
     if (!visionEst.isEmpty()) {
-      var optionalEst = visionEst.get(updateNum-1); // add fallback for index errors?
+      var optionalEst = visionEst.get(updateNum - 1); // add fallback for index errors?
       if (!optionalEst.isEmpty()) {
-        EstimatedRobotPose est = 
-          visionEst.get(updateNum-1).
-          orElse(new EstimatedRobotPose(null, 0.0, null));
+        EstimatedRobotPose est =
+            visionEst.get(updateNum - 1).orElse(new EstimatedRobotPose(null, 0.0, null));
         Pose3d visionEstPose3d = est.estimatedPose;
         Pose2d visionEstPose2d = new Pose2d(
-          visionEstPose3d.getX(), visionEstPose3d.getY(), visionEstPose3d.getRotation().toRotation2d());
+            visionEstPose3d.getX(),
+            visionEstPose3d.getY(),
+            visionEstPose3d.getRotation().toRotation2d());
         //
         RobotContainer.getDrivetrain().resetOdometry(visionEstPose2d);
         updateNum += 1;

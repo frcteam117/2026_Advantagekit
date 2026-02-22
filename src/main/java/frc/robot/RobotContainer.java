@@ -78,12 +78,15 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  static AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  static AprilTagFieldLayout kTagLayout =
+      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
   public static List<Pose3d> AprilTagPoses = new ArrayList<>();
   static Transform3d kRobotToCam0 = VisionConstants.robotToCamera0;
-  public static final PhotonPoseEstimator photonEstimatorCam0 = new PhotonPoseEstimator(kTagLayout, kRobotToCam0);
+  public static final PhotonPoseEstimator photonEstimatorCam0 =
+      new PhotonPoseEstimator(kTagLayout, kRobotToCam0);
   static Transform3d kRobotToCam1 = VisionConstants.robotToCamera0;
-  public static final PhotonPoseEstimator photonEstimatorCam1 = new PhotonPoseEstimator(kTagLayout, kRobotToCam1);
+  public static final PhotonPoseEstimator photonEstimatorCam1 =
+      new PhotonPoseEstimator(kTagLayout, kRobotToCam1);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -310,6 +313,7 @@ public class RobotContainer {
   public static SubsystemCommands getSubsystemCommands() {
     return subsystemCommands;
   }
+
   public VisionSubsystem getVisionSubsystem() {
     return vision; // these should be named the same probably
   }
