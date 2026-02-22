@@ -9,10 +9,10 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.util.States.Pos_State;
-import frc.robot.util.States.State;
+import frc.robot.util.states.Pos_State;
+import frc.robot.util.states.State;
 
-public class MechanismConstants {
+public class MechanismConstants<Output_State extends State> {
   // Physical constraints
   public String outputsLogName;
   public String tuningLogName;
@@ -41,14 +41,14 @@ public class MechanismConstants {
   public Double length_m;
 
   // Profile constants
-  public State start_State;
+  public Output_State start_State;
 
   public Pos_State min_Pos;
   public Pos_State max_Pos;
-  public Boolean isContinuous;
+  public Boolean isLoop;
 
   /** For arms: Angle of the center of mass above horizontal when the measured angle is zero. */
-  public Pos_State cmOffset_Pos;
+  public Double cmOffset_rad;
 
   public State limits_State;
 

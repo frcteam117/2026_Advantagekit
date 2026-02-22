@@ -5,14 +5,11 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
-import frc.robot.util.States.State;
-import frc.robot.util.States.Voltage_State;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.components.bases.ComponentBase;
@@ -22,15 +19,23 @@ import frc.robot.util.components.bases.ComponentSimControllerBase;
 import frc.robot.util.components.bases.ComponentStates.ComponentState;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.TunableBoolean;
+import frc.robot.util.states.LoggableStateInputs;
+import frc.robot.util.states.State;
+import frc.robot.util.states.StateUtil;
+import frc.robot.util.states.Voltage_State;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public class MechanismBase<Output_State extends State> {
+  public static String mechanismStateLogName = "0_Measured";
+  public static String goalStateLogName = "1_Goal";
+  public static String nextStateLogName = "2_Next";
+  public static String inputStateLogName = "3_Input";
+
   private final List<ComponentBase> components;
   private final List<ComponentSimBase> simulators;
   private final ComponentControllerBase controller;
@@ -44,12 +49,9 @@ public class MechanismBase<Output_State extends State> {
   private final ControlFunctionBase[] feedbacks;
   private int activeProfile = 0;
   private int activeFeedback = 0;
-  private String goalStateName = "";
-  private String nextStateName = "";
-  private String outputStateName = "";
-  private State goalStateNaN;
-  private State nextStateNaN;
-  private State outputStateNaN;
+  private State goal_State = State.create();
+  private State next_State = State.create();
+  private State input_State = State.create();
 
   private final SysIdRoutine sysId;
 
@@ -57,7 +59,8 @@ public class MechanismBase<Output_State extends State> {
   private final ComponentStatesLogger componentStatesLogger = new ComponentStatesLogger();
 
   public MechanismBase(MechanismConfig<Output_State> config, Subsystem subsystem) {
-    logName = config.logName;
+    mechanism_State = config.constants.start_State;
+    logName = config.constants.outputsLogName;
     profiles = config.profiles;
     feedbacks = config.feedbacks;
     if (RobotBase.isReal()) {
@@ -76,9 +79,6 @@ public class MechanismBase<Output_State extends State> {
       simulators.add(config.simController);
       components =
           simulators.stream().map(simulator -> (ComponentBase) simulator).toList();
-      // if (DCMotorSimulator.class.isInstance(config.simController)) {
-      //   simulators.remove(0);
-      // }
       controller = config.simController;
     }
     componentsToState = config.componentsToState;
@@ -100,7 +100,7 @@ public class MechanismBase<Output_State extends State> {
             (state) -> Logger.recordOutput(logName + "/SysIdState", state.toString())),
         new SysIdRoutine.Mechanism((voltage) -> setVoltageSysId(voltage), null, subsystem));
 
-    new TunableBoolean(config.tuningLogName + "/.Tunable", false, () -> true, value -> {
+    new TunableBoolean(config.constants.tuningLogName + "/.Tunable", false, () -> true, value -> {
       Arrays.stream(profiles).forEach(profile -> profile.setTunable(value));
       Arrays.stream(feedbacks).forEach(feedback -> feedback.setTunable(value));
     });
@@ -116,33 +116,33 @@ public class MechanismBase<Output_State extends State> {
     }
     Logger.processInputs(logName, componentStatesLogger);
     mechanism_State = componentsToState.apply(componentStates);
-    Logger.recordOutput(logName + "/State", (Record) mechanism_State);
-    // Logger.recordOutput("Tuning/test", 1);
+    StateUtil.recordOutput(logName + "/" + mechanismStateLogName, mechanism_State);
     for (ComponentSimBase simulator : simulators) {
       simulator.updateState(RobotConstants.CODE_PERIOD_s);
     }
-    // MechanismState newMechanismState = componentStateAverager.apply(componentStates);
-    // if (mechanismState == null) {
-    //   mechanismState = newMechanismState;
-    // }
-    // if (!newMechanismState.getClass().isInstance(mechanismState)) {
-    //   Logger.recordOutput(logName + "/State_" + mechanismState.getShortName(), (Record)
-    //       mechanismState.getNaNState());
-    // }
-    // mechanismState = newMechanismState;
-    // Logger.recordOutput(
-    //     logName + "/State_" + mechanismState.getShortName(), (Record) mechanismState);
   }
 
   public void setGoal(State goalState, int usedProfile, int usedFeedback) {
+    if (profiles.length <= usedProfile
+        || usedProfile < 0
+        || feedbacks.length <= usedFeedback
+        || usedFeedback < 0) {
+      throw new InvalidParameterException();
+    }
     activeProfile = usedProfile;
     activeFeedback = usedFeedback;
     setGoal(goalState);
   }
 
   public void setGoal(State goal_State) {
-    State next_State = nextStateNaN;
-    State output_State = outputStateNaN;
+    final State oldNext_State = next_State;
+    final State oldInput_State = input_State;
+
+    // Logging goal_State
+    StateUtil.overrideOutput(logName + "/" + goalStateLogName, goal_State, this.goal_State);
+    this.goal_State = goal_State;
+
+    // Calculating and logging next_State
     for (int i = 0; i < profiles.length; i++) {
       if (i == activeProfile) {
         next_State = profiles[i].calculate(goal_State, mechanism_State);
@@ -150,57 +150,33 @@ public class MechanismBase<Output_State extends State> {
         profiles[i].updateState(mechanism_State);
       }
     }
+    Logger.recordOutput(logName + "/_Profile", profiles[activeProfile].getControlFunctionName());
+    StateUtil.overrideOutput(logName + "/" + nextStateLogName, next_State, oldNext_State);
+
+    // Calculating and logging input_State
     for (int i = 0; i < feedbacks.length; i++) {
       if (i == activeFeedback) {
-        output_State = feedbacks[i].calculate(next_State, mechanism_State);
+        input_State = feedbacks[i].calculate(next_State, mechanism_State);
       } else {
         feedbacks[i].updateState(mechanism_State);
       }
     }
-    Logger.recordOutput(
-        logName + "/Active_Profile", profiles[activeProfile].getControlFunctionName());
-    Logger.recordOutput(
-        logName + "/Active_Feedback", feedbacks[activeFeedback].getControlFunctionName());
+    Logger.recordOutput(logName + "/_Feedback", feedbacks[activeFeedback].getControlFunctionName());
+    StateUtil.overrideOutput(logName + "/" + inputStateLogName, input_State, oldInput_State);
 
-    if (goalStateName != goal_State.getShortName()) {
-      if (goalStateName != null) {
-        Logger.recordOutput(logName + "/Goal_" + goalStateName, (Record) goalStateNaN);
-      }
-      goalStateName = goal_State.getShortName();
-      goalStateNaN = goal_State.getNaNState();
-    }
-    if (nextStateName != next_State.getShortName()) {
-      if (nextStateName != null) {
-        Logger.recordOutput(logName + "/Next_" + nextStateName, (Record) nextStateNaN);
-      }
-      nextStateName = next_State.getShortName();
-      nextStateNaN = next_State.getNaNState();
-    }
-    if (outputStateName != output_State.getShortName()) {
-      if (outputStateName != null) {
-        Logger.recordOutput(logName + "/Input_" + outputStateName, (Record) outputStateNaN);
-      }
-      outputStateName = output_State.getShortName();
-      outputStateNaN = output_State.getNaNState();
-    }
-
-    Logger.recordOutput(logName + "/Goal_" + goalStateName, (Record) goal_State);
-    Logger.recordOutput(logName + "/Next_" + nextStateName, (Record) next_State);
-    Logger.recordOutput(logName + "/Input_" + outputStateName, (Record) output_State);
-    controller.setInput(output_State);
+    // Giving input_State to the controller
+    controller.setInput(input_State);
   }
 
   protected void setVoltageSysId(Voltage V) {
     Voltage_State voltage_State = new Voltage_State(V.in(Volts));
     Arrays.stream(profiles).forEach(profile -> profile.updateState(mechanism_State));
     Arrays.stream(feedbacks).forEach(feedback -> feedback.updateState(mechanism_State));
-
-    Logger.recordOutput(logName + "/Active_Profile", "SysIdRoutine");
-    Logger.recordOutput(logName + "/Active_Feedback", "SysIdRoutine");
-    Logger.recordOutput(logName + "/Goal_" + goalStateName, (Record) goalStateNaN);
-    Logger.recordOutput(logName + "/Next_" + nextStateName, (Record) nextStateNaN);
-    Logger.recordOutput(logName + "/Input_" + outputStateName, (Record) outputStateNaN);
-    Logger.recordOutput(logName + "/Input_" + voltage_State.getShortName(), voltage_State);
+    Logger.recordOutput(logName + "/_Profile", "SysIdRoutine");
+    Logger.recordOutput(logName + "/_Feedback", "SysIdRoutine");
+    StateUtil.recordNullOutput(logName + "/" + goalStateLogName, goal_State);
+    StateUtil.recordNullOutput(logName + "/" + nextStateLogName, next_State);
+    StateUtil.overrideOutput(logName + "/" + inputStateLogName, voltage_State, input_State);
     controller.setInput(voltage_State);
   }
 
@@ -212,50 +188,27 @@ public class MechanismBase<Output_State extends State> {
     return mechanism_State;
   }
 
-  public class ComponentStatesLogger implements LoggableInputs {
+  public class ComponentStatesLogger implements LoggableStateInputs {
     @Override
-    public void toLog(LogTable table) {
-      for (int i = 0; i < componentStates.length; i++) {
-        // make this work for everything compatable with advantagekit
-        if (StructSerializable.class.isAssignableFrom(componentStates[i].getClass())) {
-          table.put(componentNames[i], (StructSerializable) componentStates[i]);
-        } else if (Record.class.isAssignableFrom(componentStates[i].getClass())) {
-          table.put(componentNames[i], (Record) componentStates[i]);
-        }
-      }
+    public State[] getStates() {
+      return componentStates;
     }
 
     @Override
-    public void fromLog(LogTable table) {
-      for (int i = 0; i < componentStates.length; i++) {
-        if (StructSerializable.class.isAssignableFrom(componentStates[i].getClass())) {
-          componentStates[i] =
-              (State) table.get(componentNames[i], (StructSerializable) componentStates[i]);
-        } else if (Record.class.isAssignableFrom(componentStates[i].getClass())) {
-          componentStates[i] = (State) table.get(componentNames[i], (Record) componentStates[i]);
-        }
-      }
+    public void setStates(State[] states) {
+      componentStates = states;
+    }
+
+    @Override
+    public String[] getStateNames() {
+      return componentNames;
     }
   }
 
-  // public static <T, U, V> Object[] zipMap(T[] arg1, U[] arg2, BiFunction<T, U, V>
-  // mappingFunction) {
-  //   List<V> output = new ArrayList<>(Math.min(arg1.length, arg2.length));
-  //   for (int i = 0; i < Math.min(arg1.length, arg2.length); i++) {
-  //     output.set(i, mappingFunction.apply(arg1[i], arg2[i]));
-  //   }
-  //   return output.toArray();
-  // }
+  public static class MechanismConfig<Output_State extends State> {
+    /** outputsLogName, tuningLogName, and start_State must be defined */
+    public MechanismConstants<Output_State> constants;
 
-  // public static <T, U> void zip(T[] arg1, U[] arg2, BiConsumer<T, U> mappingFunction) {
-  //   for (int i = 0; i < Math.min(arg1.length, arg2.length); i++) {
-  //     mappingFunction.accept(arg1[i], arg2[i]);
-  //   }
-  // }
-
-  public static class MechanismConfig<Output_State> {
-    public String logName;
-    public String tuningLogName;
     public ComponentBase[] realComponents = new ComponentBase[0];
     public ComponentControllerBase realController;
     public ComponentSimBase[] simComponents = new ComponentSimBase[0];
@@ -268,33 +221,11 @@ public class MechanismBase<Output_State extends State> {
     /** An array with elements corresponding to arrays of feedback classes with the same order and length as the controllers.  */
     public ControlFunctionBase[] feedbacks;
 
+    public Output_State starting_State;
+
     public Function<State[], Output_State> componentsToState;
     public double sysIdRampRate_VPs = 1;
     public double sysIdStepVoltage_V = 7;
     public double sysIdTimeout_s = 10;
-
-    // // physical constants
-    // public double moi_kgm2;
-    // public double mass_kg;
-    // public int canId;
-    // public double reduction;
-    // public DCMotor gearbox;
-
-    // // software limits
-    // public ProfileConfig<AngularPV_State> profileConfig;
-    // public ComponentSimControllerBase[] componentSimControllers;
-    // public ComponentControllerBase[] componentControllers;
-
-    // public double start_rad;
-    // public double start_radPs;
-    // public double min_rad;
-    // public double max_rad;
-    // public double max_radPs;
-    // public double max_radPs2;
-    // public int maxStator_A;
-    // public SparkMaxConfig motorConfig;
-
-    // public SimpleMotorFeedforward realFF, simFF;
-    // public PIDController realPID, simPID;
   }
 }

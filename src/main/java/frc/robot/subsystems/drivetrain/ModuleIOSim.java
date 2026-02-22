@@ -16,9 +16,12 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.controller.PIDController;
+import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.SparkUtil;
+import frc.robot.util.components.bases.ComponentStates.AbsoluteEncoder_State;
+import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
@@ -30,7 +33,7 @@ public class ModuleIOSim implements ModuleIO {
   private final PIDController drivePID = Drive.simPID, azimuthPID = Azimuth.simPID;
   private boolean driveClosedLoop = false, azimuthClosedLoop = false;
   private double lastNextDriveVelocity_radPs = 0.0,
-      currentAzimuthVelocity_radPs = 0.0,
+      lastNextAzimuthVelocity_radPs = 0.0,
       lastNextAzimuthPosition_rad = 0.0,
       driveAppliedVolts = 0.0,
       azimuthAppliedVolts = 0.0;
@@ -60,29 +63,23 @@ public class ModuleIOSim implements ModuleIO {
     azimuthMotor.requestVoltage(Volts.of(azimuthAppliedVolts));
 
     // Update drive inputs
-    inputs.driveConnected = true;
-    inputs.drivePosition_rad = moduleSimulation.getDriveWheelFinalPosition().in(Radians);
-    inputs.driveVelocity_radPs = moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond);
-    inputs.driveVoltage_V = driveAppliedVolts;
-    inputs.driveStatorCurrent_A =
-        Math.abs(moduleSimulation.getDriveMotorStatorCurrent().in(Amps));
-    inputs.driveSupplyCurrent_A =
-        Math.abs(moduleSimulation.getDriveMotorSupplyCurrent().in(Amps));
+    inputs.driveMotor_State = new Motor_State(
+        moduleSimulation.getDriveWheelFinalPosition().in(Radians),
+        moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond),
+        driveAppliedVolts,
+        Math.abs(moduleSimulation.getDriveMotorStatorCurrent().in(Amps)),
+        Math.abs(moduleSimulation.getDriveMotorSupplyCurrent().in(Amps)));
 
     // Update azimuth inputs
-    inputs.azimuthConnected = true;
-    inputs.azimuthPosition_rad =
-        moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction;
-    inputs.azimuthAbsolutePosition_rad =
-        moduleSimulation.getSteerAbsoluteFacing().getRadians();
-    inputs.azimuthVelocity_radPs =
-        moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
-    currentAzimuthVelocity_radPs = inputs.azimuthVelocity_radPs;
-    inputs.azimuthVoltage_V = azimuthAppliedVolts;
-    inputs.azimuthStatorCurrent_A =
-        Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps));
-    inputs.azimuthSupplyCurrent_A =
-        Math.abs(moduleSimulation.getSteerMotorSupplyCurrent().in(Amps));
+    inputs.azimuthMotor_State = new Motor_State(
+        moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction,
+        moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond),
+        azimuthAppliedVolts,
+        Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps)),
+        Math.abs(moduleSimulation.getSteerMotorSupplyCurrent().in(Amps)));
+    inputs.azimuthAbsolutePosition_State =
+        new AbsoluteEncoder_State(moduleSimulation.getSteerAbsoluteFacing().getRadians());
+    // currentAzimuthVelocity_radPs = inputs.azimuthMotor_State.radPs();
 
     // Update odometry inputs
     inputs.odometryTimestamps = SparkUtil.getSimulationOdometryTimeStamps();
@@ -108,6 +105,8 @@ public class ModuleIOSim implements ModuleIO {
     azimuthClosedLoop = false;
     azimuthAppliedVolts = output;
     lastNextAzimuthPosition_rad = moduleSimulation.getSteerAbsoluteFacing().getRadians();
+    lastNextAzimuthVelocity_radPs =
+        moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
   }
 
   // @Override
@@ -120,7 +119,9 @@ public class ModuleIOSim implements ModuleIO {
   @Override
   public void setNextDriveState(double nextVelocity_radPs, double nextAcceleration_radPs2) {
     driveClosedLoop = true;
-    driveAppliedVolts = Drive.simFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2)
+    driveAppliedVolts = Drive.simFF.calculateWithVelocities(
+            nextVelocity_radPs,
+            nextVelocity_radPs + RobotConstants.CODE_PERIOD_s * nextAcceleration_radPs2)
         + Drive.simPID.calculate(
             moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond),
             lastNextDriveVelocity_radPs);
@@ -131,9 +132,10 @@ public class ModuleIOSim implements ModuleIO {
   public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
     azimuthClosedLoop = true;
     azimuthAppliedVolts = Azimuth.simFF.calculateWithVelocities(
-            currentAzimuthVelocity_radPs, nextVelocity_radPs)
+            lastNextAzimuthVelocity_radPs, nextVelocity_radPs)
         + Azimuth.simPID.calculate(
             moduleSimulation.getSteerAbsoluteFacing().getRadians(), lastNextAzimuthPosition_rad);
     lastNextAzimuthPosition_rad = nextPosition_rad;
+    lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
   }
 }

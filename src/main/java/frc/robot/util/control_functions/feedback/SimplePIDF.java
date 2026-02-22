@@ -2,11 +2,11 @@ package frc.robot.util.control_functions.feedback;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import frc.robot.util.States.PosVel_State;
-import frc.robot.util.States.Voltage_State;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.logging.LogUtil;
 import frc.robot.util.mechanisms.MechanismConstants;
+import frc.robot.util.states.PosVel_State;
+import frc.robot.util.states.Voltage_State;
 
 public class SimplePIDF extends ControlFunctionBase {
   private String name = "SimplePIDF";
@@ -15,33 +15,11 @@ public class SimplePIDF extends ControlFunctionBase {
   private PosVel_State lastNext_State;
   private boolean enableTuning = false;
 
-  public SimplePIDF(
-      PIDController pid,
-      SimpleMotorFeedforward ff,
-      PosVel_State startingState,
-      String mechanismTuningLogName,
-      String name) {
-    this(pid, ff, startingState, mechanismTuningLogName);
-    this.name = name;
-  }
-
-  public SimplePIDF(
-      PIDController pid,
-      SimpleMotorFeedforward ff,
-      PosVel_State startingState,
-      String mechanismTuningLogName) {
-    this.pid = pid;
-    this.ff = ff;
-    lastNext_State = startingState;
-    LogUtil.createTunablePID(mechanismTuningLogName + "/" + name + "/", pid, () -> enableTuning);
-    LogUtil.createTunableFF(mechanismTuningLogName + "/" + name + "/", ff, () -> enableTuning);
-  }
-
-  public SimplePIDF(MechanismConstants config) {
+  public SimplePIDF(MechanismConstants<?> config) {
     this(config, "SimplePIDF");
   }
 
-  public SimplePIDF(MechanismConstants config, String profileName) {
+  public SimplePIDF(MechanismConstants<?> config, String profileName) {
     name = profileName;
     if (config.pid == null) {
       // TODO: make this an exception
@@ -55,12 +33,14 @@ public class SimplePIDF extends ControlFunctionBase {
     pid = config.pid;
     ff = config.simpleFF;
     lastNext_State = (PosVel_State) config.start_State;
+    LogUtil.createTunablePID(config.tuningLogName + "/" + name, pid, () -> enableTuning);
+    LogUtil.createTunableFF(config.tuningLogName + "/" + name, ff, () -> enableTuning);
   }
 
   public Voltage_State calculate(PosVel_State next_State, PosVel_State mechanism_State) {
     Voltage_State voltage =
         new Voltage_State(ff.calculateWithVelocities(lastNext_State.vel(), next_State.vel())
-            + pid.calculate(mechanism_State.pos(), lastNext_State.pos()));
+            + pid.calculate(mechanism_State.vel(), lastNext_State.vel()));
     lastNext_State = next_State;
     return voltage;
   }

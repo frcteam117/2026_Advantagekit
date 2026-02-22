@@ -38,8 +38,6 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
 // import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.*;
-import frc.robot.util.States.AngularP_State;
-import frc.robot.util.States.AngularV_State;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import java.util.ArrayList;
@@ -135,16 +133,16 @@ public class RobotContainer {
             VisionConstants.camera1Name,
             VisionConstants.robotToCamera1,
             driveSimulation::getSimulatedDriveTrainPose));*/
-        break;
-      default:
-        // Replayed robot, disable IO implementations
-        drive = new DrivetrainSubsystem(
-            new GyroIO() {},
-            new ModuleIO() {},
-            new ModuleIO() {},
-            new ModuleIO() {},
-            new ModuleIO() {},
-            (pose) -> {});
+        vision = null;
+        // vision = new Vision(
+        //     drive,
+        //     new VisionIOPhotonVisionSim(
+        //         VisionConstants.camera0Name,
+        //         VisionConstants.robotToCamera0,
+        //         driveSimulation::getSimulatedDriveTrainPose),
+        //     new VisionIOPhotonVisionSim(
+        //         VisionConstants.camera1Name,
+        //         VisionConstants.robotToCamera1,
         break;
     }
     pivot = new Pivot();
@@ -203,22 +201,35 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
+    // drive.setDefaultCommand(DriveCommands.joystickDriveAtAngle(
+    //     drive,
+    //     () -> -controller.getLeftY(),
+    //     () -> -controller.getLeftX(),
+    //     () -> Rotation2d.fromRadians(
+    //         Math.atan2(-controller.getRawAxis(3), -controller.getRawAxis(2)))));
     drive.setDefaultCommand(DriveCommands.joystickDrive(
         drive,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
         () -> -controller.getRawAxis(2)));
-    shooter.setDefaultCommand(Commands.run(
-        () -> shooter.setMechGoals(new AngularP_State(0), new AngularV_State(0)), shooter));
-    controller
-        .button(1)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(.25)), shooter));
-    controller
-        .button(2)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(0.5)), shooter));
-    controller
-        .button(3)
-        .onTrue(Commands.run(() -> shooter.setHoodGoal(new AngularP_State(0.75)), shooter));
+    // shooter.setDefaultCommand(Commands.run(
+    //     () -> shooter.setMechGoals(
+    //         Pos_State.create(new StateValue(0.0, Radians)),
+    //         Vel_State.create(new StateValue(0.0, RadiansPerSecond))),
+    //     shooter));
+    // controller
+    //     .button(1)
+    //     .onTrue(Commands.run(
+    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(.25, Radians))), shooter));
+    // controller
+    //     .button(2)
+    //     .onTrue(Commands.run(
+    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.5, Radians))), shooter));
+    // controller
+    //     .button(3)
+    //     .onTrue(Commands.run(
+    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.75, Radians))),
+    // shooter));
 
     controller
         .button(4)
@@ -287,9 +298,9 @@ public class RobotContainer {
     // Logger.recordOutput("controller/button2", controller.button(2).getAsBoolean());
     // Logger.recordOutput("controller/button3", controller.button(3).getAsBoolean());
     Logger.recordOutput(
-        ".FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
+        "_FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
     Logger.recordOutput(
-        ".FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        "_FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
   }
 
   /*@AutoLogOutput(key = "0.Supersystem/ComponentPoses")

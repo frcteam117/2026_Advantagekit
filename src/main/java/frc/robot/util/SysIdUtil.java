@@ -17,11 +17,9 @@ public class SysIdUtil {
     DynamicReverse
   }
 
-  private static CommandXboxController controller;
-  private static BooleanSupplier shouldStop = () -> false;
+  private static BooleanSupplier shouldStop;
 
   public static void registerController(CommandXboxController controller) {
-    SysIdUtil.controller = controller;
     shouldStop = controller
         .button(0)
         .or(controller.button(1))

@@ -19,6 +19,9 @@ import frc.robot.subsystems.drivetrain.DrivetrainConstants.AbsEncoder;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.UnitUtil;
+import frc.robot.util.components.bases.ComponentStates.AbsoluteEncoder_State;
+import frc.robot.util.components.bases.ComponentStates.Motor_State;
+import frc.robot.util.logging.TunableDouble;
 import java.util.Queue;
 
 /**
@@ -26,17 +29,6 @@ import java.util.Queue;
  * controller, and Thrifty absolute encoder.
  */
 public class ModuleIONova implements ModuleIO {
-  private final double zeroRotation_rad;
-
-  // Motion profiling
-  private double currentDriveVelocity_radPs = 0.0;
-  private double driveVoltage_V = 0.0;
-  private double lastNextDriveVelocity_radPs = 0.0;
-
-  private double azimuthPosition_rad = 0.0;
-  private double azimuthVoltage_V = 0.0;
-  private double currentAzimuthVelocity_radPs = 0.0;
-
   // Hardware objects
   private final ThriftyNova driveNova;
   private final ThriftyNova azimuthNova;
@@ -47,7 +39,6 @@ public class ModuleIONova implements ModuleIO {
   private final Queue<Double> azimuthPositionQueue;
 
   public ModuleIONova(int module) {
-    zeroRotation_rad = AbsEncoder.zeroRotations_rad[module];
     driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
 
@@ -61,8 +52,8 @@ public class ModuleIONova implements ModuleIO {
     // Configure azimuth motor
     System.out.println(
         "Configuring Azimuth motor. Module: " + module + "  CAN Id: " + Azimuth.canIds[module]);
+    Azimuth.config.absOffset = AbsEncoder.zeroRotations_ticks[module];
     azimuthNova.applyConfig(Azimuth.config);
-    ;
     System.out.println("Finished configuring Azimuth motor. Module: " + module + "  CAN Id: "
         + Azimuth.canIds[module]);
 
@@ -72,33 +63,67 @@ public class ModuleIONova implements ModuleIO {
         .registerSignal(() -> UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction));
     azimuthPositionQueue =
         NovaOdometryThread.getInstance().registerSignal(() -> -azimuthNova.getPositionAbs());
+    new TunableDouble(
+        "Tuning/Drive/1 P", Drive.config.pid0.p, () -> true, p -> driveNova.pid0.setP(p));
+    new TunableDouble(
+        "Tuning/Drive/2 I", Drive.config.pid0.i, () -> true, i -> driveNova.pid0.setI(i));
+    new TunableDouble(
+        "Tuning/Drive/3 D", Drive.config.pid0.d, () -> true, d -> driveNova.pid0.setD(d));
+    new TunableDouble(
+        "Tuning/Drive/4 F", Drive.config.pid0.f, () -> true, f -> driveNova.pid0.setFF(f));
+    new TunableDouble(
+        "Tuning/Drive/5 allowableError",
+        Drive.config.pid0.allowableError,
+        () -> true,
+        error -> driveNova.pid0.setAllowableError(error));
+    new TunableDouble(
+        "Tuning/Drive/6 accumulatorCap",
+        Drive.config.pid0.iZone,
+        () -> true,
+        cap -> driveNova.pid0.setAccumulatorCap(cap));
+    new TunableDouble(
+        "Tuning/Azimuth/1 P", Azimuth.config.pid0.p, () -> true, p -> azimuthNova.pid0.setP(p));
+    new TunableDouble(
+        "Tuning/Azimuth/2 I", Azimuth.config.pid0.i, () -> true, i -> azimuthNova.pid0.setI(i));
+    new TunableDouble(
+        "Tuning/Azimuth/3 D", Azimuth.config.pid0.d, () -> true, d -> azimuthNova.pid0.setD(d));
+    new TunableDouble(
+        "Tuning/Azimuth/4 F", Azimuth.config.pid0.f, () -> true, f -> azimuthNova.pid0.setFF(f));
+    new TunableDouble(
+        "Tuning/Azimuth/5 allowableError",
+        Azimuth.config.pid0.allowableError,
+        () -> true,
+        error -> azimuthNova.pid0.setAllowableError(error));
+    new TunableDouble(
+        "Tuning/Azimuth/6 accumulatorCap",
+        Azimuth.config.pid0.iZone,
+        () -> true,
+        cap -> azimuthNova.pid0.setAccumulatorCap(cap));
   }
 
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     // Update drive inputs
-    inputs.drivePosition_rad = UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction);
-    inputs.driveVelocity_radPs =
-        UnitUtil.RPMToradPs(driveNova.getVelocityInternal()) / Drive.reduction;
-    currentDriveVelocity_radPs = inputs.driveVelocity_radPs;
-    inputs.driveVoltage_V = driveVoltage_V; // driveNova.getVoltage();
-    inputs.driveStatorCurrent_A = driveNova.getStatorCurrent();
-    inputs.driveSupplyCurrent_A = driveNova.getSupplyCurrent();
+    inputs.driveMotor_State = new Motor_State(
+        UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction),
+        2 * Math.PI * driveNova.getVelocityInternal() / Drive.reduction,
+        driveNova.getVoltage(),
+        driveNova.getStatorCurrent(),
+        driveNova.getSupplyCurrent());
     // inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
 
     // Update azimuth inputs
     // sparkStickyFault = false;
-    inputs.azimuthAbsolutePosition_rad =
-        UnitUtil.rotTorad(-azimuthNova.getPositionAbs()); // - zeroRotation_rad;
-    azimuthPosition_rad = inputs.azimuthAbsolutePosition_rad;
-    inputs.azimuthPosition_rad =
-        UnitUtil.rotTorad(azimuthNova.getPositionInternal() / Azimuth.reduction) - zeroRotation_rad;
-    inputs.azimuthVelocity_radPs =
-        UnitUtil.RPMToradPs(azimuthNova.getVelocityInternal() / Azimuth.reduction);
-    currentAzimuthVelocity_radPs = inputs.azimuthVelocity_radPs;
-    inputs.azimuthVoltage_V = azimuthVoltage_V; // azimuthNova.getVoltage();
-    inputs.azimuthStatorCurrent_A = azimuthNova.getStatorCurrent();
-    inputs.azimuthSupplyCurrent_A = azimuthNova.getSupplyCurrent();
+    inputs.azimuthAbsolutePosition_State = new AbsoluteEncoder_State(
+        UnitUtil.rotTorad(1 - azimuthNova.getPositionAbs())); // - zeroRotation_rad;
+
+    inputs.azimuthMotor_State = new Motor_State(
+        UnitUtil.rotTorad(
+            azimuthNova.getPositionInternal() / Azimuth.reduction), // - zeroRotation_rad,
+        UnitUtil.RPMToradPs(azimuthNova.getVelocityInternal() / Azimuth.reduction),
+        azimuthNova.getVoltage(),
+        azimuthNova.getStatorCurrent(),
+        azimuthNova.getSupplyCurrent());
     // inputs.azimuthConnected = azimuthConnectedDebounce.calculate(!sparkStickyFault);
 
     // Update odometry inputs
@@ -117,38 +142,30 @@ public class ModuleIONova implements ModuleIO {
 
   @Override
   public void setDriveVoltage(double voltage_V) {
-    driveVoltage_V = voltage_V;
     driveNova.setVoltage(voltage_V);
   }
 
   @Override
   public void setAzimuthVoltage(double voltage_V) {
-    azimuthVoltage_V = voltage_V;
     azimuthNova.setVoltage(voltage_V);
   }
 
   @Override
   public void setNextDriveVelocity(double nextVelocity_radPs) {
-    driveVoltage_V =
-        Drive.realFF.calculateWithVelocities(currentDriveVelocity_radPs, nextVelocity_radPs)
-            + Drive.realPID.calculate(currentDriveVelocity_radPs, lastNextDriveVelocity_radPs);
-    driveNova.setVoltage(driveVoltage_V);
-    lastNextDriveVelocity_radPs = nextVelocity_radPs;
+    driveNova.setVelocityInternal(nextVelocity_radPs * Drive.reduction / 60);
+    // Drive.realFF.calculateWithVelocities(currentDriveVelocity_radPs, nextVelocity_radPs));
   }
 
   @Override
   public void setNextDriveState(double nextVelocity_radPs, double nextAcceleration_radPs2) {
-    driveVoltage_V = Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2)
-        + Drive.realPID.calculate(currentDriveVelocity_radPs, lastNextDriveVelocity_radPs);
-    driveNova.setVoltage(driveVoltage_V);
-    lastNextDriveVelocity_radPs = nextVelocity_radPs;
+    driveNova.setVelocityInternal(
+        nextVelocity_radPs * Drive.reduction / (2 * Math.PI),
+        Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
   }
 
   @Override
   public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
-    azimuthVoltage_V =
-        Azimuth.realFF.calculateWithVelocities(currentAzimuthVelocity_radPs, nextVelocity_radPs)
-            + Azimuth.realPID.calculate(azimuthPosition_rad, nextPosition_rad);
-    azimuthNova.setVoltage(azimuthVoltage_V);
+    azimuthNova.setPositionAbs(UnitUtil.radTorot(-nextPosition_rad));
+    // Azimuth.realFF.calculateWithVelocities(currentAzimuthVelocity_radPs, nextVelocity_radPs));
   }
 }
