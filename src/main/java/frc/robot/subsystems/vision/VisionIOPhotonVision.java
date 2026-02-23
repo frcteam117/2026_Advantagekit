@@ -35,9 +35,9 @@ public class VisionIOPhotonVision implements VisionIO {
    * @param name The configured name of the camera.
    * @param rotationSupplier The 3D position of the camera relative to the robot.
    */
-  public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
-    camera = new PhotonCamera(name);
-    this.robotToCamera = robotToCamera;
+  public VisionIOPhotonVision(int camera) {
+    this.camera = new PhotonCamera(VisionConstants.cameraNames[camera]);
+    this.robotToCamera = VisionConstants.robotToCameras[camera];
   }
 
   @Override
@@ -81,8 +81,7 @@ public class VisionIOPhotonVision implements VisionIO {
             robotPose, // 3D pose estimate
             multitagResult.estimatedPose.ambiguity, // Ambiguity
             multitagResult.fiducialIDsUsed.size(), // Tag count
-            totalTagDistance / result.targets.size(), // Average tag distance
-            PoseObservationType.PHOTONVISION)); // Observation type
+            totalTagDistance / result.targets.size())); // Average tag distance
 
       } else if (!result.targets.isEmpty()) { // Single tag result
         var target = result.targets.get(0);
@@ -106,8 +105,7 @@ public class VisionIOPhotonVision implements VisionIO {
               robotPose, // 3D pose estimate
               target.poseAmbiguity, // Ambiguity
               1, // Tag count
-              cameraToTarget.getTranslation().getNorm(), // Average tag distance
-              PoseObservationType.PHOTONVISION)); // Observation type
+              cameraToTarget.getTranslation().getNorm())); // Average tag distance
         }
       }
     }

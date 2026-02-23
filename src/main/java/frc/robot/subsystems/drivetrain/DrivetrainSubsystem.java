@@ -13,8 +13,6 @@
 
 package frc.robot.subsystems.drivetrain;
 
-import static edu.wpi.first.units.Units.*;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -23,6 +21,7 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -34,34 +33,29 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
 import frc.robot.RobotConstants.Mode;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
-import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.LocalADStarAK;
-import frc.robot.util.SysIdUtil;
-import frc.robot.util.SysIdUtil.SysIdType;
+import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionConsumer {
-  static final Lock odometryLock = new ReentrantLock();
+public class DrivetrainSubsystem extends SubsystemBase {
+  public static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
-  private final SysIdRoutine driveSysId;
-  private final SysIdRoutine azimuthSysId;
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
@@ -84,6 +78,9 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
   private final SwerveSetpointGenerator swerveSetpointGenerator =
       new SwerveSetpointGenerator(Chassis.ppConfig, 20);
   private SwerveSetpoint lastSetpoint;
+  private final TrapezoidProfile headingProfile =
+      new TrapezoidProfile(new TrapezoidProfile.Constraints(20, 50));
+  private boolean controllingHeadings = false;
 
   public DrivetrainSubsystem(
       GyroIO gyroIO,
@@ -127,24 +124,6 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
     PathPlannerLogging.setLogTargetPoseCallback((targetPose) -> {
       Logger.recordOutput(DrivetrainConstants.NAME + "/TrajectorySetpoint", targetPose);
     });
-
-    // Configure SysId
-    driveSysId = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,
-            null,
-            null,
-            (state) -> Logger.recordOutput(
-                DrivetrainConstants.NAME + "/DriveSysIdState", state.toString())),
-        new SysIdRoutine.Mechanism((voltage) -> runDriveSysId(voltage.in(Volts)), null, this));
-    azimuthSysId = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,
-            null,
-            null,
-            (state) -> Logger.recordOutput(
-                DrivetrainConstants.NAME + "/AzimuthSysIdState", state.toString())),
-        new SysIdRoutine.Mechanism((voltage) -> runAzimuthSysId(voltage.in(Volts)), null, this));
   }
 
   @Override
@@ -212,6 +191,13 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
    * @param goalSpeeds_mps Target speeds in meters/sec
    */
   public void setGoalVelocity(ChassisSpeeds goalSpeeds_mps) {
+    if (!controllingHeadings) {
+      SwerveModuleState[] goalModules = new SwerveModuleState[4];
+      Arrays.fill(goalModules, new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN)));
+      Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Modules", goalModules);
+    } else {
+      controllingHeadings = false;
+    }
     Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
     // swerve setpoint generator
     lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, goalSpeeds_mps, 0.02);
@@ -230,47 +216,47 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
     }
   }
 
+  /**
+   * Stops the drive and azimuths the modules to an X arrangement to resist movement. The modules will
+   * return to their normal orientations the next time a nonzero velocity is requested.
+   */
+  public void stopWithHeadings(Rotation2d[] goalHeadings) {
+    Logger.recordOutput(
+        DrivetrainConstants.NAME + "/1_Goal/Modules",
+        Arrays.stream(goalHeadings)
+            .map(rotation -> new SwerveModuleState(0, rotation))
+            .toArray(SwerveModuleState[]::new));
+    controllingHeadings = true;
+    Rotation2d[] nextHeadings = new Rotation2d[4];
+    for (int i = 0; i < 4; i++) {
+      if (MathUtil.inputModulus(
+              goalHeadings[i].getRadians() - modules[i].getAngle(), -Math.PI / 2, 3 * Math.PI / 2)
+          > Math.PI / 2) {
+        goalHeadings[i] = goalHeadings[i].rotateBy(Rotation2d.k180deg);
+      }
+      nextHeadings[i] = Rotation2d.fromRadians(headingProfile.calculate(
+              RobotConstants.CODE_PERIOD_s,
+              new TrapezoidProfile.State(
+                  modules[i].getAngle(),
+                  modules[i].getInputs().azimuthMotor_State.radPs() / Azimuth.reduction),
+              new TrapezoidProfile.State(goalHeadings[i].getRadians(), 0))
+          .position);
+    }
+    kinematics.resetHeadings(nextHeadings);
+    setGoalVelocity(new ChassisSpeeds());
+  }
+
   /** Runs the drive in a straight line with the specified drive output. */
-  public void runDriveSysId(double output_V) {
+  public void setForwardDriveVoltage(double output_V) {
     for (int i = 0; i < 4; i++) {
       modules[i].runDriveSysId(output_V);
     }
   }
 
-  public void runAzimuthSysId(double output_V) {
+  public void setAzimuthVoltage(double output_V) {
     for (int i = 0; i < 4; i++) {
       modules[i].runAzimuthSysId(output_V);
     }
-  }
-
-  /** Stops the drive. */
-  public void stop() {
-    setGoalVelocity(new ChassisSpeeds());
-  }
-
-  /**
-   * Stops the drive and azimuths the modules to an X arrangement to resist movement. The modules will
-   * return to their normal orientations the next time a nonzero velocity is requested.
-   */
-  public void stopWithX() {
-    Rotation2d[] headings = new Rotation2d[4];
-    for (int i = 0; i < 4; i++) {
-      headings[i] = Chassis.moduleTranslations[i].getAngle();
-    }
-    kinematics.resetHeadings(headings);
-    stop();
-  }
-
-  /** Returns a command to run a drive sysId test with the specified type. */
-  public Command getDriveSysId(SysIdType type) {
-    return run(() -> runDriveSysId(0.0))
-        .withTimeout(1.0)
-        .andThen(SysIdUtil.getSysIdCommand(driveSysId, type));
-  }
-
-  /** Returns a command to run a drive sysId test with the specified type. */
-  public Command getAzimuthSysId(SysIdType type) {
-    return SysIdUtil.getSysIdCommand(driveSysId, type);
   }
 
   /** Returns the module states (azimuth angles and drive velocities) for all of the modules. */
@@ -283,19 +269,35 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
     return states;
   }
 
-  /** Returns the module positions (azimuth angles and drive positions) for all of the modules. */
-  private SwerveModulePosition[] getModulePositions() {
-    SwerveModulePosition[] states = new SwerveModulePosition[4];
-    for (int i = 0; i < 4; i++) {
-      states[i] = modules[i].getPosition();
-    }
-    return states;
-  }
-
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = DrivetrainConstants.NAME + "/0_Measured/Chassis")
   private ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  /** Returns the current odometry pose. */
+  @AutoLogOutput(key = DrivetrainConstants.NAME + "/EstimatedPose")
+  public Pose2d getPose() {
+    return poseEstimator.getEstimatedPosition();
+  }
+
+  /** Resets the current odometry pose. */
+  public void resetOdometry(Pose2d pose) {
+    SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
+    for (int i = 0; i < 4; i++) {
+      modulePositions[i] = modules[i].getPosition();
+    }
+    resetSimulationPoseCallBack.accept(pose);
+    poseEstimator.resetPosition(rawGyroRotation, modulePositions, pose);
+  }
+
+  /** Adds a new timestamped vision measurement. */
+  public void accept(
+      Pose2d visionRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> visionMeasurementStdDevs) {
+    poseEstimator.addVisionMeasurement(
+        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
 
   /** Returns the position of each module in radians. */
@@ -305,51 +307,5 @@ public class DrivetrainSubsystem extends SubsystemBase implements Vision.VisionC
       values[i] = modules[i].getWheelRadiusCharacterizationPosition();
     }
     return values;
-  }
-
-  /** Returns the average velocity of the modules in rad/sec. */
-  public double getFFCharacterizationVelocity() {
-    double output = 0.0;
-    for (int i = 0; i < 4; i++) {
-      output += modules[i].getFFCharacterizationVelocity() / 4.0;
-    }
-    return output;
-  }
-
-  /** Returns the current odometry pose. */
-  @AutoLogOutput(key = DrivetrainConstants.NAME + "/EstimatedPose")
-  public Pose2d getPose() {
-    return poseEstimator.getEstimatedPosition();
-  }
-
-  /** Returns the current odometry rotation. */
-  public Rotation2d getRotation() {
-    return getPose().getRotation();
-  }
-
-  /** Resets the current odometry pose. */
-  public void resetOdometry(Pose2d pose) {
-    resetSimulationPoseCallBack.accept(pose);
-    poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
-  }
-
-  /** Adds a new timestamped vision measurement. */
-  @Override
-  public void accept(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
-    poseEstimator.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-  }
-
-  /** Returns the maximum linear speed in meters per sec. */
-  public double getMaxLinearSpeedMetersPerSec() {
-    return Drive.max_mPs;
-  }
-
-  /** Returns the maximum angular speed in radians per sec. */
-  public double getMaxAngularSpeedRadPerSec() {
-    return Drive.max_mPs / Chassis.trackRadius_m;
   }
 }

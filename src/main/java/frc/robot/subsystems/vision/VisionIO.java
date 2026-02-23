@@ -32,18 +32,7 @@ public interface VisionIO {
 
   /** Represents a robot pose sample used for pose estimation. */
   record PoseObservation(
-      double timestamp,
-      Pose3d pose,
-      double ambiguity,
-      int tagCount,
-      double averageTagDistance,
-      PoseObservationType type) {}
-
-  enum PoseObservationType {
-    MEGATAG_1,
-    MEGATAG_2,
-    PHOTONVISION
-  }
+      double timestamp, Pose3d pose, double ambiguity, int tagCount, double averageTagDistance) {}
 
   default void updateInputs(VisionIOInputs inputs) {}
 }

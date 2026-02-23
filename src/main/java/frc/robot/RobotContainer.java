@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
@@ -49,7 +48,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final DrivetrainSubsystem drive;
-  private final Vision vision;
+  private final VisionSubsystem vision;
   public final IntakeSubsystem intake;
   public final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
@@ -74,13 +73,8 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        this.vision = null;
-        // new Vision(
-        //     drive,
-        //     new VisionIOPhotonVision(VisionConstants.camera0Name,
-        // VisionConstants.robotToCamera0),
-        //     new VisionIOPhotonVision(VisionConstants.camera1Name,
-        // VisionConstants.robotToCamera1));
+        vision = new VisionSubsystem(
+            drive::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -105,17 +99,10 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        vision = null;
-        // vision = new Vision(
-        //     drive,
-        //     new VisionIOPhotonVisionSim(
-        //         VisionConstants.camera0Name,
-        //         VisionConstants.robotToCamera0,
-        //         driveSimulation::getSimulatedDriveTrainPose),
-        //     new VisionIOPhotonVisionSim(
-        //         VisionConstants.camera1Name,
-        //         VisionConstants.robotToCamera1,
-        //         driveSimulation::getSimulatedDriveTrainPose));
+        vision = new VisionSubsystem(
+            drive::accept,
+            new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
+            new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
         // Replayed robot, disable IO implementations
@@ -126,13 +113,10 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             (pose) -> {});
-        vision = null;
-        // vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
+        // vision = null;
+        vision = new VisionSubsystem(drive::accept, new VisionIO() {}, new VisionIO() {});
         break;
     }
-    // intake = null;
-    // indexer = null;
-    // shooter = null;
     intake = new IntakeSubsystem();
     indexer = new IndexerSubsystem();
     shooter = new ShooterSubsystem();
@@ -144,13 +128,18 @@ public class RobotContainer {
 
     // Set up SysId routines
     autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+        "Drive Wheel Radius Characterization",
+        DrivetrainCommands.wheelRadiusCharacterization(drive));
     autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser.addOption("Drive SysId (Quasistatic)", drive.getDriveSysId(SysIdType.Quasistatic));
-    autoChooser.addOption("Drive SysId (Dynamic)", drive.getDriveSysId(SysIdType.Dynamic));
-    autoChooser.addOption("Turn SysId (Quasistatic)", drive.getAzimuthSysId(SysIdType.Quasistatic));
-    autoChooser.addOption("Turn SysId (Dynamic)", drive.getAzimuthSysId(SysIdType.Dynamic));
+        "Drive SysId (Quasistatic)",
+        DrivetrainCommands.getDriveSysId(drive, SysIdType.Quasistatic));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic)", DrivetrainCommands.getDriveSysId(drive, SysIdType.Dynamic));
+    autoChooser.addOption(
+        "Azimuth SysId (Quasistatic)",
+        DrivetrainCommands.getAzimuthSysId(drive, SysIdType.Quasistatic));
+    autoChooser.addOption(
+        "Azimuth SysId (Dynamic)", DrivetrainCommands.getAzimuthSysId(drive, SysIdType.Dynamic));
     // autoChooser.addOption(
     //     "Flywheel SysId (Quasistatic)",
     //     ShooterCommands.flywheelSysId(shooter, SysIdType.Quasistatic));
@@ -179,7 +168,7 @@ public class RobotContainer {
     //     () -> -controller.getLeftX(),
     //     () -> Rotation2d.fromRadians(
     //         Math.atan2(-controller.getRawAxis(3), -controller.getRawAxis(2)))));
-    drive.setDefaultCommand(DriveCommands.joystickDrive(
+    drive.setDefaultCommand(DrivetrainCommands.joystickDrive(
         drive,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
