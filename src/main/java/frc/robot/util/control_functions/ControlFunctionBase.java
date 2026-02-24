@@ -3,6 +3,7 @@ package frc.robot.util.control_functions;
 import frc.robot.util.states.State;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,12 +68,13 @@ public abstract class ControlFunctionBase {
         try {
           return (State) m.invoke(this, goal_State, mechanism_State);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-          // TODO Auto-generated catch block
           e.printStackTrace();
         }
       }
     }
-    // TODO Make this an exception
+    new InvalidParameterException("No \"calculate\" method found in "
+        + this.getControlFunctionName() + " with the parameters " + goal_State.toString() + " and "
+        + mechanism_State.toString() + ".");
     return null;
   }
 
@@ -82,12 +84,13 @@ public abstract class ControlFunctionBase {
         try {
           m.invoke(this, mechanism_State);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-          // TODO Auto-generated catch block
           e.printStackTrace();
         }
       }
     }
-    // TODO Make this an exception
+    new InvalidParameterException(
+        "No \"updateState\" method found in " + this.getControlFunctionName()
+            + " with the parameter " + mechanism_State.toString() + ".");
   }
 
   public final void resetState(Object new_State) {
@@ -96,12 +99,12 @@ public abstract class ControlFunctionBase {
         try {
           m.invoke(this, new_State);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-          // TODO Auto-generated catch block
           e.printStackTrace();
         }
       }
     }
-    // TODO Make this an exception
+    new InvalidParameterException("No \"resetState\" method found in "
+        + this.getControlFunctionName() + " with the parameter " + new_State.toString() + ".");
   }
 
   public abstract String getControlFunctionName();

@@ -12,7 +12,7 @@ import java.util.function.DoubleSupplier;
 
 public class IntakeCommands {
   private static final DoubleSupplier targetSpeed_radPs =
-      new TunableDouble(ROLLER_CONSTANTS.tuningLogName + "/Targets/_radPs", 0, () -> true);
+      new TunableDouble(ROLLER_CONSTANTS.tuningLogName + "/Targets/_radPs", 80, () -> true);
   private static final DoubleSupplier lowered_rad = new TunableDouble(
       PIVOT_CONSTANTS.tuningLogName + "/Targets/lowered_rad",
       (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
@@ -21,8 +21,9 @@ public class IntakeCommands {
   public static Command lowerCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
-          runRollerWhenLowered(instance);
+          // instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
+          // runRollerWhenLowered(instance);
+          instance.setRollerGoal(new RadVel_State(0));
         },
         instance);
   }
@@ -30,8 +31,9 @@ public class IntakeCommands {
   public static Command raiseCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setPivotGoal(PIVOT_CONSTANTS.max_Pos);
-          runRollerWhenLowered(instance);
+          // instance.setPivotGoal(PIVOT_CONSTANTS.max_Pos);
+          // runRollerWhenLowered(instance);
+          instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
         },
         instance);
   }

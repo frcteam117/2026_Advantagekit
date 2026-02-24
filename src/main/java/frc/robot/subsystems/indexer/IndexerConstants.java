@@ -62,14 +62,14 @@ public class IndexerConstants {
     HOPPER_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
     HOPPER_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
     HOPPER_CONSTANTS.limits_State = VelAcc_State.create(
-        new StateValue(200, RadiansPerSecond), new StateValue(500, RadiansPerSecondPerSecond));
+        new StateValue(200, RadiansPerSecond), new StateValue(150, RadiansPerSecondPerSecond));
     HOPPER_CONSTANTS.isLoop = true;
     // Feedback
     HOPPER_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0, 0, 0, HOPPER_CONSTANTS.codePeriod_s)
+        ? new PIDController(0.1, 0, 0, HOPPER_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, HOPPER_CONSTANTS.codePeriod_s);
     HOPPER_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0, 0, 0, HOPPER_CONSTANTS.codePeriod_s)
+        ? new SimpleMotorFeedforward(0.14, 0.1, 0, HOPPER_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, HOPPER_CONSTANTS.codePeriod_s);
 
     HOPPER_CONFIG.constants = HOPPER_CONSTANTS;
@@ -111,14 +111,14 @@ public class IndexerConstants {
     KICKER_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
     KICKER_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
     KICKER_CONSTANTS.limits_State = VelAcc_State.create(
-        new StateValue(200, RadiansPerSecond), new StateValue(500, RadiansPerSecondPerSecond));
+        new StateValue(200, RadiansPerSecond), new StateValue(150, RadiansPerSecondPerSecond));
     KICKER_CONSTANTS.isLoop = true;
     // Feedback
     KICKER_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0, 0, 0, KICKER_CONSTANTS.codePeriod_s)
+        ? new PIDController(0.1, 0, 0, KICKER_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, KICKER_CONSTANTS.codePeriod_s);
     KICKER_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0, 0, 0, KICKER_CONSTANTS.codePeriod_s)
+        ? new SimpleMotorFeedforward(0.35, 0.16, 0, KICKER_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, KICKER_CONSTANTS.codePeriod_s);
 
     KICKER_CONFIG.constants = KICKER_CONSTANTS;

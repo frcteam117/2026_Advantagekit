@@ -33,6 +33,7 @@ public class MechanismConstants<Output_State extends State> {
   public SparkMaxConfig[] sparkConfigs;
   public ResetMode revResetMode = ResetMode.kResetSafeParameters;
   public PersistMode revPersistMode = PersistMode.kPersistParameters;
+  public boolean useAlternateEncoder = false;
 
   // Physical constants
   public Double mass_kg;

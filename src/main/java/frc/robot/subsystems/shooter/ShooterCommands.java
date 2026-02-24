@@ -11,7 +11,7 @@ import java.util.function.DoubleSupplier;
 
 public class ShooterCommands {
   private static final DoubleSupplier targetSpeed_radPs =
-      new TunableDouble(FLYWHEEL_CONSTANTS.tuningLogName + "/_radPs", 0, () -> true);
+      new TunableDouble(FLYWHEEL_CONSTANTS.tuningLogName + "/_radPs", 240, () -> true);
 
   public static Command stopCommand(ShooterSubsystem instance) {
     return Commands.run(

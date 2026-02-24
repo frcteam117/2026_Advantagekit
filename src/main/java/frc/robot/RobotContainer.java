@@ -47,8 +47,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  private final DrivetrainSubsystem drive;
-  private final VisionSubsystem vision;
+  private final DrivetrainSubsystem drivetrain;
+  // private final VisionSubsystem vision;
   public final IntakeSubsystem intake;
   public final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
@@ -60,12 +60,12 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /** The container for the robot. Contains subsystems and commands. */
   public RobotContainer() {
     switch (RobotConstants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drive = new DrivetrainSubsystem(
+        drivetrain = new DrivetrainSubsystem(
             new GyroIONavX(),
             new ModuleIONova(0),
             new ModuleIONova(1),
@@ -73,8 +73,8 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        vision = new VisionSubsystem(
-            drive::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
+        // vision = new VisionSubsystem(
+        //     drivetrain::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -82,16 +82,9 @@ public class RobotContainer {
             DrivetrainConstants.Chassis.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
         // add the simulated drivetrain to the simulation field
         SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
-        // Body body = new Body();
-        // BodyFixture fixture = new BodyFixture(new Circle(2));
-        // fixture.setSensor(true);
-        // body.addFixture(fixture);
-        // body.setTransform(new Transform());
-        // World simWorld = new World<>();
-        // simWorld.addCollisionListener(new CollisionListenerAdapter<>().collision(body.)));
 
         // Sim robot, instantiate physics sim IO implementations
-        drive = new DrivetrainSubsystem(
+        drivetrain = new DrivetrainSubsystem(
             new GyroIOSim(driveSimulation.getGyroSimulation()),
             new ModuleIOSim(driveSimulation.getModules()[0]),
             new ModuleIOSim(driveSimulation.getModules()[1]),
@@ -99,14 +92,14 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        vision = new VisionSubsystem(
-            drive::accept,
-            new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
-            new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
+        // vision = new VisionSubsystem(
+        //     drivetrain::accept,
+        //     new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
+        //     new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
         // Replayed robot, disable IO implementations
-        drive = new DrivetrainSubsystem(
+        drivetrain = new DrivetrainSubsystem(
             new GyroIO() {},
             new ModuleIO() {},
             new ModuleIO() {},
@@ -114,7 +107,7 @@ public class RobotContainer {
             new ModuleIO() {},
             (pose) -> {});
         // vision = null;
-        vision = new VisionSubsystem(drive::accept, new VisionIO() {}, new VisionIO() {});
+        // vision = new VisionSubsystem(drivetrain::accept, new VisionIO() {}, new VisionIO() {});
         break;
     }
     intake = new IntakeSubsystem();
@@ -129,17 +122,18 @@ public class RobotContainer {
     // Set up SysId routines
     autoChooser.addOption(
         "Drive Wheel Radius Characterization",
-        DrivetrainCommands.wheelRadiusCharacterization(drive));
+        DrivetrainCommands.wheelRadiusCharacterization(drivetrain));
     autoChooser.addOption(
         "Drive SysId (Quasistatic)",
-        DrivetrainCommands.getDriveSysId(drive, SysIdType.Quasistatic));
+        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.Quasistatic));
     autoChooser.addOption(
-        "Drive SysId (Dynamic)", DrivetrainCommands.getDriveSysId(drive, SysIdType.Dynamic));
+        "Drive SysId (Dynamic)", DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.Dynamic));
     autoChooser.addOption(
         "Azimuth SysId (Quasistatic)",
-        DrivetrainCommands.getAzimuthSysId(drive, SysIdType.Quasistatic));
+        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.Quasistatic));
     autoChooser.addOption(
-        "Azimuth SysId (Dynamic)", DrivetrainCommands.getAzimuthSysId(drive, SysIdType.Dynamic));
+        "Azimuth SysId (Dynamic)",
+        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.Dynamic));
     // autoChooser.addOption(
     //     "Flywheel SysId (Quasistatic)",
     //     ShooterCommands.flywheelSysId(shooter, SysIdType.Quasistatic));
@@ -162,14 +156,8 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
-    // drive.setDefaultCommand(DriveCommands.joystickDriveAtAngle(
-    //     drive,
-    //     () -> -controller.getLeftY(),
-    //     () -> -controller.getLeftX(),
-    //     () -> Rotation2d.fromRadians(
-    //         Math.atan2(-controller.getRawAxis(3), -controller.getRawAxis(2)))));
-    drive.setDefaultCommand(DrivetrainCommands.joystickDrive(
-        drive,
+    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
+        drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
         () -> -controller.getRightX()));
@@ -178,70 +166,21 @@ public class RobotContainer {
     controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
-    controller
-        .R1()
-        .onTrue(IndexerCommands.runForwardCommand(indexer))
-        .onFalse(IndexerCommands.stopCommand(indexer));
-    controller
-        .L1()
-        .onTrue(IndexerCommands.runBackwardCommand(indexer))
-        .onFalse(IndexerCommands.stopCommand(indexer));
+    controller.R1().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    controller.L1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     shooter.setDefaultCommand(ShooterCommands.stopCommand(shooter));
-    controller
-        .triangle()
-        .onTrue(ShooterCommands.runCommand(shooter))
-        .onFalse(ShooterCommands.stopCommand(shooter));
-    // shooter.setDefaultCommand(Commands.run(
-    //     () -> shooter.setMechGoals(
-    //         Pos_State.create(new StateValue(0.0, Radians)),
-    //         Vel_State.create(new StateValue(0.0, RadiansPerSecond))),
-    //     shooter));
-    // controller
-    //     .button(1)
-    //     .onTrue(Commands.run(
-    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(.25, Radians))), shooter));
-    // controller
-    //     .button(2)
-    //     .onTrue(Commands.run(
-    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.5, Radians))), shooter));
-    // controller
-    //     .button(3)
-    //     .onTrue(Commands.run(
-    //         () -> shooter.setHoodGoal(Pos_State.create(new StateValue(0.75, Radians))),
-    // shooter));
-
-    // controller
-    //     .button(4)
-    //     .onTrue(Commands.run(
-    //         () ->
-    //             shooter.setFlywheelGoal(Vel_State.create(new StateValue(200.0,
-    // RadiansPerSecond))),
-    //         shooter));
-    // controller
-    //     .button(5)
-    //     .onTrue(Commands.run(
-    //         () ->
-    //             shooter.setFlywheelGoal(Vel_State.create(new StateValue(400.0,
-    // RadiansPerSecond))),
-    //         shooter));
-    // controller
-    //     .button(6)
-    //     .onTrue(Commands.run(
-    //         () ->
-    //             shooter.setFlywheelGoal(Vel_State.create(new StateValue(600.0,
-    // RadiansPerSecond))),
-    //         shooter));
+    controller.triangle().whileTrue(ShooterCommands.runCommand(shooter));
 
     // Reset gyro / odometry
     final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
-        ? () -> drive.resetOdometry(
+        ? () -> drivetrain.resetOdometry(
             driveSimulation
                 .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
         // simulation
-        : () -> drive.resetOdometry(
-            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
-    controller.square().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+        : () -> drivetrain.resetOdometry(
+            new Pose2d(drivetrain.getPose().getTranslation(), new Rotation2d())); // zero gyro
+    controller.square().onTrue(Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
     // controller
     //     .button(1)
     //     .onTrue(Commands.runOnce(() -> {})
@@ -260,7 +199,7 @@ public class RobotContainer {
   public void resetSimulationField() {
     if (RobotConstants.currentMode != RobotConstants.Mode.SIM) return;
 
-    drive.resetOdometry(new Pose2d(3, 3, new Rotation2d()));
+    drivetrain.resetOdometry(new Pose2d(3, 3, new Rotation2d()));
     SimulatedArena.getInstance().resetFieldForAuto();
   }
 
@@ -268,10 +207,6 @@ public class RobotContainer {
     if (RobotConstants.currentMode != RobotConstants.Mode.SIM) return;
 
     SimulatedArena.getInstance().simulationPeriodic();
-    // Logger.recordOutput("controller/button0", controller.button(0).getAsBoolean());
-    // Logger.recordOutput("controller/button1", controller.button(1).getAsBoolean());
-    // Logger.recordOutput("controller/button2", controller.button(2).getAsBoolean());
-    // Logger.recordOutput("controller/button3", controller.button(3).getAsBoolean());
     Logger.recordOutput(
         "_FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
     Logger.recordOutput(

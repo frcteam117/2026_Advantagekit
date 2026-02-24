@@ -6,7 +6,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -16,10 +15,8 @@ import frc.robot.util.components.bases.ComponentBase;
 import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.components.controllers.SparkMaxController;
-import frc.robot.util.components.simulators.ArmSimulator;
 import frc.robot.util.components.simulators.DCMotorSimulator;
 import frc.robot.util.control_functions.ControlFunctionBase;
-import frc.robot.util.control_functions.feedback.ArmPIDF;
 import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
@@ -60,8 +57,9 @@ public class ShooterConstants {
         .baseSparkConfig
         .voltageCompensation(RobotConstants.NOMINAL_V)
         .smartCurrentLimit(30);
+    // HOOD_CONSTANTS.useAlternateEncoder = true;
     // Motor properties
-    HOOD_CONSTANTS.reduction = 30d;
+    HOOD_CONSTANTS.reduction = (100.0 / 9.0) * 32;
     HOOD_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(HOOD_CONSTANTS.reduction);
     HOOD_CONSTANTS.moi_kgm2 = .3;
     // Profiling
@@ -76,17 +74,17 @@ public class ShooterConstants {
     HOOD_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, HOOD_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, HOOD_CONSTANTS.codePeriod_s);
-    HOOD_CONSTANTS.armFF = RobotBase.isReal()
-        ? new ArmFeedforward(0, 0, 0, 0, HOOD_CONSTANTS.codePeriod_s)
-        : new ArmFeedforward(0, 0, 0, 0, HOOD_CONSTANTS.codePeriod_s);
+    HOOD_CONSTANTS.simpleFF = RobotBase.isReal()
+        ? new SimpleMotorFeedforward(0, 0, 0, HOOD_CONSTANTS.codePeriod_s)
+        : new SimpleMotorFeedforward(0, 0, 0, HOOD_CONSTANTS.codePeriod_s);
 
     HOOD_CONFIG.constants = HOOD_CONSTANTS;
     HOOD_CONFIG.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};
     HOOD_CONFIG.simComponents = new ComponentSimBase[0]; // {absoluteEncoderSimComponent};
     HOOD_CONFIG.realController = new SparkMaxController(HOOD_CONSTANTS);
-    HOOD_CONFIG.simController = new ArmSimulator(HOOD_CONSTANTS);
+    HOOD_CONFIG.simController = new DCMotorSimulator(HOOD_CONSTANTS);
     HOOD_CONFIG.profiles = new ControlFunctionBase[] {new TrapezoidProfileFunction(HOOD_CONSTANTS)};
-    HOOD_CONFIG.feedbacks = new ControlFunctionBase[] {new ArmPIDF(HOOD_CONSTANTS)};
+    HOOD_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(HOOD_CONSTANTS)};
     HOOD_CONFIG.componentsToState = componentStates -> PosVel_State.create(
         new StateValue(
             ((Motor_State) componentStates[0]).rad() / HOOD_CONSTANTS.reduction, Radians),
@@ -121,14 +119,14 @@ public class ShooterConstants {
     FLYWHEEL_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
     FLYWHEEL_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
     FLYWHEEL_CONSTANTS.limits_State = VelAcc_State.create(
-        new StateValue(628, RadiansPerSecond), new StateValue(200, RadiansPerSecondPerSecond));
+        new StateValue(628, RadiansPerSecond), new StateValue(250, RadiansPerSecondPerSecond));
     FLYWHEEL_CONSTANTS.isLoop = true;
     // Feedback
     FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
     FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
+        ? new SimpleMotorFeedforward(0.15, 0.017, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
 
     FLYWHEEL_CONFIG.constants = FLYWHEEL_CONSTANTS;

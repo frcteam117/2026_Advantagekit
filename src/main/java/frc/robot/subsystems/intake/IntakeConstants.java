@@ -112,14 +112,14 @@ public class IntakeConstants {
     ROLLER_CONSTANTS.min_Pos = new RadPos_State(-Double.MAX_VALUE);
     ROLLER_CONSTANTS.max_Pos = new RadPos_State(Double.MAX_VALUE);
     ROLLER_CONSTANTS.limits_State = VelAcc_State.create(
-        new StateValue(100, RadiansPerSecond), new StateValue(400, RadiansPerSecondPerSecond));
+        new StateValue(100, RadiansPerSecond), new StateValue(300, RadiansPerSecondPerSecond));
     ROLLER_CONSTANTS.isLoop = true;
     // Feedback
     ROLLER_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s)
+        ? new PIDController(0.02, 0, 0, ROLLER_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s);
     ROLLER_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s)
+        ? new SimpleMotorFeedforward(0, 0.113, 0, ROLLER_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s);
 
     ROLLER_CONFIG.constants = ROLLER_CONSTANTS;

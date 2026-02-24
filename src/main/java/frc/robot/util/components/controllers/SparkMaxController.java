@@ -36,7 +36,13 @@ public class SparkMaxController extends ComponentControllerBase {
       } else {
         sparkMaxes[i].configure(config.sparkConfigs[i], config.revResetMode, config.revPersistMode);
       }
-      relativeEncoders[i] = sparkMaxes[i].getEncoder();
+      if (config.useAlternateEncoder) {
+        // sparkMaxes[i].configure(new AlternateEncoderConfig().setSparkMaxDataPortConfig(), null,
+        // null)
+        relativeEncoders[i] = sparkMaxes[i].getAlternateEncoder();
+      } else {
+        relativeEncoders[i] = sparkMaxes[i].getEncoder();
+      }
     }
   }
 
