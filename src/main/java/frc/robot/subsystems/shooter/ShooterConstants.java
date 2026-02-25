@@ -124,7 +124,7 @@ public class ShooterConstants {
     FLYWHEEL_CONSTANTS.isLoop = true;
     // Feedback
     FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
+        ? new PIDController(0.0155, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
     FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
         ? new SimpleMotorFeedforward(0.13, 0.017, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
