@@ -89,7 +89,7 @@ public class TrapezoidProfileFunction extends ControlFunctionBase {
   public PosVel_State calculate(Vel_State goal_State, PosVel_State mechanism_State) {
     prevState = new TrapezoidProfile(new TrapezoidProfile.Constraints(
             Math.max(
-                prevState.velocity - max_Acc * period_s,
+                Math.abs(prevState.velocity) - max_Acc * period_s,
                 Math.min(max_Vel, Math.abs(goal_State.vel()))),
             max_Acc))
         .calculate(

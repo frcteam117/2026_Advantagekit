@@ -64,4 +64,9 @@ public class ShooterSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_St
   public MechanismBase<PosVel_State> getFlywheel() {
     return getMechanism1();
   }
+
+  //@Override
+  //public void periodic() {
+  //  ShooterCommands
+  //}
 }

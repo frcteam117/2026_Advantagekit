@@ -48,7 +48,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final DrivetrainSubsystem drivetrain;
-  // private final VisionSubsystem vision;
+  private final VisionSubsystem vision;
   public final IntakeSubsystem intake;
   public final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
@@ -73,8 +73,8 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        // vision = new VisionSubsystem(
-        //     drivetrain::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
+        vision = new VisionSubsystem(
+            drivetrain::accept, new VisionIOPhotonVision(0));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -92,10 +92,9 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
 
-        // vision = new VisionSubsystem(
-        //     drivetrain::accept,
-        //     new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
-        //     new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
+        vision = new VisionSubsystem(
+            drivetrain::accept,
+            new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
         // Replayed robot, disable IO implementations
@@ -107,7 +106,7 @@ public class RobotContainer {
             new ModuleIO() {},
             (pose) -> {});
         // vision = null;
-        // vision = new VisionSubsystem(drivetrain::accept, new VisionIO() {}, new VisionIO() {});
+        vision = new VisionSubsystem(drivetrain::accept, new VisionIO() {});
         break;
     }
     intake = new IntakeSubsystem();
@@ -162,20 +161,23 @@ public class RobotContainer {
         () -> -controller.getLeftX(),
         () -> -controller.getRightX()));
 
-    // controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
-    // controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
+    controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
+    controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
     controller.R1().whileTrue(IndexerCommands.runForwardCommand(indexer));
     controller.L1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
-    shooter.setDefaultCommand(ShooterCommands.stopCommand(shooter));
-    controller.triangle().whileTrue(ShooterCommands.runCommand(shooter));
+    shooter.setDefaultCommand(ShooterCommands.stop(shooter));
+    controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
     // zzzzzzzzzzzzzzzzzzzzz
     controller.circle().onTrue(IntakeCommands.RunRollerForwardForTuning(intake));
     controller.cross().onTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
     // intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
     controller.square().onTrue(IntakeCommands.stopCommand(intake));
+
+    controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
+    controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
     // controller.circle().whileFalse(IntakeCommands.(intake));

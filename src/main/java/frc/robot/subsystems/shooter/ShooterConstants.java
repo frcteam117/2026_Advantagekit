@@ -25,6 +25,8 @@ import frc.robot.util.states.StateValue;
 import frc.robot.util.states.bases.PosVel_State;
 import frc.robot.util.states.bases.Pos_State;
 import frc.robot.util.states.bases.VelAcc_State;
+import frc.robot.util.states.premade.RadPosVel_State;
+import frc.robot.util.states.premade.RadPos_State;
 
 public class ShooterConstants {
   public static final String LOG_NAME = "4_Shooter";
@@ -63,10 +65,9 @@ public class ShooterConstants {
     HOOD_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(HOOD_CONSTANTS.reduction);
     HOOD_CONSTANTS.moi_kgm2 = .3;
     // Profiling
-    HOOD_CONSTANTS.start_State =
-        PosVel_State.create(new StateValue(0, Radians), new StateValue(0, RadiansPerSecond));
-    HOOD_CONSTANTS.min_Pos = Pos_State.create(new StateValue(0, Radians));
-    HOOD_CONSTANTS.max_Pos = Pos_State.create(new StateValue(0.76, Radians));
+    HOOD_CONSTANTS.start_State = new RadPosVel_State(0, 0);
+    HOOD_CONSTANTS.min_Pos = new RadPos_State(0); // -0.477
+    HOOD_CONSTANTS.max_Pos = new RadPos_State(0.646); // .169
     HOOD_CONSTANTS.limits_State = VelAcc_State.create(
         new StateValue(4, RadiansPerSecond), new StateValue(12, RadiansPerSecondPerSecond));
     HOOD_CONSTANTS.isLoop = false;

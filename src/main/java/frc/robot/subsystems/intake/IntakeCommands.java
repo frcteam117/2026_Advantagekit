@@ -21,9 +21,9 @@ public class IntakeCommands {
   public static Command lowerCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          // instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
+          instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
           // runRollerWhenLowered(instance);
-          instance.setRollerGoal(new RadVel_State(0));
+          // instance.setRollerGoal(new RadVel_State(0));
         },
         instance);
   }
@@ -31,9 +31,9 @@ public class IntakeCommands {
   public static Command raiseCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          // instance.setPivotGoal(PIVOT_CONSTANTS.max_Pos);
+          instance.setPivotGoal(PIVOT_CONSTANTS.max_Pos);
           // runRollerWhenLowered(instance);
-          instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+          // instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
         },
         instance);
   }

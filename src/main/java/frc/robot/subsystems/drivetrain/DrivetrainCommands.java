@@ -36,6 +36,7 @@ import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -179,7 +180,18 @@ public class DrivetrainCommands {
         .beforeStarting(
             () -> angleController.reset(drivetrain.getPose().getRotation().getRadians()));
   }
+  //
+  public static Command AimAtHubFromTag(
+    DrivetrainSubsystem drivetrain, 
+    List<Double> targetTagRotation2ds, Rotation2d robotRotation2d[]) {
+    return drivetrain.run(() -> {
+        // run align code!!!
+    });
+  }
 
+
+
+  //
   /** Measures the robot's wheel radius by spinning in a circle. */
   public static Command wheelRadiusCharacterization(DrivetrainSubsystem drive) {
     SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);

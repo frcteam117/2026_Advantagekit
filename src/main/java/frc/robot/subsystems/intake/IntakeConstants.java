@@ -46,7 +46,7 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + PIVOT_CONSTANTS.outputsLogName;
     PIVOT_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     PIVOT_CONSTANTS.mass_kg = 0.5;
-    PIVOT_CONSTANTS.cmOffset_rad = (-15 * Math.PI / 180) - ((1.43256625 + 1.54566358557) / 2);
+    PIVOT_CONSTANTS.cmOffset_rad = (-108 * Math.PI / 180); // - ((1.43256625 + 1.54566358557) / 2);
     // Motor
     PIVOT_CONSTANTS.motorCanIds = new int[] {12};
     PIVOT_CONSTANTS.revMotorType = MotorType.kBrushless;
@@ -54,7 +54,7 @@ public class IntakeConstants {
     PIVOT_CONSTANTS
         .baseSparkConfig
         .voltageCompensation(RobotConstants.NOMINAL_V)
-        .smartCurrentLimit(30)
+        .smartCurrentLimit(80)
         .inverted(true);
     // Motor properties
     PIVOT_CONSTANTS.reduction = 23.80952381;
@@ -63,7 +63,7 @@ public class IntakeConstants {
     // Profiling
     PIVOT_CONSTANTS.start_State = new RadPosVel_State(
         0, 0); // 5.643, 5.929, -0.214, 0.214 rotor rotations with positive being farther down
-    PIVOT_CONSTANTS.min_Pos = new RadPos_State(-1.54566358557);
+    PIVOT_CONSTANTS.min_Pos = new RadPos_State(-82 * (Math.PI / 180)); // -1.54566358557);
     PIVOT_CONSTANTS.max_Pos = new RadPos_State(0);
     PIVOT_CONSTANTS.limits_State = VelAcc_State.create(
         new StateValue(4, RadiansPerSecond), new StateValue(12, RadiansPerSecondPerSecond));
@@ -101,7 +101,7 @@ public class IntakeConstants {
     ROLLER_CONSTANTS
         .baseSparkConfig
         .voltageCompensation(RobotConstants.NOMINAL_V)
-        .smartCurrentLimit(30);
+        .smartCurrentLimit(60);
     // Motor properties
     ROLLER_CONSTANTS.reduction = 5d;
     ROLLER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(ROLLER_CONSTANTS.reduction);
