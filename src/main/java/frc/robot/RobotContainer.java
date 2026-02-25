@@ -162,8 +162,8 @@ public class RobotContainer {
         () -> -controller.getLeftX(),
         () -> -controller.getRightX()));
 
-    controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
-    controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
+    // controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
+    // controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
     controller.R1().whileTrue(IndexerCommands.runForwardCommand(indexer));
@@ -171,6 +171,14 @@ public class RobotContainer {
 
     shooter.setDefaultCommand(ShooterCommands.stopCommand(shooter));
     controller.triangle().whileTrue(ShooterCommands.runCommand(shooter));
+    // zzzzzzzzzzzzzzzzzzzzz
+    controller.circle().onTrue(IntakeCommands.RunRollerForwardForTuning(intake));
+    controller.cross().onTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
+    // intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
+    controller.square().onTrue(IntakeCommands.stopCommand(intake));
+    //
+    // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
+    // controller.circle().whileFalse(IntakeCommands.(intake));
 
     // Reset gyro / odometry
     final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM

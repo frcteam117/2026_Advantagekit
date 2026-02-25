@@ -100,14 +100,14 @@ public class ShooterConstants {
         RobotConstants.TUNING_PREFIX + FLYWHEEL_CONSTANTS.outputsLogName;
     FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {13, 14, 15, 16};
+    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {13, 14};
     FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true, false, true};
     FLYWHEEL_CONSTANTS.revMotorType = MotorType.kBrushless;
     FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     FLYWHEEL_CONSTANTS
         .baseSparkConfig
         .voltageCompensation(RobotConstants.NOMINAL_V)
-        .smartCurrentLimit(30);
+        .smartCurrentLimit(55);
     // Motor properties
     FLYWHEEL_CONSTANTS.reduction = 1d;
     FLYWHEEL_CONSTANTS.gearbox =
@@ -120,13 +120,15 @@ public class ShooterConstants {
     FLYWHEEL_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
     FLYWHEEL_CONSTANTS.limits_State = VelAcc_State.create(
         new StateValue(628, RadiansPerSecond), new StateValue(250, RadiansPerSecondPerSecond));
+    // 75% of top speed should be 471 rad/sec (tuning)
     FLYWHEEL_CONSTANTS.isLoop = true;
     // Feedback
     FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
     FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0.15, 0.017, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
+        ? new SimpleMotorFeedforward(0.13, 0.017, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
+        // from tuning: 0.13, 0.017, N/A
         : new SimpleMotorFeedforward(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
 
     FLYWHEEL_CONFIG.constants = FLYWHEEL_CONSTANTS;

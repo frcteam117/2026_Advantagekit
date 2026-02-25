@@ -45,4 +45,28 @@ public class IntakeCommands {
       instance.setRollerGoal(new RadVel_State(0));
     }
   }
+  // for tuning
+  public static Command RunRollerForwardForTuning(IntakeSubsystem instance) {
+    return Commands.run(
+        () -> {
+          instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+        },
+        instance);
+  }
+
+  public static Command RunRollerBackwardForTuning(IntakeSubsystem instance) {
+    return Commands.run(
+        () -> {
+          instance.setRollerGoal(new RadVel_State(-targetSpeed_radPs.getAsDouble()));
+        },
+        instance);
+  }
+
+  public static Command stopCommand(IntakeSubsystem instance) {
+    return Commands.run(
+        () -> {
+          instance.setRollerGoal(new RadVel_State(0));
+        },
+        instance);
+  }
 }

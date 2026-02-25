@@ -46,7 +46,7 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + PIVOT_CONSTANTS.outputsLogName;
     PIVOT_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     PIVOT_CONSTANTS.mass_kg = 0.5;
-    PIVOT_CONSTANTS.cmOffset_rad = .3 - ((1.43256625 + 1.54566358557) / 2);
+    PIVOT_CONSTANTS.cmOffset_rad = (-15 * Math.PI / 180) - ((1.43256625 + 1.54566358557) / 2);
     // Motor
     PIVOT_CONSTANTS.motorCanIds = new int[] {12};
     PIVOT_CONSTANTS.revMotorType = MotorType.kBrushless;
