@@ -59,7 +59,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
-
+  public final DrivetrainCommands drivetrainCommands;
   // Kinematics
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Chassis.moduleTranslations);
@@ -90,6 +90,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
       ModuleIO blModuleIO,
       ModuleIO brModuleIO,
       Consumer<Pose2d> resetSimulationPoseCallBack) {
+    drivetrainCommands = new DrivetrainCommands();
     this.gyroIO = gyroIO;
     this.resetSimulationPoseCallBack = resetSimulationPoseCallBack;
     modules[0] = new Module(flModuleIO, 0);
@@ -297,11 +298,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs,
-      List<Double> targetTagRotation2ds) {
+      Rotation2d targetTagRotation2d) {
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
         // TODO: when should this be run? vvvv
-    //DrivetrainCommands.AimAtHubFromTag(this, targetTagRotation2ds, gyroInputs.odometryYawPositions);
+    drivetrainCommands.StoreVisionValues(targetTagRotation2d, gyroInputs.odometryYawPositions);
   }
 
   /** Returns the position of each module in radians. */

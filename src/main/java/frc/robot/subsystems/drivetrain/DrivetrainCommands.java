@@ -16,6 +16,7 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,6 +24,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -36,6 +39,7 @@ import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -57,8 +61,13 @@ public class DrivetrainCommands {
     Chassis.moduleTranslations[2].getAngle(),
     Chassis.moduleTranslations[3].getAngle()
   };
-
-  private DrivetrainCommands() {} // Stops DrivetrainCommands from being instantiated
+  public static Rotation2d targetTagRotation2d;
+  public static Rotation2d robotRotation2d[];
+  public DrivetrainCommands() {
+    //targetTagRotation2ds = new ArrayList<>();
+    //robotRotation2d = new Rotation2d[] {};
+  } // Stops DrivetrainCommands from being instantiated
+  //
 
   /** Returns a command to run a drive sysId test with the specified type. */
   public static Command getDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
@@ -181,11 +190,18 @@ public class DrivetrainCommands {
             () -> angleController.reset(drivetrain.getPose().getRotation().getRadians()));
   }
   //
+  public void StoreVisionValues(
+    Rotation2d targetTagRotation2d, 
+    Rotation2d robotRotation2d[]) {
+    this.targetTagRotation2d = targetTagRotation2d;
+    this.robotRotation2d = robotRotation2d;
+    //TODO: figure out how wrong i did this
+  }
   public static Command AimAtHubFromTag(
-    DrivetrainSubsystem drivetrain, 
-    List<Double> targetTagRotation2ds, Rotation2d robotRotation2d[]) {
+    DrivetrainSubsystem drivetrain) {
     return drivetrain.run(() -> {
         // run align code!!!
+        
     });
   }
 
@@ -274,6 +290,7 @@ public class DrivetrainCommands {
     Rotation2d lastAngle = new Rotation2d();
     double gyroDelta = 0.0;
   }
+// get directly from drive consumer?
 
   // public static Command pathToReef(Supplier<Pose2d> poseSupplier, BooleanSupplier getButton) {
   //   Pose2d waypoint;
