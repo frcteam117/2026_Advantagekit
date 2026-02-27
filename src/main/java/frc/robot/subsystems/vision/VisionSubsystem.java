@@ -25,12 +25,9 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.drivetrain.DrivetrainCommands;
-
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
-import org.photonvision.PhotonCamera;
 
 public class VisionSubsystem extends SubsystemBase {
   private final VisionConsumer consumer;
@@ -139,7 +136,7 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         // Send vision observation
-        //DrivetrainCommands.AlignToTag(drivetrain, observation);
+        // DrivetrainCommands.AlignToTag(drivetrain, observation);
         consumer.accept(
             observation.pose().toPose2d(),
             observation.timestamp(),

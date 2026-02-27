@@ -16,7 +16,6 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -24,8 +23,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -35,16 +32,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
-import frc.robot.subsystems.vision.VisionSubsystem;
-import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
-import org.photonvision.PhotonCamera;
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainCommands {
@@ -222,7 +215,7 @@ public class DrivetrainCommands {
       drivetrain.setGoalVelocity(speeds);
     });
   }
-  public Command AlignToTag(
+  /*public Command AlignToTag(
       DrivetrainSubsystem drivetrain, PoseObservation observation) {
     //    change 2??? vvv
     double targetRange = cameraData.targetRange();
@@ -246,7 +239,7 @@ public class DrivetrainCommands {
               ? drivetrain.getPose().getRotation().plus(new Rotation2d(Math.PI))
               : drivetrain.getPose().getRotation());
       return drivetrain.run(()-> {drivetrain.setGoalVelocity(speeds);});
-  }
+  }*/
   //
   /** Measures the robot's wheel radius by spinning in a circle. */
   public static Command wheelRadiusCharacterization(DrivetrainSubsystem drive) {
