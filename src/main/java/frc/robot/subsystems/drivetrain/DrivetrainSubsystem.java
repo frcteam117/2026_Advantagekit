@@ -297,11 +297,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    // Rotation2d targetTagRotation2d) {
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-    // TODO: when should this be run? vvvv
-    // drivetrainCommands.StoreVisionValues(targetTagRotation2d, gyroInputs.odometryYawPositions);
   }
 
   /** Returns the position of each module in radians. */

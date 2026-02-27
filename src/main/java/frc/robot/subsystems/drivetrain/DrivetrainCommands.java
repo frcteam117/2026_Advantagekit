@@ -186,16 +186,33 @@ public class DrivetrainCommands {
             () -> angleController.reset(drivetrain.getPose().getRotation().getRadians()));
   }
   //
-  public void StoreVisionValues(Rotation2d targetTagRotation2d, Rotation2d robotRotation2d[]) {
-    this.targetTagRotation2d = targetTagRotation2d;
-    this.robotRotation2d = robotRotation2d;
-    // TODO: figure out how wrong i did this
-  }
 
-  public static Command AimAtHubFromTag(DrivetrainSubsystem drivetrain) {
+  public static Command PointAtAllianceHub(DrivetrainSubsystem drivetrain) {
+    // should this not be run?
     return drivetrain.run(() -> {
-      // run align code!!!
-
+      var alliance = DriverStation.getAlliance();
+      Pose2d robotPose = drivetrain.getPose();
+      Pose2d hubPosition = new Pose2d();
+      double angleToTarget = 0.0;
+      if (alliance.isPresent()) {
+        if (alliance.get() == Alliance.Red) {
+          hubPosition = new Pose2d();
+        } else if (alliance.get() == Alliance.Blue) {
+          hubPosition = new Pose2d();
+        }
+        Translation2d delta = hubPosition.getTranslation().minus(robotPose.getTranslation());
+        angleToTarget = Math.atan2(delta.getY(), delta.getX());
+      }
+      // Convert to field relative speeds & send command
+      ChassisSpeeds speeds = new ChassisSpeeds(0, 0, angleToTarget);
+      boolean isFlipped = DriverStation.getAlliance().isPresent()
+          && DriverStation.getAlliance().get() == Alliance.Red;
+      speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+          speeds,
+          isFlipped
+              ? drivetrain.getPose().getRotation().plus(new Rotation2d(Math.PI))
+              : drivetrain.getPose().getRotation());
+      drivetrain.setGoalVelocity(speeds);
     });
   }
 

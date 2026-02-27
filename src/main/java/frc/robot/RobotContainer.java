@@ -177,6 +177,10 @@ public class RobotContainer {
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
+    controller
+        .povUpLeft()
+        .whileTrue(DrivetrainCommands.PointAtAllianceHub(
+            drivetrain)); // when should the command terminate/do that
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
     // controller.circle().whileFalse(IntakeCommands.(intake));

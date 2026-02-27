@@ -138,7 +138,6 @@ public class VisionSubsystem extends SubsystemBase {
             observation.pose().toPose2d(),
             observation.timestamp(),
             VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
-        // observation.pose().getRotation().toRotation2d());
       }
 
       // Log camera datadata
@@ -184,6 +183,5 @@ public class VisionSubsystem extends SubsystemBase {
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs);
-    // Rotation2d targetTagRotation2d);
   }
 }
