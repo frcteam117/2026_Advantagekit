@@ -143,7 +143,7 @@ public class VisionSubsystem extends SubsystemBase {
             VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
       }
 
-      // Log camera datadata
+      // Log camera datgtadata
       Logger.recordOutput(
           VisionConstants.logName + "/" + VisionConstants.cameraLogNames[cameraIndex] + "/TagPoses",
           tagPoses.toArray(new Pose3d[tagPoses.size()]));

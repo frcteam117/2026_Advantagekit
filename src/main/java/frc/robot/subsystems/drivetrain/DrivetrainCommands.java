@@ -15,6 +15,8 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -189,57 +191,46 @@ public class DrivetrainCommands {
 
   public static Command PointAtAllianceHub(DrivetrainSubsystem drivetrain) {
     // should this not be run?
-    return drivetrain.run(() -> {
-      var alliance = DriverStation.getAlliance();
-      Pose2d robotPose = drivetrain.getPose();
-      Pose2d hubPosition = new Pose2d();
-      double angleToTarget = 0.0;
-      if (alliance.isPresent()) {
-        if (alliance.get() == Alliance.Red) {
-          hubPosition = new Pose2d();
-        } else if (alliance.get() == Alliance.Blue) {
-          hubPosition = new Pose2d();
-        }
-        Translation2d delta = hubPosition.getTranslation().minus(robotPose.getTranslation());
-        angleToTarget = Math.atan2(delta.getY(), delta.getX());
+    var alliance = DriverStation.getAlliance();
+    Pose2d robotPose = drivetrain.getPose();
+    Pose2d hubPosition = new Pose2d();
+    double angleToTarget = 0.0;
+    if (alliance.isPresent()) {
+      if (alliance.get() == Alliance.Red) {
+        hubPosition = new Pose2d();
+      } else if (alliance.get() == Alliance.Blue) {
+        hubPosition = new Pose2d();
       }
-      // Convert to field relative speeds & send command
-      ChassisSpeeds speeds = new ChassisSpeeds(0, 0, angleToTarget);
-      boolean isFlipped = DriverStation.getAlliance().isPresent()
-          && DriverStation.getAlliance().get() == Alliance.Red;
-      speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-          speeds,
-          isFlipped
-              ? drivetrain.getPose().getRotation().plus(new Rotation2d(Math.PI))
-              : drivetrain.getPose().getRotation());
-      drivetrain.setGoalVelocity(speeds);
-    });
+      // Translation2d delta = hubPosition.getTranslation().minus(robotPose.getTranslation());
+      // angleToTarget = Math.atan2(delta.getY(), delta.getX());
+    }
+    return Commands.defer(
+        () -> {
+          // Create a path from the current pose to the target pose
+          PathPlannerPath path = PathPlannerPath.waypointsFromPoses(
+              drivetrain.getPose(), // Assumes you have a getEstimatedPose() method
+              hubPosition);
+          // Use the AutoBuilder to create a command to follow the generated path
+          return AutoBuilder.followPath(path);
+        },
+        drivetrain); // Specify the subsystem requirements
   }
-  /*public Command AlignToTag(
-      DrivetrainSubsystem drivetrain, PoseObservation observation) {
+
+  public Command AlignToTag(DrivetrainSubsystem drivetrain, Int tagID) {
     //    change 2??? vvv
-    double targetRange = cameraData.targetRange();
-    boolean targetVisible = cameraData.targetVisible();
-    double targetYaw = cameraData.targetYaw();
-    double kPVision_Turn = cameraData.kPVision_Turn();
-    SmartDashboard.putString("cameraData", cameraData.toString()); // if targetRange > 2
-    if (true && targetVisible) { // reset the camera photonvision values so the targetrange stuff can be
-      // accurate?
-      SmartDashboard.putNumber("check #", 2);
-      double rot = -1.0
-          * targetYaw
-          * kPVision_Turn
-          * 5; // (SwerveConstants.TOP_SPEED_METERS_PER_SEC/0.6);//SwerveConstants.kMaxAngularSpeed;
-      ChassisSpeeds speeds = new ChassisSpeeds(0, 0, rot);
-      boolean isFlipped = DriverStation.getAlliance().isPresent()
-          && DriverStation.getAlliance().get() == Alliance.Red;
-      speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-          speeds,
-          isFlipped
-              ? drivetrain.getPose().getRotation().plus(new Rotation2d(Math.PI))
-              : drivetrain.getPose().getRotation());
-      return drivetrain.run(()-> {drivetrain.setGoalVelocity(speeds);});
-  }*/
+    Pose2d targetTagPose = DrivetrainConstants.AprilTagPoses.get(tagID - 1).toPose2d(); // minus 1?
+    //
+    return Commands.defer(
+        () -> {
+          // Create a path from the current pose to the target pose
+          PathPlannerPath path = PathPlannerPath.waypointsFromPoses(
+              drivetrain.getPose(), // Assumes you have a getEstimatedPose() method
+              targetTagPose);
+          // Use the AutoBuilder to create a command to follow the generated path
+          return AutoBuilder.followPath(path);
+        },
+        drivetrain); // Specify the subsystem requirements
+  }
   //
   /** Measures the robot's wheel radius by spinning in a circle. */
   public static Command wheelRadiusCharacterization(DrivetrainSubsystem drive) {

@@ -21,8 +21,11 @@ import com.thethriftybot.devices.ThriftyNova.EncoderType;
 import com.thethriftybot.devices.ThriftyNova.ExternalEncoder;
 import com.thethriftybot.devices.ThriftyNova.PIDSlot;
 import com.thethriftybot.devices.ThriftyNova.ThriftyNovaConfig;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -30,6 +33,8 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
 import frc.robot.util.UnitUtil;
 import frc.robot.util.logging.LogUtil;
+import java.util.ArrayList;
+import java.util.List;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
@@ -39,6 +44,16 @@ public class DrivetrainConstants {
   public static final String NAME = "1_Drivetrain";
   public static final LoggedNetworkBoolean tunable =
       new LoggedNetworkBoolean(RobotConstants.TUNING_PREFIX + NAME + "/.Tunable", false);
+  public static AprilTagFieldLayout kTagLayout =
+      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  public static List<Pose3d> AprilTagPoses = new ArrayList<>();
+
+  public DrivetrainConstants() {
+    for (int i = 1; i < 33; i++) { // 33 because 32 tags, index 0 will return a safe Null
+      Pose3d tagPose = kTagLayout.getTagPose(i).orElse(new Pose3d());
+      AprilTagPoses.add(tagPose);
+    }
+  }
 
   public static final class Chassis {
     public static final String name = DrivetrainConstants.NAME + "/Chassis";
