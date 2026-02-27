@@ -101,7 +101,7 @@ public class ShooterConstants {
         RobotConstants.TUNING_PREFIX + FLYWHEEL_CONSTANTS.outputsLogName;
     FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {13, 14, 15, 16};
+    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {15, 16};
     FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true, false, true};
     FLYWHEEL_CONSTANTS.revMotorType = MotorType.kBrushless;
     FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();

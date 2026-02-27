@@ -45,7 +45,6 @@ import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.util.LocalADStarAK;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -297,12 +296,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
   public void accept(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs,
-      Rotation2d targetTagRotation2d) {
+      Matrix<N3, N1> visionMeasurementStdDevs) {
+    // Rotation2d targetTagRotation2d) {
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-        // TODO: when should this be run? vvvv
-    drivetrainCommands.StoreVisionValues(targetTagRotation2d, gyroInputs.odometryYawPositions);
+    // TODO: when should this be run? vvvv
+    // drivetrainCommands.StoreVisionValues(targetTagRotation2d, gyroInputs.odometryYawPositions);
   }
 
   /** Returns the position of each module in radians. */

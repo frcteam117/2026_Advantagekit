@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -21,33 +20,34 @@ public class ShooterCommands {
       new TunableDouble(FLYWHEEL_CONSTANTS.tuningLogName + "/_radPs", 471, () -> true);
   private static final DoubleSupplier targetHoodSpeed_radPs =
       new TunableDouble(HOOD_CONSTANTS.tuningLogName + "/_radPs", .2, () -> true);
-  private static final InterpolatingDoubleTreeMap distanceToSpeedLerp = new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap distanceToSpeedLerp =
+      new InterpolatingDoubleTreeMap();
+
   static {
     distanceToSpeedLerp.put(0.0, 0.0);
     distanceToSpeedLerp.put(3.0, 350.0);
   }
+
   private static final Translation2d blueHub = new Translation2d(0, 0);
   private static final Translation2d redHub = new Translation2d(0, 0);
 
   public static Command autoAim(Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter) {
-    return shooter.run(
-        () -> {
-          double distance;
-          if (DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Blue)) {
-            distance = blueHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
-          } else {
-            distance = redHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
-          }
-          shooter.setFlywheelGoal(new RadVel_State(distanceToSpeedLerp.get(distance)));
-        });
+    return shooter.run(() -> {
+      double distance;
+      if (DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Blue)) {
+        distance = blueHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
+      } else {
+        distance = redHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
+      }
+      shooter.setFlywheelGoal(new RadVel_State(distanceToSpeedLerp.get(distance)));
+    });
   }
 
   public static Command stop(ShooterSubsystem shooter) {
-    return shooter.run(
-        () -> {
-          shooter.setFlywheelGoal(new RadVel_State(0));
-          shooter.setHoodGoal(new RadVel_State(0));
-        });
+    return shooter.run(() -> {
+      shooter.setFlywheelGoal(new RadVel_State(0));
+      shooter.setHoodGoal(new RadVel_State(0));
+    });
   }
 
   public static Command runForward(ShooterSubsystem instance) {

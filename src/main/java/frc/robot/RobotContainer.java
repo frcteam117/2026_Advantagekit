@@ -73,8 +73,7 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        vision = new VisionSubsystem(
-            drivetrain::accept, new VisionIOPhotonVision(0));
+        vision = new VisionSubsystem(drivetrain::accept, new VisionIOPhotonVision(0));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
