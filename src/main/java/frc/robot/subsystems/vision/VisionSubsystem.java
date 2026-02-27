@@ -25,9 +25,12 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.drivetrain.DrivetrainCommands;
+
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.PhotonCamera;
 
 public class VisionSubsystem extends SubsystemBase {
   private final VisionConsumer consumer;
@@ -84,6 +87,7 @@ public class VisionSubsystem extends SubsystemBase {
 
       // Initialize logging values
       List<Pose3d> tagPoses = new LinkedList<>();
+
       List<Pose3d> robotPoses = new LinkedList<>();
       List<Pose3d> robotPosesAccepted = new LinkedList<>();
       List<Pose3d> robotPosesRejected = new LinkedList<>();
@@ -98,6 +102,7 @@ public class VisionSubsystem extends SubsystemBase {
 
       // Loop over pose observations
       for (var observation : inputs[cameraIndex].poseObservations) {
+
         // Check whether to reject pose
         boolean rejectPose = observation.tagCount() == 0 // Must have at least one tag
             || (observation.tagCount() == 1
@@ -134,6 +139,7 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         // Send vision observation
+        //DrivetrainCommands.AlignToTag(drivetrain, observation);
         consumer.accept(
             observation.pose().toPose2d(),
             observation.timestamp(),
