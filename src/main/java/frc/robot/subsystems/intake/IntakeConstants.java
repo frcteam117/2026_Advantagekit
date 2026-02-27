@@ -6,9 +6,9 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
@@ -19,9 +19,10 @@ import frc.robot.util.components.controllers.SparkMaxController;
 import frc.robot.util.components.simulators.ArmSimulator;
 import frc.robot.util.components.simulators.DCMotorSimulator;
 import frc.robot.util.control_functions.ControlFunctionBase;
-import frc.robot.util.control_functions.feedback.ArmPIDF;
+import frc.robot.util.control_functions.feedback.ArbitraryPIDSVAF;
 import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
+import frc.robot.util.logging.TunableDouble;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
 import frc.robot.util.states.StateValue;
@@ -72,9 +73,119 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.pid = RobotBase.isReal()
         ? new PIDController(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s);
-    PIVOT_CONSTANTS.armFF = RobotBase.isReal()
-        ? new ArmFeedforward(0, 0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
-        : new ArmFeedforward(0, 0, 0, 0, PIVOT_CONSTANTS.codePeriod_s);
+    PIVOT_CONSTANTS.simpleFF = RobotBase.isReal()
+        ? new SimpleMotorFeedforward(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
+        : new SimpleMotorFeedforward(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s);
+    PIVOT_CONSTANTS.arbitraryFF = new InterpolatingDoubleTreeMap();
+    PIVOT_CONSTANTS.arbitraryFF.put(0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.0, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.0, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.2, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.3, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.4, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.5, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.6, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.7, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.8, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.9, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.0, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.2, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.3, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.4, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.5, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.6, 0.0);
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/_0.1",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(0.1, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.0",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.0, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.1",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.1, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.2",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.2, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.3",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.3, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.4",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.4, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.5",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.5, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.6",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.6, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.7",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.7, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.8",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.8, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-0.9",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.9, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-1.0",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.0, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-1.1",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.1, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-1.2",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.2, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-1.3",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.3, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-1.4",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.4, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-1.5",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.5, value));
+    new TunableDouble(
+        LOG_NAME + "/ArbitraryFF/-1.6",
+        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.6, value));
 
     PIVOT_CONFIG.constants = PIVOT_CONSTANTS;
     PIVOT_CONFIG.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};
@@ -83,7 +194,7 @@ public class IntakeConstants {
     PIVOT_CONFIG.simController = new ArmSimulator(PIVOT_CONSTANTS);
     PIVOT_CONFIG.profiles =
         new ControlFunctionBase[] {new TrapezoidProfileFunction(PIVOT_CONSTANTS)};
-    PIVOT_CONFIG.feedbacks = new ControlFunctionBase[] {new ArmPIDF(PIVOT_CONSTANTS)};
+    PIVOT_CONFIG.feedbacks = new ControlFunctionBase[] {new ArbitraryPIDSVAF(PIVOT_CONSTANTS)};
     PIVOT_CONFIG.componentsToState = componentStates -> new RadPosVel_State(
         ((Motor_State) componentStates[0]).rad() / PIVOT_CONSTANTS.reduction,
         ((Motor_State) componentStates[0]).radPs() / PIVOT_CONSTANTS.reduction);

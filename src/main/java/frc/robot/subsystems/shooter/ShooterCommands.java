@@ -1,18 +1,17 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.logging.TunableDouble;
 import frc.robot.util.states.premade.RadVel_State;
 import java.util.function.DoubleSupplier;
+import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
 
 public class ShooterCommands {
@@ -20,27 +19,37 @@ public class ShooterCommands {
       new TunableDouble(FLYWHEEL_CONSTANTS.tuningLogName + "/_radPs", 471, () -> true);
   private static final DoubleSupplier targetHoodSpeed_radPs =
       new TunableDouble(HOOD_CONSTANTS.tuningLogName + "/_radPs", .2, () -> true);
-  private static final InterpolatingDoubleTreeMap distanceToSpeedLerp =
-      new InterpolatingDoubleTreeMap();
+  // private static final InterpolatingDoubleTreeMap distanceToSpeedLerp =
+  //     new InterpolatingDoubleTreeMap();
 
-  static {
-    distanceToSpeedLerp.put(0.0, 0.0);
-    distanceToSpeedLerp.put(3.0, 350.0);
+  // static {
+  //   distanceToSpeedLerp.put(0.0, 0.0);
+  //   distanceToSpeedLerp.put(86.8261633902, 350.0);
+  // }
+
+  private static final DoubleUnaryOperator distanceToSpeed =
+      meters -> 11.0169521624 * meters * meters + 277.447063272;
+  private static final DoubleSupplier maxAllowableErrorRadPS =
+      new TunableDouble(LOG_NAME + "/AutoAim/AllowableError", 10, () -> true);
+  private static double autoTargetSpeed = 0;
+
+  public static Command hubAutoAim(
+      ShooterSubsystem shooter,
+      Supplier<Pose2d> robotPoseSupplier,
+      Supplier<Translation2d> targetSupplier) {
+    return shooter.run(() -> {
+      autoTargetSpeed = distanceToSpeed.applyAsDouble(
+          robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get()));
+      shooter.setFlywheelGoal(new RadVel_State(autoTargetSpeed));
+    });
   }
 
-  private static final Translation2d blueHub = new Translation2d(0, 0);
-  private static final Translation2d redHub = new Translation2d(0, 0);
-
-  public static Command autoAim(Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter) {
-    return shooter.run(() -> {
-      double distance;
-      if (DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Blue)) {
-        distance = blueHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
-      } else {
-        distance = redHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
-      }
-      shooter.setFlywheelGoal(new RadVel_State(distanceToSpeedLerp.get(distance)));
-    });
+  public static boolean isAutoAimReady(ShooterSubsystem shooter) {
+    // if (!hubAutoAim(shooter, null, null).isScheduled()) {
+    //   return false;
+    // }
+    return Math.abs(shooter.getFlywheelState().vel(RadiansPerSecond) - autoTargetSpeed)
+        < maxAllowableErrorRadPS.getAsDouble();
   }
 
   public static Command stop(ShooterSubsystem shooter) {
@@ -50,28 +59,22 @@ public class ShooterCommands {
     });
   }
 
-  public static Command runForward(ShooterSubsystem instance) {
-    return Commands.run(
-        () -> {
-          instance.setFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
-        },
-        instance);
+  public static Command runForward(ShooterSubsystem shooter) {
+    return shooter.run(() -> {
+      shooter.setFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+    });
   }
 
-  public static Command raiseHood(ShooterSubsystem instance) {
-    return Commands.run(
-        () -> {
-          instance.setHoodGoal(new RadVel_State(targetHoodSpeed_radPs.getAsDouble()));
-        },
-        instance);
+  public static Command raiseHood(ShooterSubsystem shooter) {
+    return shooter.run(() -> {
+      shooter.setHoodGoal(new RadVel_State(targetHoodSpeed_radPs.getAsDouble()));
+    });
   }
 
-  public static Command lowerHood(ShooterSubsystem instance) {
-    return Commands.run(
-        () -> {
-          instance.setHoodGoal(new RadVel_State(-targetHoodSpeed_radPs.getAsDouble()));
-        },
-        instance);
+  public static Command lowerHood(ShooterSubsystem shooter) {
+    return shooter.run(() -> {
+      shooter.setHoodGoal(new RadVel_State(-targetHoodSpeed_radPs.getAsDouble()));
+    });
   }
 
   public static Command hoodSysId(ShooterSubsystem shooter, SysIdType type) {

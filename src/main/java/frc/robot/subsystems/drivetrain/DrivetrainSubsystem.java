@@ -58,7 +58,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
-  public final DrivetrainCommands drivetrainCommands;
   // Kinematics
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Chassis.moduleTranslations);
@@ -89,7 +88,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
       ModuleIO blModuleIO,
       ModuleIO brModuleIO,
       Consumer<Pose2d> resetSimulationPoseCallBack) {
-    drivetrainCommands = new DrivetrainCommands();
     this.gyroIO = gyroIO;
     this.resetSimulationPoseCallBack = resetSimulationPoseCallBack;
     modules[0] = new Module(flModuleIO, 0);
@@ -272,7 +270,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = DrivetrainConstants.NAME + "/0_Measured/Chassis")
-  private ChassisSpeeds getChassisSpeeds() {
+  public ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
 
@@ -297,11 +295,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    // Rotation2d targetTagRotation2d) {
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-    // TODO: when should this be run? vvvv
-    // drivetrainCommands.StoreVisionValues(targetTagRotation2d, gyroInputs.odometryYawPositions);
+    // TODO: when should this be run? Max's answer: DrivetrainSubsystem.accept() should be run each
+    // timestep that photonvision was able to predict the robot pose
   }
 
   /** Returns the position of each module in radians. */

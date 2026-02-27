@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -107,8 +108,9 @@ public class ShooterConstants {
     FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     FLYWHEEL_CONSTANTS
         .baseSparkConfig
-        .voltageCompensation(RobotConstants.NOMINAL_V)
-        .smartCurrentLimit(55);
+        .disableVoltageCompensation()
+        .smartCurrentLimit(55)
+        .idleMode(IdleMode.kCoast);
     // Motor properties
     FLYWHEEL_CONSTANTS.reduction = 1d;
     FLYWHEEL_CONSTANTS.gearbox =

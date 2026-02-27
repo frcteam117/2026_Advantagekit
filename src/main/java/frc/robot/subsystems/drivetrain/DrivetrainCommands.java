@@ -30,10 +30,12 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.function.DoubleSupplier;
@@ -59,11 +61,66 @@ public class DrivetrainCommands {
   public static Rotation2d targetTagRotation2d;
   public static Rotation2d robotRotation2d[];
 
-  public DrivetrainCommands() {
-    // targetTagRotation2ds = new ArrayList<>();
-    // robotRotation2d = new Rotation2d[] {};
-  } // Stops DrivetrainCommands from being instantiated
-  //
+  private static TrapezoidProfile.Constraints turningConstraints =
+      new TrapezoidProfile.Constraints(2, 4);
+  private static TrapezoidProfile turningProfile = new TrapezoidProfile(turningConstraints);
+
+  static {
+    new TunableDouble(
+        DrivetrainConstants.NAME + "/autoAlign/Max_Vel",
+        turningConstraints.maxVelocity,
+        () -> true,
+        value -> {
+          turningConstraints =
+              new TrapezoidProfile.Constraints(value, turningConstraints.maxAcceleration);
+          turningProfile = new TrapezoidProfile(turningConstraints);
+        });
+    new TunableDouble(
+        DrivetrainConstants.NAME + "/autoAlign/Max_Acc",
+        turningConstraints.maxAcceleration,
+        () -> true,
+        value -> {
+          turningConstraints =
+              new TrapezoidProfile.Constraints(turningConstraints.maxVelocity, value);
+          turningProfile = new TrapezoidProfile(turningConstraints);
+        });
+  }
+
+  private DrivetrainCommands() {} // Stops DrivetrainCommands from being instantiated
+
+  private static final DoubleSupplier maxAllowableErrorRad =
+      new TunableDouble(DrivetrainConstants.NAME + "/AutoAim/AllowableError", .05, () -> true);
+  private static double autoFacingRad = 0;
+
+  public static Command stopAndFacePosition(
+      DrivetrainSubsystem drivetrain, Supplier<Translation2d> targetSupplier) {
+    return drivetrain.run(() -> {
+      autoFacingRad = targetSupplier
+          .get()
+          .minus(drivetrain.getPose().getTranslation())
+          .getAngle()
+          .getRadians();
+      drivetrain.setGoalVelocity(new ChassisSpeeds(
+          0,
+          0,
+          turningProfile.calculate(
+                  RobotConstants.CODE_PERIOD_s,
+                  new TrapezoidProfile.State(
+                      drivetrain.getPose().getRotation().getRadians(),
+                      drivetrain.getChassisSpeeds().omegaRadiansPerSecond),
+                  new TrapezoidProfile.State(autoFacingRad, 0))
+              .velocity));
+    });
+  }
+
+  public static boolean isAutoAimReady(DrivetrainSubsystem drivetrain) {
+    // if (!stopAndFacePosition(drivetrain, null)
+    //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
+    //   return false;
+    // }
+    return Math.abs(drivetrain.getPose().getRotation().getRadians() - autoFacingRad)
+        < maxAllowableErrorRad.getAsDouble();
+  }
 
   /** Returns a command to run a drive sysId test with the specified type. */
   public static Command getDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
@@ -185,19 +242,19 @@ public class DrivetrainCommands {
         .beforeStarting(
             () -> angleController.reset(drivetrain.getPose().getRotation().getRadians()));
   }
-  //
-  public void StoreVisionValues(Rotation2d targetTagRotation2d, Rotation2d robotRotation2d[]) {
-    this.targetTagRotation2d = targetTagRotation2d;
-    this.robotRotation2d = robotRotation2d;
-    // TODO: figure out how wrong i did this
-  }
 
-  public static Command AimAtHubFromTag(DrivetrainSubsystem drivetrain) {
-    return drivetrain.run(() -> {
-      // run align code!!!
+  // public void StoreVisionValues(Rotation2d targetTagRotation2d, Rotation2d robotRotation2d[]) {
+  //   this.targetTagRotation2d = targetTagRotation2d;
+  //   this.robotRotation2d = robotRotation2d;
+  //   // TODO: figure out how wrong i did this
+  // }
 
-    });
-  }
+  // public static Command AimAtHubFromTag(DrivetrainSubsystem drivetrain) {
+  //   return drivetrain.run(() -> {
+  //     // run align code!!!
+
+  //   });
+  // }
 
   //
   /** Measures the robot's wheel radius by spinning in a circle. */

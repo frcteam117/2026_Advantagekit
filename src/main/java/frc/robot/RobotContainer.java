@@ -16,6 +16,7 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -49,8 +50,8 @@ public class RobotContainer {
   // Subsystems
   private final DrivetrainSubsystem drivetrain;
   private final VisionSubsystem vision;
-  public final IntakeSubsystem intake;
-  public final IndexerSubsystem indexer;
+  private final IntakeSubsystem intake;
+  private final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
   private SwerveDriveSimulation driveSimulation = null;
 
@@ -163,7 +164,7 @@ public class RobotContainer {
     controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
     controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
 
-    indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
+    indexer.setDefaultCommand(IndexerCommands.stop(indexer));
     controller.R1().whileTrue(IndexerCommands.runForwardCommand(indexer));
     controller.L1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
@@ -177,6 +178,10 @@ public class RobotContainer {
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
+    controller
+        .button(4)
+        .onTrue(
+            ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> new Translation2d()));
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
     // controller.circle().whileFalse(IntakeCommands.(intake));

@@ -38,13 +38,13 @@ public class IntakeCommands {
         instance);
   }
 
-  private static void runRollerWhenLowered(IntakeSubsystem instance) {
-    if (instance.getPivotState().pos(Radians) < lowered_rad.getAsDouble()) {
-      instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
-    } else {
-      instance.setRollerGoal(new RadVel_State(0));
-    }
-  }
+  // private static void runRollerWhenLowered(IntakeSubsystem instance) {
+  //   if (instance.getPivotState().pos(Radians) < lowered_rad.getAsDouble()) {
+  //     instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+  //   } else {
+  //     instance.setRollerGoal(new RadVel_State(0));
+  //   }
+  // }
   // for tuning
   public static Command RunRollerForwardForTuning(IntakeSubsystem instance) {
     return Commands.run(

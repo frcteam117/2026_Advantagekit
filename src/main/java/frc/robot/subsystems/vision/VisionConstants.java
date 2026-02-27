@@ -17,13 +17,17 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.RobotConstants;
+import frc.robot.RobotConstants.FieldType;
 
 public class VisionConstants {
   public static final String logName = "5_Vision";
 
   // AprilTag layout
-  public static final AprilTagFieldLayout aprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+  public static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(
+      RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
+          ? AprilTagFields.k2026RebuiltWelded
+          : AprilTagFields.k2026RebuiltAndymark);
 
   // Camera names, must match names configured on coprocessor
   public static final String[] cameraNames = new String[] {"PC_Camera0", "PC_Camera2"};
