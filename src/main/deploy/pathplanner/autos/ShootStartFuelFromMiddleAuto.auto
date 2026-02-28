@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "RunIndexer"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "StartToShoot_4"
@@ -25,37 +19,19 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 2.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "StopIndexer"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShooter"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "CollectAndReturnToHub"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoAim"
+            "name": "RunIndexer"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 15.0
           }
         },
         {

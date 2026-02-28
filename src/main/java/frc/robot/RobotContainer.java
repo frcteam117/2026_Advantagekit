@@ -143,6 +143,8 @@ public class RobotContainer {
     NamedCommands.registerCommand("StopShooter", ShooterCommands.stop(shooter));
     NamedCommands.registerCommand("RunIntakeForward", IntakeCommands.RunRollerForward(intake));
     NamedCommands.registerCommand("StopIntake", IntakeCommands.stopCommand(intake));
+    NamedCommands.registerCommand("RunIndexer", IndexerCommands.runForwardCommand(indexer));
+    NamedCommands.registerCommand("StopIndexer", IndexerCommands.stopCommand(indexer));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());

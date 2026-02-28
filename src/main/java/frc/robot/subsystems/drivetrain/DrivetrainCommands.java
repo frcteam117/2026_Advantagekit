@@ -213,7 +213,7 @@ public class DrivetrainCommands {
           }
           // Create a path from the current pose to the target pose
           PathConstraints constraints =
-              new PathConstraints(3.0, 3.0, 2 * Math.PI, 4 * Math.PI); // adjust!!!
+              new PathConstraints(4.5, 3.0, 2 * Math.PI, 4 * Math.PI); // adjust!!!
 
           // 4. Define goal end state (end velocity, end holonomic rotation)
           GoalEndState goalEndState = new GoalEndState(
@@ -246,7 +246,7 @@ public class DrivetrainCommands {
     return Commands.runOnce(
         () -> {
           PathConstraints constraints =
-              new PathConstraints(3.0, 3.0, 2 * Math.PI, 4 * Math.PI); // adjust!!!
+              new PathConstraints(4.5, 3.0, 2 * Math.PI, 4 * Math.PI); // adjust!!!
 
           // 4. Define goal end state (end velocity, end holonomic rotation)
           GoalEndState goalEndState = new GoalEndState(
