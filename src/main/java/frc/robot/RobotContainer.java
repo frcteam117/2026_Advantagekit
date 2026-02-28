@@ -181,6 +181,9 @@ public class RobotContainer {
         .povUpLeft()
         .whileTrue(DrivetrainCommands.PointAtAllianceHub(
             drivetrain)); // when should the command terminate/do that
+    controller
+        .povDownRight()
+        .whileTrue(DrivetrainCommands.AlignToTag(drivetrain, 3)); // change this for different tag
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
     // controller.circle().whileFalse(IntakeCommands.(intake));

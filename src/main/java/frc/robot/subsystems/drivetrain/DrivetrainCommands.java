@@ -16,7 +16,10 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -38,6 +41,7 @@ import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -191,43 +195,77 @@ public class DrivetrainCommands {
 
   public static Command PointAtAllianceHub(DrivetrainSubsystem drivetrain) {
     // should this not be run?
-    var alliance = DriverStation.getAlliance();
-    Pose2d robotPose = drivetrain.getPose();
-    Pose2d hubPosition = new Pose2d();
-    double angleToTarget = 0.0;
-    if (alliance.isPresent()) {
-      if (alliance.get() == Alliance.Red) {
-        hubPosition = new Pose2d();
-      } else if (alliance.get() == Alliance.Blue) {
-        hubPosition = new Pose2d();
-      }
-      // Translation2d delta = hubPosition.getTranslation().minus(robotPose.getTranslation());
-      // angleToTarget = Math.atan2(delta.getY(), delta.getX());
-    }
-    return Commands.defer(
+
+    return Commands.runOnce( // should this be runOnce?
         () -> {
+          var alliance = DriverStation.getAlliance();
+          Pose2d robotPose = drivetrain.getPose();
+          Pose2d hubPosition = new Pose2d();
+          double angleToTarget = 0.0;
+          if (alliance.isPresent()) {
+            if (alliance.get() == Alliance.Red) {
+              hubPosition = new Pose2d();
+            } else if (alliance.get() == Alliance.Blue) {
+              hubPosition = new Pose2d();
+            }
+            // Translation2d delta = hubPosition.getTranslation().minus(robotPose.getTranslation());
+            // angleToTarget = Math.atan2(delta.getY(), delta.getX());
+          }
           // Create a path from the current pose to the target pose
-          PathPlannerPath path = PathPlannerPath.waypointsFromPoses(
+          PathConstraints constraints =
+              new PathConstraints(3.0, 3.0, 2 * Math.PI, 4 * Math.PI); // adjust!!!
+
+          // 4. Define goal end state (end velocity, end holonomic rotation)
+          GoalEndState goalEndState = new GoalEndState(
+              0.0,
+              hubPosition.getRotation().minus(new Rotation2d(180))); // should this be -180 or no?
+          List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
               drivetrain.getPose(), // Assumes you have a getEstimatedPose() method
               hubPosition);
+          // 5. Create the PathPlannerPath object
+          PathPlannerPath path = new PathPlannerPath(
+              waypoints,
+              constraints,
+              null, // Ideal starting state
+              goalEndState);
+
+          // Create a path from the current pose to the target pose
+
           // Use the AutoBuilder to create a command to follow the generated path
-          return AutoBuilder.followPath(path);
+          AutoBuilder.followPath(path).schedule();
+          ;
         },
         drivetrain); // Specify the subsystem requirements
   }
 
-  public Command AlignToTag(DrivetrainSubsystem drivetrain, Int tagID) {
+  public static Command AlignToTag(DrivetrainSubsystem drivetrain, Integer tagID) {
     //    change 2??? vvv
     Pose2d targetTagPose = DrivetrainConstants.AprilTagPoses.get(tagID - 1).toPose2d(); // minus 1?
     //
-    return Commands.defer(
+    return Commands.runOnce(
         () -> {
-          // Create a path from the current pose to the target pose
-          PathPlannerPath path = PathPlannerPath.waypointsFromPoses(
+          PathConstraints constraints =
+              new PathConstraints(3.0, 3.0, 2 * Math.PI, 4 * Math.PI); // adjust!!!
+
+          // 4. Define goal end state (end velocity, end holonomic rotation)
+          GoalEndState goalEndState = new GoalEndState(
+              0.0,
+              targetTagPose.getRotation().minus(new Rotation2d(180))); // should this be -180 or no?
+          List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
               drivetrain.getPose(), // Assumes you have a getEstimatedPose() method
               targetTagPose);
+          // 5. Create the PathPlannerPath object
+          PathPlannerPath path = new PathPlannerPath(
+              waypoints,
+              constraints,
+              null, // Ideal starting state
+              goalEndState);
+
+          // Create a path from the current pose to the target pose
+
           // Use the AutoBuilder to create a command to follow the generated path
-          return AutoBuilder.followPath(path);
+          AutoBuilder.followPath(path).schedule();
+          ;
         },
         drivetrain); // Specify the subsystem requirements
   }
