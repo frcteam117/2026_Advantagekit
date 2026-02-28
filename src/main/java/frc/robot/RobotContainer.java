@@ -46,6 +46,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  // CONSTANTS INITIATION (NOT FOR USE)
+  private final DrivetrainConstants drivetrainConstants = new DrivetrainConstants();
   // Subsystems
   private final DrivetrainSubsystem drivetrain;
   private final VisionSubsystem vision;
