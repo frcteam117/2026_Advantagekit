@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "StartToShoot_4"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "AutoAim"
