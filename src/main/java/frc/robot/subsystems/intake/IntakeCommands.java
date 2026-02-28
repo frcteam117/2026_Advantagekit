@@ -46,7 +46,7 @@ public class IntakeCommands {
     }
   }
   // for tuning
-  public static Command RunRollerForwardForTuning(IntakeSubsystem instance) {
+  public static Command RunRollerForward(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
           instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
@@ -54,7 +54,7 @@ public class IntakeCommands {
         instance);
   }
 
-  public static Command RunRollerBackwardForTuning(IntakeSubsystem instance) {
+  public static Command RunRollerBackward(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
           instance.setRollerGoal(new RadVel_State(-targetSpeed_radPs.getAsDouble()));

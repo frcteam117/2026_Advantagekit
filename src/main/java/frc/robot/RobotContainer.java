@@ -14,8 +14,11 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -64,6 +67,8 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems and commands. */
   public RobotContainer() {
+    var alliance = DriverStation.getAlliance();
+    //
     switch (RobotConstants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -115,6 +120,29 @@ public class RobotContainer {
     shooter = new ShooterSubsystem();
 
     SysIdUtil.registerController(controller);
+    // named commands for autos
+    // tag align commands (change how these are named? idk)
+    // is this even close to the right way to do this?
+    if (alliance.isPresent()) {
+      if (alliance.get() == Alliance.Red) {
+        NamedCommands.registerCommand(
+            "AlignLeftAZTrench", DrivetrainCommands.AlignToTag(drivetrain, 7));
+        NamedCommands.registerCommand(
+            "AlignRightAZTrench", DrivetrainCommands.AlignToTag(drivetrain, 12));
+      } // should this be an else if or just an if?
+      else if (alliance.get() == Alliance.Blue) {
+        NamedCommands.registerCommand(
+            "AlignLeftAZTrench", DrivetrainCommands.AlignToTag(drivetrain, 23));
+        NamedCommands.registerCommand(
+            "AlignRightAZTrench", DrivetrainCommands.AlignToTag(drivetrain, 28));
+      }
+    }
+    //
+    NamedCommands.registerCommand(
+        "AutoAim", ShooterCommands.autoAim(() -> drivetrain.getPose(), shooter));
+    NamedCommands.registerCommand("StopShooter", ShooterCommands.stop(shooter));
+    NamedCommands.registerCommand("RunIntakeForward", IntakeCommands.RunRollerForward(intake));
+    NamedCommands.registerCommand("StopIntake", IntakeCommands.stopCommand(intake));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -172,8 +200,8 @@ public class RobotContainer {
     shooter.setDefaultCommand(ShooterCommands.stop(shooter));
     controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
     // zzzzzzzzzzzzzzzzzzzzz
-    controller.circle().onTrue(IntakeCommands.RunRollerForwardForTuning(intake));
-    controller.cross().onTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
+    controller.circle().onTrue(IntakeCommands.RunRollerForward(intake));
+    controller.cross().onTrue(IntakeCommands.RunRollerBackward(intake));
     // intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
     controller.square().onTrue(IntakeCommands.stopCommand(intake));
 

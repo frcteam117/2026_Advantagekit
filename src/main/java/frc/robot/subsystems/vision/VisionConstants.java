@@ -33,8 +33,10 @@ public class VisionConstants {
 
   // Robot to camera transforms
   public static final Transform3d[] robotToCameras = new Transform3d[] {
-    /*camera0*/new Transform3d(-0.311, -0.273, -0.4, new Rotation3d(0.0, -0.4, 0.0)), // rotation can be done later ig
-    /*camera1*/new Transform3d(-0.311, 0.273, 0.4, new Rotation3d(0.0, -0.4, Math.PI))
+    /*camera0*/ new Transform3d(
+        -0.311, -0.273, -0.4, new Rotation3d(0.0, -0.4, 0.0)), // rotation can be done later ig
+    /*camera1*/ new Transform3d(-0.311, 0.273, 0.4, new Rotation3d(0.0, -0.4, Math.PI))
+    // TODO: grab edited version of this from max's commit
   };
 
   // Basic filtering thresholds

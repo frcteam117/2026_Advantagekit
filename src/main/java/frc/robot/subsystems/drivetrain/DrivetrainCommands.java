@@ -218,7 +218,8 @@ public class DrivetrainCommands {
           // 4. Define goal end state (end velocity, end holonomic rotation)
           GoalEndState goalEndState = new GoalEndState(
               0.0,
-              hubPosition.getRotation().minus(new Rotation2d(180))); // should this be -180 or no?
+              hubPosition
+                  .getRotation()); // .minus(new Rotation2d(180))); // should this be -180 or no?
           List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
               drivetrain.getPose(), // Assumes you have a getEstimatedPose() method
               hubPosition);
@@ -250,7 +251,8 @@ public class DrivetrainCommands {
           // 4. Define goal end state (end velocity, end holonomic rotation)
           GoalEndState goalEndState = new GoalEndState(
               0.0,
-              targetTagPose.getRotation().minus(new Rotation2d(180))); // should this be -180 or no?
+              targetTagPose
+                  .getRotation()); // .minus(new Rotation2d(180))); // should this be -180 or no?
           List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
               drivetrain.getPose(), // Assumes you have a getEstimatedPose() method
               targetTagPose);
