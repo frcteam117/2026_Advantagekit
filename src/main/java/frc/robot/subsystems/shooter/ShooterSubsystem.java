@@ -5,16 +5,18 @@ import static edu.wpi.first.units.Units.Radians;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.SubsystemBase2Mech;
+import frc.robot.subsystems.SubsystemBase3Mech;
 import frc.robot.util.SysIdUtil.SysIdType;
-import frc.robot.util.mechanisms.MechanismBase;
 import frc.robot.util.states.State;
 import frc.robot.util.states.bases.PosVel_State;
 
-public class ShooterSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_State> {
+public class ShooterSubsystem extends SubsystemBase3Mech<PosVel_State, PosVel_State, PosVel_State> {
 
   public ShooterSubsystem() {
-    super(ShooterConstants.HOOD_CONFIG, ShooterConstants.FLYWHEEL_CONFIG);
+    super(
+        ShooterConstants.HOOD_CONFIG,
+        ShooterConstants.RIO_FLYWHEEL_CONFIG,
+        ShooterConstants.PDH_FLYWHEEL_CONFIG);
   }
 
   public Pose3d getPose3d() {
@@ -39,34 +41,39 @@ public class ShooterSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_St
     return getMech0State();
   }
 
-  public MechanismBase<PosVel_State> getHood() {
-    return getMechanism0();
-  }
+  // RIO Flywheel
 
-  // Flywheel
-
-  public void setFlywheelGoal(State goal_State, int usedProfile, int usedFeedback) {
+  public void setRIOFlywheelGoal(State goal_State, int usedProfile, int usedFeedback) {
     setMech1Goal(goal_State, usedProfile, usedFeedback);
   }
 
-  public void setFlywheelGoal(State goal_State) {
+  public void setRIOFlywheelGoal(State goal_State) {
     setMech1Goal(goal_State);
   }
 
-  public Command getFlywheelSysIdCommand(SysIdType type) {
+  public Command getRIOFlywheelSysIdCommand(SysIdType type) {
     return getMech1SysIdCommand(type);
   }
 
-  public PosVel_State getFlywheelState() {
+  public PosVel_State getRIOFlywheelState() {
     return getMech1State();
   }
 
-  public MechanismBase<PosVel_State> getFlywheel() {
-    return getMechanism1();
+  // PDH Flywheel
+
+  public void setPDHFlywheelGoal(State goal_State, int usedProfile, int usedFeedback) {
+    setMech2Goal(goal_State, usedProfile, usedFeedback);
   }
 
-  // @Override
-  // public void periodic() {
-  //  ShooterCommands
-  // }
+  public void setPDHFlywheelGoal(State goal_State) {
+    setMech2Goal(goal_State);
+  }
+
+  public Command getPDHFlywheelSysIdCommand(SysIdType type) {
+    return getMech2SysIdCommand(type);
+  }
+
+  public PosVel_State getPDHFlywheelState() {
+    return getMech2State();
+  }
 }

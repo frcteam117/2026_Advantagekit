@@ -137,7 +137,7 @@ public class DrivetrainConstants {
         simPID = new PIDController(0.23931, 0.0, 0.0, RobotConstants.CODE_PERIOD_s);
 
     static {
-      config.brakeMode = false;
+      config.brakeMode = true;
       config.voltageCompensation = RobotConstants.NOMINAL_V;
       config.currentType = CurrentType.STATOR;
       config.maxCurrent = 50.0;
@@ -188,7 +188,7 @@ public class DrivetrainConstants {
         simPID = new PIDController(4, 0.0, 0.05, RobotConstants.CODE_PERIOD_s);
 
     static {
-      config.brakeMode = false;
+      config.brakeMode = true;
       config.voltageCompensation = RobotConstants.NOMINAL_V;
       config.currentType = CurrentType.STATOR;
       config.maxCurrent = 30.0;

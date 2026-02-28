@@ -151,7 +151,7 @@ public class SubsystemBase3Mech<
     return mechanism0.getState();
   }
 
-  protected MechanismBase<Output0_State> getMech0() {
+  protected MechanismBase<Output0_State> getMechanism0() {
     return mechanism0;
   }
 
@@ -173,7 +173,7 @@ public class SubsystemBase3Mech<
     return mechanism1.getState();
   }
 
-  protected MechanismBase<Output1_State> getMech1() {
+  protected MechanismBase<Output1_State> getMechanism1() {
     return mechanism1;
   }
 
@@ -195,7 +195,7 @@ public class SubsystemBase3Mech<
     return mechanism2.getState();
   }
 
-  protected MechanismBase<Output2_State> getMech2() {
+  protected MechanismBase<Output2_State> getMechanism2() {
     return mechanism2;
   }
 }

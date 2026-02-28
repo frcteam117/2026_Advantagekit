@@ -36,14 +36,15 @@ public class ShooterConstants {
   public static final MechanismConfig<PosVel_State> HOOD_CONFIG =
       new MechanismConfig<PosVel_State>();
 
-  public static final MechanismConstants<PosVel_State> FLYWHEEL_CONSTANTS =
+  public static final MechanismConstants<PosVel_State> RIO_FLYWHEEL_CONSTANTS =
       new MechanismConstants<>();
-  public static final MechanismConfig<PosVel_State> FLYWHEEL_CONFIG =
+  public static final MechanismConfig<PosVel_State> RIO_FLYWHEEL_CONFIG =
       new MechanismConfig<PosVel_State>();
 
-  //   public static final MechanismConstants<PosVel_State> R_FLYWHEEL_CONSTANTS;
-  //   public static final MechanismConfig<PosVel_State> R_FLYWHEEL_CONFIG =
-  //       new MechanismConfig<PosVel_State>();
+  public static final MechanismConstants<PosVel_State> PDH_FLYWHEEL_CONSTANTS =
+      new MechanismConstants<>();
+  public static final MechanismConfig<PosVel_State> PDH_FLYWHEEL_CONFIG =
+      new MechanismConfig<PosVel_State>();
 
   static {
     // Miscellaneous
@@ -58,7 +59,8 @@ public class ShooterConstants {
     HOOD_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     HOOD_CONSTANTS
         .baseSparkConfig
-        .voltageCompensation(RobotConstants.NOMINAL_V)
+        .disableVoltageCompensation()
+        .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(30);
     // HOOD_CONSTANTS.useAlternateEncoder = true;
     // Motor properties
@@ -97,81 +99,110 @@ public class ShooterConstants {
 
   static {
     // Miscellaneous
-    FLYWHEEL_CONSTANTS.outputsLogName = LOG_NAME + "/Flywheel";
-    FLYWHEEL_CONSTANTS.tuningLogName =
-        RobotConstants.TUNING_PREFIX + FLYWHEEL_CONSTANTS.outputsLogName;
-    FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
+    RIO_FLYWHEEL_CONSTANTS.outputsLogName = LOG_NAME + "/RIO_Flywheel";
+    RIO_FLYWHEEL_CONSTANTS.tuningLogName =
+        RobotConstants.TUNING_PREFIX + RIO_FLYWHEEL_CONSTANTS.outputsLogName;
+    RIO_FLYWHEEL_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
     // Motor
-    FLYWHEEL_CONSTANTS.motorCanIds = new int[] {15, 16};
-    FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true, false, true};
-    FLYWHEEL_CONSTANTS.revMotorType = MotorType.kBrushless;
-    FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
-    FLYWHEEL_CONSTANTS
+    RIO_FLYWHEEL_CONSTANTS.motorCanIds = new int[] {13, 14};
+    RIO_FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true};
+    RIO_FLYWHEEL_CONSTANTS.revMotorType = MotorType.kBrushless;
+    RIO_FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
+    RIO_FLYWHEEL_CONSTANTS
         .baseSparkConfig
         .disableVoltageCompensation()
-        .smartCurrentLimit(55)
-        .idleMode(IdleMode.kCoast);
+        .idleMode(IdleMode.kCoast)
+        .smartCurrentLimit(55);
     // Motor properties
-    FLYWHEEL_CONSTANTS.reduction = 1d;
-    FLYWHEEL_CONSTANTS.gearbox =
-        DCMotor.getNeoVortex(2).withReduction(FLYWHEEL_CONSTANTS.reduction);
-    FLYWHEEL_CONSTANTS.moi_kgm2 = .05;
+    RIO_FLYWHEEL_CONSTANTS.reduction = 1d;
+    RIO_FLYWHEEL_CONSTANTS.gearbox =
+        DCMotor.getNeoVortex(2).withReduction(RIO_FLYWHEEL_CONSTANTS.reduction);
+    RIO_FLYWHEEL_CONSTANTS.moi_kgm2 = .05;
     // Profiling
-    FLYWHEEL_CONSTANTS.start_State =
+    RIO_FLYWHEEL_CONSTANTS.start_State =
         PosVel_State.create(new StateValue(0, Radians), new StateValue(0, RadiansPerSecond));
-    FLYWHEEL_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
-    FLYWHEEL_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
-    FLYWHEEL_CONSTANTS.limits_State = VelAcc_State.create(
+    RIO_FLYWHEEL_CONSTANTS.min_Pos = Pos_State.create(new StateValue(-Double.MAX_VALUE, Radians));
+    RIO_FLYWHEEL_CONSTANTS.max_Pos = Pos_State.create(new StateValue(Double.MAX_VALUE, Radians));
+    RIO_FLYWHEEL_CONSTANTS.limits_State = VelAcc_State.create(
         new StateValue(628, RadiansPerSecond), new StateValue(250, RadiansPerSecondPerSecond));
     // 75% of top speed should be 471 rad/sec (tuning)
-    FLYWHEEL_CONSTANTS.isLoop = true;
+    RIO_FLYWHEEL_CONSTANTS.isLoop = true;
     // Feedback
-    FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0.0155, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
-        : new PIDController(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
-    FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0.13, 0.017, 0, FLYWHEEL_CONSTANTS.codePeriod_s)
+    RIO_FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
+        ? new PIDController(0.006, 0, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s)
+        : new PIDController(0, 0, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s);
+    RIO_FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
+        ? new SimpleMotorFeedforward(.24, .0175, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s)
         // from tuning: 0.13, 0.017, N/A
-        : new SimpleMotorFeedforward(0, 0, 0, FLYWHEEL_CONSTANTS.codePeriod_s);
+        : new SimpleMotorFeedforward(0, 0, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s);
 
-    FLYWHEEL_CONFIG.constants = FLYWHEEL_CONSTANTS;
-    FLYWHEEL_CONFIG.realComponents = new ComponentBase[0];
-    FLYWHEEL_CONFIG.simComponents = new ComponentSimBase[0];
-    FLYWHEEL_CONFIG.realController = new SparkMaxController(FLYWHEEL_CONSTANTS);
-    FLYWHEEL_CONFIG.simController = new DCMotorSimulator(FLYWHEEL_CONSTANTS);
-    FLYWHEEL_CONFIG.profiles =
-        new ControlFunctionBase[] {new TrapezoidProfileFunction(FLYWHEEL_CONSTANTS)};
-    FLYWHEEL_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(FLYWHEEL_CONSTANTS)};
-    FLYWHEEL_CONFIG.componentsToState = componentStates -> PosVel_State.create(
+    RIO_FLYWHEEL_CONFIG.constants = RIO_FLYWHEEL_CONSTANTS;
+    RIO_FLYWHEEL_CONFIG.realComponents = new ComponentBase[0];
+    RIO_FLYWHEEL_CONFIG.simComponents = new ComponentSimBase[0];
+    RIO_FLYWHEEL_CONFIG.realController = new SparkMaxController(RIO_FLYWHEEL_CONSTANTS);
+    RIO_FLYWHEEL_CONFIG.simController = new DCMotorSimulator(RIO_FLYWHEEL_CONSTANTS);
+    RIO_FLYWHEEL_CONFIG.profiles =
+        new ControlFunctionBase[] {new TrapezoidProfileFunction(RIO_FLYWHEEL_CONSTANTS)};
+    RIO_FLYWHEEL_CONFIG.feedbacks =
+        new ControlFunctionBase[] {new SimplePIDF(RIO_FLYWHEEL_CONSTANTS, "RIO_SimplePIDF")};
+    RIO_FLYWHEEL_CONFIG.componentsToState = componentStates -> PosVel_State.create(
         new StateValue(
-            ((Motor_State) componentStates[0]).rad() / FLYWHEEL_CONSTANTS.reduction, Radians),
+            ((Motor_State) componentStates[0]).rad() / RIO_FLYWHEEL_CONSTANTS.reduction, Radians),
         new StateValue(
-            ((Motor_State) componentStates[0]).radPs() / FLYWHEEL_CONSTANTS.reduction,
+            ((Motor_State) componentStates[0]).radPs() / RIO_FLYWHEEL_CONSTANTS.reduction,
             RadiansPerSecond));
   }
 
-  //   static {
-  //     R_FLYWHEEL_CONSTANTS = L_FLYWHEEL_CONSTANTS;
-  //     R_FLYWHEEL_CONSTANTS.outputsLogName = LOG_NAME + "/R Flywheel";
-  //     R_FLYWHEEL_CONSTANTS.tuningLogName =
-  //         RobotConstants.TUNING_PREFIX + R_FLYWHEEL_CONSTANTS.outputsLogName;
-  //     R_FLYWHEEL_CONSTANTS.motorCanIds = new int[] {15, 16};
+  static {
+    // Miscellaneous
+    PDH_FLYWHEEL_CONSTANTS.outputsLogName = LOG_NAME + "/PDH_Flywheel";
+    PDH_FLYWHEEL_CONSTANTS.tuningLogName =
+        RobotConstants.TUNING_PREFIX + PDH_FLYWHEEL_CONSTANTS.outputsLogName;
+    PDH_FLYWHEEL_CONSTANTS.codePeriod_s = RIO_FLYWHEEL_CONSTANTS.codePeriod_s;
+    // Motor
+    PDH_FLYWHEEL_CONSTANTS.motorCanIds = new int[] {15, 16};
+    PDH_FLYWHEEL_CONSTANTS.followerInversions = new boolean[] {false, true};
+    PDH_FLYWHEEL_CONSTANTS.revMotorType = RIO_FLYWHEEL_CONSTANTS.revMotorType;
+    PDH_FLYWHEEL_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
+    PDH_FLYWHEEL_CONSTANTS
+        .baseSparkConfig
+        .disableVoltageCompensation()
+        .idleMode(IdleMode.kCoast)
+        .smartCurrentLimit(55);
+    // Motor properties
+    PDH_FLYWHEEL_CONSTANTS.reduction = RIO_FLYWHEEL_CONSTANTS.reduction;
+    PDH_FLYWHEEL_CONSTANTS.gearbox = RIO_FLYWHEEL_CONSTANTS.gearbox;
+    PDH_FLYWHEEL_CONSTANTS.moi_kgm2 = RIO_FLYWHEEL_CONSTANTS.moi_kgm2;
+    // Profiling
+    PDH_FLYWHEEL_CONSTANTS.start_State = RIO_FLYWHEEL_CONSTANTS.start_State;
+    PDH_FLYWHEEL_CONSTANTS.min_Pos = RIO_FLYWHEEL_CONSTANTS.min_Pos;
+    PDH_FLYWHEEL_CONSTANTS.max_Pos = RIO_FLYWHEEL_CONSTANTS.max_Pos;
+    PDH_FLYWHEEL_CONSTANTS.limits_State = RIO_FLYWHEEL_CONSTANTS.limits_State;
+    // 75% of top speed should be 471 rad/sec (tuning)
+    PDH_FLYWHEEL_CONSTANTS.isLoop = true;
+    // Feedback
+    PDH_FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
+        ? new PIDController(0, 0, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s)
+        : new PIDController(0, 0, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s);
+    PDH_FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
+        ? new SimpleMotorFeedforward(0.13, 0.01704, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s)
+        // from tuning: 0.13, 0.017, N/A
+        : new SimpleMotorFeedforward(0, 0, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s);
 
-  //     R_FLYWHEEL_CONFIG.constants = R_FLYWHEEL_CONSTANTS;
-  //     R_FLYWHEEL_CONFIG.realComponents = new ComponentBase[0];
-  //     R_FLYWHEEL_CONFIG.simComponents = new ComponentSimBase[0];
-  //     R_FLYWHEEL_CONFIG.realController = new SparkMaxController(R_FLYWHEEL_CONSTANTS);
-  //     R_FLYWHEEL_CONFIG.simController = new DCMotorSimulator(R_FLYWHEEL_CONSTANTS);
-  //     R_FLYWHEEL_CONFIG.profiles =
-  //         new ControlFunctionBase[] {new TrapezoidProfileFunction(R_FLYWHEEL_CONSTANTS)};
-  //     R_FLYWHEEL_CONFIG.feedbacks = new ControlFunctionBase[] {new
-  // SimplePIDF(R_FLYWHEEL_CONSTANTS)};
-  //     R_FLYWHEEL_CONFIG.componentsToState = componentStates -> PosVel_State.create(
-  //         new StateValue(
-  //             ((Motor_State) componentStates[0]).rad() / R_FLYWHEEL_CONSTANTS.reduction,
-  // Radians),
-  //         new StateValue(
-  //             ((Motor_State) componentStates[0]).radPs() / R_FLYWHEEL_CONSTANTS.reduction,
-  //             RadiansPerSecond));
-  //   }
+    PDH_FLYWHEEL_CONFIG.constants = PDH_FLYWHEEL_CONSTANTS;
+    PDH_FLYWHEEL_CONFIG.realComponents = new ComponentBase[0];
+    PDH_FLYWHEEL_CONFIG.simComponents = new ComponentSimBase[0];
+    PDH_FLYWHEEL_CONFIG.realController = new SparkMaxController(PDH_FLYWHEEL_CONSTANTS);
+    PDH_FLYWHEEL_CONFIG.simController = new DCMotorSimulator(PDH_FLYWHEEL_CONSTANTS);
+    PDH_FLYWHEEL_CONFIG.profiles =
+        new ControlFunctionBase[] {new TrapezoidProfileFunction(PDH_FLYWHEEL_CONSTANTS)};
+    PDH_FLYWHEEL_CONFIG.feedbacks =
+        new ControlFunctionBase[] {new SimplePIDF(PDH_FLYWHEEL_CONSTANTS, "PDH_SimplePIDF")};
+    PDH_FLYWHEEL_CONFIG.componentsToState = componentStates -> PosVel_State.create(
+        new StateValue(
+            ((Motor_State) componentStates[0]).rad() / PDH_FLYWHEEL_CONSTANTS.reduction, Radians),
+        new StateValue(
+            ((Motor_State) componentStates[0]).radPs() / PDH_FLYWHEEL_CONSTANTS.reduction,
+            RadiansPerSecond));
+  }
 }

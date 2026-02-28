@@ -1,8 +1,7 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Radians;
+import static frc.robot.subsystems.intake.IntakeConstants.LOG_NAME;
 import static frc.robot.subsystems.intake.IntakeConstants.PIVOT_CONSTANTS;
-import static frc.robot.subsystems.intake.IntakeConstants.ROLLER_CONSTANTS;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -11,12 +10,13 @@ import frc.robot.util.states.premade.RadVel_State;
 import java.util.function.DoubleSupplier;
 
 public class IntakeCommands {
+  private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
   private static final DoubleSupplier targetSpeed_radPs =
-      new TunableDouble(ROLLER_CONSTANTS.tuningLogName + "/Targets/_radPs", 80, () -> true);
-  private static final DoubleSupplier lowered_rad = new TunableDouble(
-      PIVOT_CONSTANTS.tuningLogName + "/Targets/lowered_rad",
-      (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
-      () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/_radPs", 80, () -> true);
+  // private static final DoubleSupplier lowered_rad = new TunableDouble(
+  //     TUNING_NT_KEY + "/lowered_rad",
+  //     (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
+  //     () -> true);
 
   public static Command lowerCommand(IntakeSubsystem instance) {
     return Commands.run(

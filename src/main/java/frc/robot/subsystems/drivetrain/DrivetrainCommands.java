@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainCommands {
+  private static final String TUNING_NT_KEY = "Tuning/" + DrivetrainConstants.NAME + "/Commands";
   private static final double JOYSTICK_DEADBAND = 0.04;
   private static final double ANGLE_KP = 0.5;
   private static final double ANGLE_KD = 0;
@@ -67,19 +68,13 @@ public class DrivetrainCommands {
 
   static {
     new TunableDouble(
-        DrivetrainConstants.NAME + "/autoAlign/Max_Vel",
-        turningConstraints.maxVelocity,
-        () -> true,
-        value -> {
+        TUNING_NT_KEY + "/Max_Vel", turningConstraints.maxVelocity, () -> true, value -> {
           turningConstraints =
               new TrapezoidProfile.Constraints(value, turningConstraints.maxAcceleration);
           turningProfile = new TrapezoidProfile(turningConstraints);
         });
     new TunableDouble(
-        DrivetrainConstants.NAME + "/autoAlign/Max_Acc",
-        turningConstraints.maxAcceleration,
-        () -> true,
-        value -> {
+        TUNING_NT_KEY + "/Max_Acc", turningConstraints.maxAcceleration, () -> true, value -> {
           turningConstraints =
               new TrapezoidProfile.Constraints(turningConstraints.maxVelocity, value);
           turningProfile = new TrapezoidProfile(turningConstraints);
@@ -89,7 +84,7 @@ public class DrivetrainCommands {
   private DrivetrainCommands() {} // Stops DrivetrainCommands from being instantiated
 
   private static final DoubleSupplier maxAllowableErrorRad =
-      new TunableDouble(DrivetrainConstants.NAME + "/AutoAim/AllowableError", .05, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/AllowableError", .05, () -> true);
   private static double autoFacingRad = 0;
 
   public static Command stopAndFacePosition(
@@ -321,8 +316,7 @@ public class DrivetrainCommands {
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
-    double linearMagnitude =
-        MathUtil.clamp(MathUtil.applyDeadband(Math.hypot(x, y), JOYSTICK_DEADBAND), -1, 1);
+    double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), JOYSTICK_DEADBAND);
     Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 
     // Square magnitude for more precise control

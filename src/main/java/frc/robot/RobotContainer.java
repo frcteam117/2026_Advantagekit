@@ -16,12 +16,12 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.commands.RobotCommands;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
@@ -74,7 +74,7 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        vision = new VisionSubsystem(drivetrain::accept, new VisionIOPhotonVision(0));
+        vision = new VisionSubsystem(drivetrain::accept, new VisionIOPhotonVision(1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -159,10 +159,10 @@ public class RobotContainer {
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRightX()));
+        () -> controller.getRightX()));
 
-    controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
-    controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
+    controller.R2().whileTrue(IntakeCommands.lowerCommand(intake));
+    controller.L2().whileTrue(IntakeCommands.raiseCommand(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
     controller.R1().whileTrue(IndexerCommands.runForwardCommand(indexer));
@@ -179,9 +179,8 @@ public class RobotContainer {
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller
-        .button(4)
-        .onTrue(
-            ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> new Translation2d()));
+        .povLeft()
+        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
     // controller.circle().whileFalse(IntakeCommands.(intake));
@@ -194,7 +193,7 @@ public class RobotContainer {
         // simulation
         : () -> drivetrain.resetOdometry(
             new Pose2d(drivetrain.getPose().getTranslation(), new Rotation2d())); // zero gyro
-    controller.square().onTrue(Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
+    controller.touchpad().onTrue(Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
     // controller
     //     .button(1)
     //     .onTrue(Commands.runOnce(() -> {})

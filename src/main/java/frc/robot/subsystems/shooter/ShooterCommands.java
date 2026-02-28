@@ -15,10 +15,11 @@ import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
 
 public class ShooterCommands {
+  private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
   private static final DoubleSupplier targetSpeed_radPs =
-      new TunableDouble(FLYWHEEL_CONSTANTS.tuningLogName + "/_radPs", 471, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/Flywheel_radPs", 471, () -> true);
   private static final DoubleSupplier targetHoodSpeed_radPs =
-      new TunableDouble(HOOD_CONSTANTS.tuningLogName + "/_radPs", .2, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/Hood_radPs", .2, () -> true);
   // private static final InterpolatingDoubleTreeMap distanceToSpeedLerp =
   //     new InterpolatingDoubleTreeMap();
 
@@ -30,7 +31,7 @@ public class ShooterCommands {
   private static final DoubleUnaryOperator distanceToSpeed =
       meters -> 11.0169521624 * meters * meters + 277.447063272;
   private static final DoubleSupplier maxAllowableErrorRadPS =
-      new TunableDouble(LOG_NAME + "/AutoAim/AllowableError", 10, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableError", 10, () -> true);
   private static double autoTargetSpeed = 0;
 
   public static Command hubAutoAim(
@@ -40,7 +41,8 @@ public class ShooterCommands {
     return shooter.run(() -> {
       autoTargetSpeed = distanceToSpeed.applyAsDouble(
           robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get()));
-      shooter.setFlywheelGoal(new RadVel_State(autoTargetSpeed));
+      shooter.setRIOFlywheelGoal(new RadVel_State(autoTargetSpeed));
+      shooter.setPDHFlywheelGoal(new RadVel_State(autoTargetSpeed));
     });
   }
 
@@ -48,20 +50,24 @@ public class ShooterCommands {
     // if (!hubAutoAim(shooter, null, null).isScheduled()) {
     //   return false;
     // }
-    return Math.abs(shooter.getFlywheelState().vel(RadiansPerSecond) - autoTargetSpeed)
-        < maxAllowableErrorRadPS.getAsDouble();
+    return Math.abs(shooter.getRIOFlywheelState().vel(RadiansPerSecond) - autoTargetSpeed)
+            < maxAllowableErrorRadPS.getAsDouble()
+        && Math.abs(shooter.getPDHFlywheelState().vel(RadiansPerSecond) - autoTargetSpeed)
+            < maxAllowableErrorRadPS.getAsDouble();
   }
 
   public static Command stop(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setFlywheelGoal(new RadVel_State(0));
       shooter.setHoodGoal(new RadVel_State(0));
+      shooter.setRIOFlywheelGoal(new RadVel_State(0));
+      shooter.setPDHFlywheelGoal(new RadVel_State(0));
     });
   }
 
   public static Command runForward(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+      shooter.setRIOFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+      shooter.setPDHFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
     });
   }
 
@@ -84,10 +90,17 @@ public class ShooterCommands {
         .withName("HoodSysId_" + type.name());
   }
 
-  public static Command flywheelSysId(ShooterSubsystem shooter, SysIdType type) {
+  public static Command rioFlywheelSysId(ShooterSubsystem shooter, SysIdType type) {
     return Commands.run(() -> {}, shooter)
         .withTimeout(1)
-        .andThen(shooter.getFlywheelSysIdCommand(type))
+        .andThen(shooter.getRIOFlywheelSysIdCommand(type))
+        .withName("FlywheelSysId_" + type.name());
+  }
+
+  public static Command pdhFlywheelSysId(ShooterSubsystem shooter, SysIdType type) {
+    return Commands.run(() -> {}, shooter)
+        .withTimeout(1)
+        .andThen(shooter.getPDHFlywheelSysIdCommand(type))
         .withName("FlywheelSysId_" + type.name());
   }
 
