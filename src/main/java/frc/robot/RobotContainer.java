@@ -180,11 +180,11 @@ public class RobotContainer {
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller
-        .povUpLeft()
+        .povLeft()
         .whileTrue(DrivetrainCommands.PointAtAllianceHub(
             drivetrain)); // when should the command terminate/do that
     controller
-        .povDownRight()
+        .povRight()
         .whileTrue(DrivetrainCommands.AlignToTag(drivetrain, 3)); // change this for different tag
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
