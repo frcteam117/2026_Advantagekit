@@ -129,7 +129,7 @@ public class ShooterConstants {
     RIO_FLYWHEEL_CONSTANTS.isLoop = true;
     // Feedback
     RIO_FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0.006, 0, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s)
+        ? new PIDController(0.015, 0, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s);
     RIO_FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
         ? new SimpleMotorFeedforward(.24, .0175, 0, RIO_FLYWHEEL_CONSTANTS.codePeriod_s)
@@ -182,7 +182,7 @@ public class ShooterConstants {
     PDH_FLYWHEEL_CONSTANTS.isLoop = true;
     // Feedback
     PDH_FLYWHEEL_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0, 0, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s)
+        ? new PIDController(0.015, 0, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s);
     PDH_FLYWHEEL_CONSTANTS.simpleFF = RobotBase.isReal()
         ? new SimpleMotorFeedforward(0.13, 0.01704, 0, PDH_FLYWHEEL_CONSTANTS.codePeriod_s)

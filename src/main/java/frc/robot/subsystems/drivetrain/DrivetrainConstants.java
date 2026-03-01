@@ -137,7 +137,7 @@ public class DrivetrainConstants {
         simPID = new PIDController(0.23931, 0.0, 0.0, RobotConstants.CODE_PERIOD_s);
 
     static {
-      config.brakeMode = true;
+      config.brakeMode = false;
       config.voltageCompensation = RobotConstants.NOMINAL_V;
       config.currentType = CurrentType.STATOR;
       config.maxCurrent = 50.0;
@@ -155,6 +155,7 @@ public class DrivetrainConstants {
       config.absoluteWrapping = false;
       config.inverted = false;
       config.encoderType = EncoderType.INTERNAL;
+      config.maxOutput = 1.0;
 
       if (RobotBase.isReal()) {
         LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, realPID, tunable::get);

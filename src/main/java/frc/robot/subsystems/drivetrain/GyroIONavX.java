@@ -22,7 +22,7 @@ import java.util.Queue;
 
 /** IO implementation for NavX. */
 public class GyroIONavX implements GyroIO {
-  private final Navx navX = new Navx(24, 100); // rate in Hz
+  private final Navx navX = new Navx(0, 100); // rate in Hz
   private final Queue<Double> yawPositionQueue;
   private final Queue<Double> yawTimestampQueue;
 
@@ -31,13 +31,13 @@ public class GyroIONavX implements GyroIO {
         true, //           comment to make formatter spread this line out
         true, //         comment to make formatter spread this line out
         true, //       comment to make formatter spread this line out
-        true, //       comment to make formatter spread this line out
-        true, //   comment to make formatter spread this line out
+        false, //       comment to make formatter spread this line out
+        false, //   comment to make formatter spread this line out
         true, //     comment to make formatter spread this line out
-        true, //   comment to make formatter spread this line out
+        false, //   comment to make formatter spread this line out
         true, //  comment to make formatter spread this line out
-        true, //      comment to make formatter spread this line out
-        true); // comment to make formatter spread this line out
+        false, //      comment to make formatter spread this line out
+        false); // comment to make formatter spread this line out
     yawTimestampQueue = NovaOdometryThread.getInstance().makeTimestampQueue();
     yawPositionQueue = NovaOdometryThread.getInstance()
         .registerSignal(() -> navX.getRotation2d().getRadians());
@@ -56,5 +56,9 @@ public class GyroIONavX implements GyroIO {
         .toArray(Rotation2d[]::new);
     yawTimestampQueue.clear();
     yawPositionQueue.clear();
+  }
+
+  public void resetNavX() {
+    navX.resetYaw();
   }
 }

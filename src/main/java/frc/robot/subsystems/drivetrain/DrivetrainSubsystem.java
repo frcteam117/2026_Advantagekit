@@ -80,6 +80,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final TrapezoidProfile headingProfile =
       new TrapezoidProfile(new TrapezoidProfile.Constraints(20, 50));
   private boolean controllingHeadings = false;
+  private Rotation2d gyroOffset = Rotation2d.kZero;
 
   public DrivetrainSubsystem(
       GyroIO gyroIO,
@@ -176,7 +177,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
       }
 
       // Apply update
-      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+      poseEstimator.updateWithTime(
+          sampleTimestamps[i], rawGyroRotation.plus(gyroOffset), modulePositions);
     }
 
     // Update gyro alert
@@ -287,7 +289,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
       modulePositions[i] = modules[i].getPosition();
     }
     resetSimulationPoseCallBack.accept(pose);
-    poseEstimator.resetPosition(rawGyroRotation, modulePositions, pose);
+    poseEstimator.resetPosition(rawGyroRotation.plus(gyroOffset), modulePositions, pose);
+  }
+
+  /** Resets the current odometry pose. */
+  public void resetNavX() {
+    gyroOffset = gyroOffset.plus(gyroInputs.yawPosition);
+    gyroIO.resetNavX();
+  }
+
+  /** Resets the current odometry pose. */
+  public Rotation2d getNavXYaw() {
+    return gyroInputs.yawPosition;
   }
 
   /** Adds a new timestamped vision measurement. */

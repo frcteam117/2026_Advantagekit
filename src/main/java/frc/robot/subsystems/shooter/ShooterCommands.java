@@ -13,6 +13,7 @@ import frc.robot.util.states.premade.RadVel_State;
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class ShooterCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
@@ -39,8 +40,12 @@ public class ShooterCommands {
       Supplier<Pose2d> robotPoseSupplier,
       Supplier<Translation2d> targetSupplier) {
     return shooter.run(() -> {
-      autoTargetSpeed = distanceToSpeed.applyAsDouble(
-          robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get()));
+      double targetDistance =
+          robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get());
+      autoTargetSpeed = distanceToSpeed.applyAsDouble(targetDistance);
+      Logger.recordOutput(TUNING_NT_KEY + "/targetDistance", targetDistance);
+      Logger.recordOutput(TUNING_NT_KEY + "/autoTargetSpeed", autoTargetSpeed);
+
       shooter.setRIOFlywheelGoal(new RadVel_State(autoTargetSpeed));
       shooter.setPDHFlywheelGoal(new RadVel_State(autoTargetSpeed));
     });

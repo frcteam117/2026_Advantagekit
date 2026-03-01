@@ -57,6 +57,7 @@ public class RobotContainer {
 
   // Controller
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
+  private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -161,19 +162,24 @@ public class RobotContainer {
         () -> -controller.getLeftX(),
         () -> controller.getRightX()));
 
-    controller.R2().whileTrue(IntakeCommands.lowerCommand(intake));
-    controller.L2().whileTrue(IntakeCommands.raiseCommand(intake));
+    controller
+        .R2()
+        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+    controller2
+        .R1()
+        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+    controller.L2().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
-    controller.R1().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    controller.L1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     shooter.setDefaultCommand(ShooterCommands.stop(shooter));
     controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
     // zzzzzzzzzzzzzzzzzzzzz
-    controller.circle().onTrue(IntakeCommands.RunRollerForwardForTuning(intake));
-    controller.cross().onTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
-    // intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
+    controller.circle().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
+    controller.cross().whileTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
+    intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
     controller.square().onTrue(IntakeCommands.stopCommand(intake));
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
@@ -191,8 +197,7 @@ public class RobotContainer {
             driveSimulation
                 .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
         // simulation
-        : () -> drivetrain.resetOdometry(
-            new Pose2d(drivetrain.getPose().getTranslation(), new Rotation2d())); // zero gyro
+        : () -> drivetrain.resetNavX(); // zero gyro
     controller.touchpad().onTrue(Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
     // controller
     //     .button(1)
@@ -206,7 +211,11 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    // return autoChooser.get();
+    return Commands.parallel(
+            Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
+            RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
+        .withTimeout(8);
   }
 
   public void resetSimulationField() {
