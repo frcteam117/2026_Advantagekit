@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.indexer.IndexerCommands;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.logging.TunableDouble;
 import frc.robot.util.states.premade.RadVel_State;
@@ -30,7 +32,7 @@ public class ShooterCommands {
 
   private static final Translation2d blueHub = new Translation2d(0, 0);
   private static final Translation2d redHub = new Translation2d(0, 0);
-
+  //
   public static Command autoAim(Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter) {
     return shooter.run(() -> {
       double distance;
@@ -42,7 +44,27 @@ public class ShooterCommands {
       shooter.setFlywheelGoal(new RadVel_State(distanceToSpeedLerp.get(distance)));
     });
   }
+  // placeholder/prototype shooter -> indexer + autoAim commands:
+  /* 
+  public static Command AutoFireFuel(Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter, IndexerSubsystem indexer) {
+    double distance;
+    if (DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Blue)) {
+        distance = blueHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
+      } else {
+        distance = redHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
+      }
+    //
+    return Commands.parallel(
+    shooter.run(() -> {
+      shooter.setFlywheelGoal(new RadVel_State(distanceToSpeedLerp.get(distance)));
+    }),
+    indexer.run(() -> {
+      indexer.setHopperGoal(new RadVel_State(IndexerCommands.forward_radPs.getAsDouble()));
+      indexer.setKickerGoal(new RadVel_State(IndexerCommands.forward_radPs.getAsDouble()));
+    }).unless(//measured flywheel velocity < distanceToSpeedLerp.get(distance)));
+  }*/
 
+  //
   public static Command stop(ShooterSubsystem shooter) {
     return shooter.run(() -> {
       shooter.setFlywheelGoal(new RadVel_State(0));

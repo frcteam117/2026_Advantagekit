@@ -7,7 +7,7 @@ import frc.robot.util.states.premade.RadVel_State;
 import java.util.function.DoubleSupplier;
 
 public class IndexerCommands {
-  private static final DoubleSupplier forward_radPs = new TunableDouble(
+  public static final DoubleSupplier forward_radPs = new TunableDouble(
       "Tuning/" + IndexerConstants.LOG_NAME + "/Targets/forward_radPs", 30, () -> true);
   private static final DoubleSupplier backward_radPs = new TunableDouble(
       "Tuning/" + IndexerConstants.LOG_NAME + "/Targets/backward_radPs", -10, () -> true);
