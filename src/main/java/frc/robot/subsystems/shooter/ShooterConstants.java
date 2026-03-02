@@ -61,7 +61,10 @@ public class ShooterConstants {
         .baseSparkConfig
         .disableVoltageCompensation()
         .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit(30);
+        .smartCurrentLimit(30)
+        .encoder
+        .quadratureMeasurementPeriod(10)
+        .quadratureAverageDepth(4);
     // HOOD_CONSTANTS.useAlternateEncoder = true;
     // Motor properties
     HOOD_CONSTANTS.reduction = (100.0 / 9.0) * 32;
@@ -112,7 +115,10 @@ public class ShooterConstants {
         .baseSparkConfig
         .disableVoltageCompensation()
         .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(55);
+        .smartCurrentLimit(60)
+        .encoder
+        .quadratureMeasurementPeriod(10)
+        .quadratureAverageDepth(4);
     // Motor properties
     RIO_FLYWHEEL_CONSTANTS.reduction = 1d;
     RIO_FLYWHEEL_CONSTANTS.gearbox =
@@ -168,7 +174,10 @@ public class ShooterConstants {
         .baseSparkConfig
         .disableVoltageCompensation()
         .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(55);
+        .smartCurrentLimit(60)
+        .encoder
+        .quadratureMeasurementPeriod(10)
+        .quadratureAverageDepth(4);
     // Motor properties
     PDH_FLYWHEEL_CONSTANTS.reduction = RIO_FLYWHEEL_CONSTANTS.reduction;
     PDH_FLYWHEEL_CONSTANTS.gearbox = RIO_FLYWHEEL_CONSTANTS.gearbox;
