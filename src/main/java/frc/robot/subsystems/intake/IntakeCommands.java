@@ -17,6 +17,12 @@ public class IntakeCommands {
   //     TUNING_NT_KEY + "/lowered_rad",
   //     (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
   //     () -> true);
+  public static Command RunRollerAndLowerPivot(IntakeSubsystem instance) {
+    return Commands.run(() -> {
+      instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
+      instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+    });
+  }
 
   public static Command lowerCommand(IntakeSubsystem instance) {
     return Commands.run(

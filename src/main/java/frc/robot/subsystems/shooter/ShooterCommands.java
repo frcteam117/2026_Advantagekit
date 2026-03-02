@@ -5,6 +5,8 @@ import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.SysIdUtil.SysIdType;
@@ -62,7 +64,8 @@ public class ShooterCommands {
       } else {
         distance = redHub.minus(robotPoseSupplier.get().getTranslation()).getNorm();
       }
-      shooter.setFlywheelGoal(new RadVel_State(distanceToSpeedLerp.get(distance)));
+      shooter.setRIOFlywheelGoal(new RadVel_State(distanceToSpeed.applyAsDouble(distance)));
+      shooter.setPDHFlywheelGoal(new RadVel_State(distanceToSpeed.applyAsDouble(distance)));
     });
   }
 
