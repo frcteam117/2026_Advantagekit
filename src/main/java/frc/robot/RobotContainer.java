@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.commands.RobotCommands;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
@@ -54,13 +55,14 @@ public class RobotContainer {
   // Subsystems
   private final DrivetrainSubsystem drivetrain;
   private final VisionSubsystem vision;
-  public final IntakeSubsystem intake;
-  public final IndexerSubsystem indexer;
+  private final IntakeSubsystem intake;
+  private final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
   private SwerveDriveSimulation driveSimulation = null;
 
   // Controller
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
+  private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -80,7 +82,7 @@ public class RobotContainer {
             new ModuleIONova(3),
             (pose) -> {});
 
-        vision = new VisionSubsystem(drivetrain::accept, new VisionIOPhotonVision(0));
+        vision = new VisionSubsystem(drivetrain::accept, new VisionIOPhotonVision(1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -190,32 +192,47 @@ public class RobotContainer {
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRightX()));
+        () -> controller.getRightX()));
 
-    controller.R2().onTrue(IntakeCommands.lowerCommand(intake));
-    controller.L2().onTrue(IntakeCommands.raiseCommand(intake));
+    controller
+        .R2()
+        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+    controller2
+        .R1()
+        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+    controller.L2().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
 
-    indexer.setDefaultCommand(IndexerCommands.stopCommand(indexer));
-    controller.R1().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    controller.L1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    indexer.setDefaultCommand(IndexerCommands.stop(indexer));
+    controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     shooter.setDefaultCommand(ShooterCommands.stop(shooter));
     controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
     // zzzzzzzzzzzzzzzzzzzzz
+<<<<<<< HEAD
     controller.circle().onTrue(IntakeCommands.RunRollerForward(intake));
     controller.cross().onTrue(IntakeCommands.RunRollerBackward(intake));
     // intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
+=======
+    controller.circle().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
+    controller.cross().whileTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
+    intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
+>>>>>>> Week-0-testing
     controller.square().onTrue(IntakeCommands.stopCommand(intake));
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller
         .povLeft()
+<<<<<<< HEAD
         .whileTrue(DrivetrainCommands.PointAtAllianceHub(
             drivetrain)); // when should the command terminate/do that
     controller
         .povRight()
         .whileTrue(DrivetrainCommands.AlignToTag(drivetrain, 3)); // change this for different tag
+=======
+        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+>>>>>>> Week-0-testing
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
     // controller.circle().whileFalse(IntakeCommands.(intake));
@@ -226,9 +243,8 @@ public class RobotContainer {
             driveSimulation
                 .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
         // simulation
-        : () -> drivetrain.resetOdometry(
-            new Pose2d(drivetrain.getPose().getTranslation(), new Rotation2d())); // zero gyro
-    controller.square().onTrue(Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
+        : () -> drivetrain.resetNavX(); // zero gyro
+    controller.touchpad().onTrue(Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
     // controller
     //     .button(1)
     //     .onTrue(Commands.runOnce(() -> {})
@@ -241,7 +257,11 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    // return autoChooser.get();
+    return Commands.parallel(
+            Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
+            RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
+        .withTimeout(8);
   }
 
   public void resetSimulationField() {

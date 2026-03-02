@@ -35,10 +35,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
-import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
@@ -47,15 +48,16 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainCommands {
+  private static final String TUNING_NT_KEY = "Tuning/" + DrivetrainConstants.NAME + "/Commands";
   private static final double JOYSTICK_DEADBAND = 0.04;
   private static final double ANGLE_KP = 0.5;
   private static final double ANGLE_KD = 0;
-  private static final double ANGLE_MAX_VELOCITY = 8.0;
-  private static final double ANGLE_MAX_ACCELERATION = 20.0;
+  private static final double ANGLE_MAX_VELOCITY = 4.0;
+  private static final double ANGLE_MAX_ACCELERATION = 12.0;
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
-  private static final double DRIVE_MAX_VELOCITY = Drive.max_mPs;
-  private static final double DRIVE_MAX_ANGULAR_VELOCITY = Drive.max_mPs / Chassis.trackRadius_m;
+  private static final double DRIVE_MAX_VELOCITY = 3;
+  private static final double DRIVE_MAX_ANGULAR_VELOCITY = 4;
   private static final Rotation2d[] X_MODULE_HEADINGS = new Rotation2d[] {
     Chassis.moduleTranslations[0].getAngle(),
     Chassis.moduleTranslations[1].getAngle(),
@@ -65,11 +67,61 @@ public class DrivetrainCommands {
   public static Rotation2d targetTagRotation2d;
   public static Rotation2d robotRotation2d[];
 
-  public DrivetrainCommands() {
-    // targetTagRotation2ds = new ArrayList<>();
-    // robotRotation2d = new Rotation2d[] {};
-  } // Stops DrivetrainCommands from being instantiated
-  //
+  private static TrapezoidProfile.Constraints turningConstraints =
+      new TrapezoidProfile.Constraints(2, 4);
+  private static TrapezoidProfile turningProfile = new TrapezoidProfile(turningConstraints);
+
+  static {
+    new TunableDouble(
+        TUNING_NT_KEY + "/Max_Vel", turningConstraints.maxVelocity, () -> true, value -> {
+          turningConstraints =
+              new TrapezoidProfile.Constraints(value, turningConstraints.maxAcceleration);
+          turningProfile = new TrapezoidProfile(turningConstraints);
+        });
+    new TunableDouble(
+        TUNING_NT_KEY + "/Max_Acc", turningConstraints.maxAcceleration, () -> true, value -> {
+          turningConstraints =
+              new TrapezoidProfile.Constraints(turningConstraints.maxVelocity, value);
+          turningProfile = new TrapezoidProfile(turningConstraints);
+        });
+  }
+
+  private DrivetrainCommands() {} // Stops DrivetrainCommands from being instantiated
+
+  private static final DoubleSupplier maxAllowableErrorRad =
+      new TunableDouble(TUNING_NT_KEY + "/AllowableError", .08, () -> true);
+  private static double autoFacingRad = 0;
+
+  public static Command stopAndFacePosition(
+      DrivetrainSubsystem drivetrain, Supplier<Translation2d> targetSupplier) {
+    return drivetrain.run(() -> {
+      autoFacingRad = targetSupplier
+          .get()
+          .minus(drivetrain.getPose().getTranslation())
+          .getAngle()
+          .getRadians();
+      drivetrain.setGoalVelocity(new ChassisSpeeds(
+          0,
+          0,
+          turningProfile.calculate(
+                  RobotConstants.CODE_PERIOD_s,
+                  new TrapezoidProfile.State(
+                      drivetrain.getPose().getRotation().getRadians(),
+                      drivetrain.getChassisSpeeds().omegaRadiansPerSecond),
+                  new TrapezoidProfile.State(autoFacingRad, 0))
+              .velocity));
+      // Logger.recordOutput(TUNING_NT_KEY, null);
+    });
+  }
+
+  public static boolean isAutoAimReady(DrivetrainSubsystem drivetrain) {
+    // if (!stopAndFacePosition(drivetrain, null)
+    //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
+    //   return false;
+    // }
+    return Math.abs(drivetrain.getPose().getRotation().getRadians() - autoFacingRad)
+        < maxAllowableErrorRad.getAsDouble();
+  }
 
   /** Returns a command to run a drive sysId test with the specified type. */
   public static Command getDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
@@ -102,6 +154,9 @@ public class DrivetrainCommands {
     return SysIdUtil.getSysIdCommand(routine, type);
   }
 
+  private static final double approximateZero = 1e-6;
+  private static Double radTarget = null;
+
   /**
    * Field relative drive command using two joysticks (controlling linear and angular velocities).
    */
@@ -110,6 +165,52 @@ public class DrivetrainCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
+    // return drivetrain
+    //     .run(() -> {
+    //       // Get linear velocity
+    //       Translation2d linearVelocity =
+    //           getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+    //       // Apply rotation deadband
+    //       double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), JOYSTICK_DEADBAND);
+
+    //       // Square rotation value for more precise control
+    //       omega = MathUtil.copyDirectionPow(omega, 2);
+
+    //       // Convert to field relative speeds & send command
+    //       ChassisSpeeds speeds = new ChassisSpeeds(
+    //           linearVelocity.getX() * DRIVE_MAX_VELOCITY,
+    //           linearVelocity.getY() * DRIVE_MAX_VELOCITY,
+    //           omega * DRIVE_MAX_ANGULAR_VELOCITY);
+    //       boolean isFlipped = DriverStation.getAlliance().isPresent()
+    //           && DriverStation.getAlliance().get() == Alliance.Red;
+    //       speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+    //           speeds,
+    //           isFlipped
+    //               ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+    //               : drivetrain.getPose().getRotation());
+    //       if (Math.abs(speeds.omegaRadiansPerSecond) > approximateZero) {
+    //         radTarget = null;
+    //         drivetrain.setGoalVelocity(speeds);
+    //       } else if (Math.abs(speeds.vxMetersPerSecond) < approximateZero
+    //           && Math.abs(speeds.vyMetersPerSecond) < approximateZero) {
+    //         radTarget = null;
+    //         drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
+    //       } else {
+    //         if (radTarget == null) {
+    //           radTarget = drivetrain.getPose().getRotation().getRadians();
+    //         }
+    //         speeds.omegaRadiansPerSecond = turningProfile.calculate(
+    //                 RobotConstants.CODE_PERIOD_s,
+    //                 new TrapezoidProfile.State(
+    //                     drivetrain.getPose().getRotation().getRadians(),
+    //                     drivetrain.getChassisSpeeds().omegaRadiansPerSecond),
+    //                 new TrapezoidProfile.State(radTarget, 0))
+    //             .velocity;
+    //         drivetrain.setGoalVelocity(speeds);
+    //       }
+    //     })
+    //     .withName("JoystickDrive");
     return drivetrain.run(() -> {
       // Get linear velocity
       Translation2d linearVelocity =
@@ -126,13 +227,12 @@ public class DrivetrainCommands {
           linearVelocity.getX() * DRIVE_MAX_VELOCITY,
           linearVelocity.getY() * DRIVE_MAX_VELOCITY,
           omega * DRIVE_MAX_ANGULAR_VELOCITY);
-      boolean isFlipped = DriverStation.getAlliance().isPresent()
-          && DriverStation.getAlliance().get() == Alliance.Red;
+      // boolean isFlipped = DriverStation.getAlliance().isPresent()
+      //     && DriverStation.getAlliance().get() == Alliance.Red;
       speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
           speeds,
-          isFlipped
-              ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
-              : drivetrain.getPose().getRotation());
+          // isFlipped ? drivetrain.getNavXYaw().plus(Rotation2d.k180deg) :
+          drivetrain.getNavXYaw());
       if (speeds.equals(new ChassisSpeeds())) {
         drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
       } else {
@@ -193,7 +293,7 @@ public class DrivetrainCommands {
   }
   //
 
-  public static Command PointAtAllianceHub(DrivetrainSubsystem drivetrain) {
+  /*public static Command PointAtAllianceHub(DrivetrainSubsystem drivetrain) {
     // should this not be run?
 
     return Commands.runOnce( // should this be runOnce?
@@ -237,7 +337,7 @@ public class DrivetrainCommands {
           ;
         },
         drivetrain); // Specify the subsystem requirements
-  }
+  }*/
 
   public static Command AlignToTag(DrivetrainSubsystem drivetrain, Integer tagID) {
     //    change 2??? vvv
@@ -336,8 +436,7 @@ public class DrivetrainCommands {
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
-    double linearMagnitude =
-        MathUtil.clamp(MathUtil.applyDeadband(Math.hypot(x, y), JOYSTICK_DEADBAND), -1, 1);
+    double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), JOYSTICK_DEADBAND);
     Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 
     // Square magnitude for more precise control

@@ -17,13 +17,17 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.RobotConstants;
+import frc.robot.RobotConstants.FieldType;
 
 public class VisionConstants {
   public static final String logName = "5_Vision";
 
   // AprilTag layout
-  public static final AprilTagFieldLayout aprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+  public static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(
+      RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
+          ? AprilTagFields.k2026RebuiltWelded
+          : AprilTagFields.k2026RebuiltAndymark);
 
   // Camera names, must match names configured on coprocessor
   public static final String[] cameraNames = new String[] {"PC_Camera0", "PC_Camera2"};
@@ -33,10 +37,8 @@ public class VisionConstants {
 
   // Robot to camera transforms
   public static final Transform3d[] robotToCameras = new Transform3d[] {
-    /*camera0*/ new Transform3d(
-        -0.311, -0.273, -0.4, new Rotation3d(0.0, -0.4, 0.0)), // rotation can be done later ig
-    /*camera1*/ new Transform3d(-0.311, 0.273, 0.4, new Rotation3d(0.0, -0.4, Math.PI))
-    // TODO: grab edited version of this from max's commit
+    new Transform3d(-0.273, 0.311, 0.4, new Rotation3d(0.0, 0, -.30429726 + Math.PI)),
+    new Transform3d(-0.273, -0.311, 0.4, new Rotation3d(0.0, 0, .30429726 + Math.PI)) // .30429726
   };
 
   // Basic filtering thresholds

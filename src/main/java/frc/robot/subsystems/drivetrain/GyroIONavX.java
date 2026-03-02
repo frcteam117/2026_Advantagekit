@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.drivetrain;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.studica.frc.Navx;
@@ -29,12 +30,12 @@ public class GyroIONavX implements GyroIO {
     navX.enableOptionalMessages(
         true, //           comment to make formatter spread this line out
         true, //         comment to make formatter spread this line out
-        false, //       comment to make formatter spread this line out
+        true, //       comment to make formatter spread this line out
         false, //       comment to make formatter spread this line out
         false, //   comment to make formatter spread this line out
         true, //     comment to make formatter spread this line out
         false, //   comment to make formatter spread this line out
-        false, //  comment to make formatter spread this line out
+        true, //  comment to make formatter spread this line out
         false, //      comment to make formatter spread this line out
         false); // comment to make formatter spread this line out
     yawTimestampQueue = NovaOdometryThread.getInstance().makeTimestampQueue();
@@ -45,8 +46,8 @@ public class GyroIONavX implements GyroIO {
   @Override
   public void updateInputs(GyroIOInputs inputs) {
     inputs.connected = true;
-    inputs.yawPosition = navX.getRotation2d();
-    inputs.yawVelocityRadPerSec = -navX.getAngularVel()[2].in(RadiansPerSecond);
+    inputs.yawPosition = Rotation2d.fromDegrees(navX.getYaw().in(Degrees));
+    inputs.yawVelocityRadPerSec = navX.getAngularVel()[2].in(RadiansPerSecond);
 
     inputs.odometryYawTimestamps =
         yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
@@ -55,5 +56,9 @@ public class GyroIONavX implements GyroIO {
         .toArray(Rotation2d[]::new);
     yawTimestampQueue.clear();
     yawPositionQueue.clear();
+  }
+
+  public void resetNavX() {
+    navX.resetYaw();
   }
 }

@@ -26,6 +26,7 @@ public final class RobotConstants {
   public static final double NOMINAL_V = 12.0;
   public static final double MASS_kg = 40.0;
   public static final double MOI_kgm2 = 4.883;
+  public static final FieldType FIELD_TYPE = FieldType.WELDED;
 
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
@@ -39,5 +40,10 @@ public final class RobotConstants {
 
     /** Replaying from a log file. */
     REPLAY
+  }
+
+  public static enum FieldType {
+    WELDED,
+    ANDYMARK
   }
 }

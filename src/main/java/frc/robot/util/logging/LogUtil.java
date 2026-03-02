@@ -56,6 +56,8 @@ public class LogUtil {
         min -> pidController.setIntegratorRange(min, maxIntegral.getAsDouble()));
   }
 
+  public static void createTunableProfiledPID() {}
+
   // public static void createTunablePID(
   //     String key, SparkBase spark, BooleanSupplier shouldPublish) {
   //   new TunableDouble(key + "/0 P", spark.configure, shouldPublish, pidController::setP);

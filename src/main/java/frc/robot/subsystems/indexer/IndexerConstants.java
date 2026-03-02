@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -50,7 +51,8 @@ public class IndexerConstants {
     HOPPER_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     HOPPER_CONSTANTS
         .baseSparkConfig
-        .voltageCompensation(RobotConstants.NOMINAL_V)
+        .disableVoltageCompensation()
+        .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(30);
     // Motor properties
     HOPPER_CONSTANTS.reduction = 3d;
@@ -101,7 +103,8 @@ public class IndexerConstants {
     KICKER_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
     KICKER_CONSTANTS
         .baseSparkConfig
-        .voltageCompensation(RobotConstants.NOMINAL_V)
+        .disableVoltageCompensation()
+        .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(30);
     // Motor properties
     KICKER_CONSTANTS.reduction = 3d;

@@ -8,6 +8,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.util.states.State;
 import frc.robot.util.states.bases.Pos_State;
@@ -58,6 +59,7 @@ public class MechanismConstants<Output_State extends State> {
   public SimpleMotorFeedforward simpleFF;
   public ArmFeedforward armFF;
   public ElevatorFeedforward elevatorFF;
+  public InterpolatingDoubleTreeMap arbitraryFF;
   // public PIDController realPID;
   // public PIDController simPID;
   // public SimpleMotorFeedforward realSimpleFF;
