@@ -37,11 +37,12 @@ public class ModuleIONova implements ModuleIO {
   private final Queue<Double> timestampQueue;
   private final Queue<Double> drivePositionQueue;
   private final Queue<Double> azimuthPositionQueue;
-
+  private final double azimuthVelocityVar = 
+  UnitUtil.RPMToradPs(azimuthNova.getVelocityInternal() / Azimuth.reduction),
   public ModuleIONova(int module) {
     driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
-
+    
     // Configure drive motor
     System.out.println(
         "Configuring drive motor. Module: " + module + "  CAN Id: " + Drive.canIds[module]);
@@ -165,7 +166,7 @@ public class ModuleIONova implements ModuleIO {
 
   @Override
   public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
-    azimuthNova.setPositionAbs(UnitUtil.radTorot(-nextPosition_rad));
+    azimuthNova.setPositionAbs(UnitUtil.radTorot(-nextPosition_rad),Azimuth.realFF.calculateWithVelocities(azimuthVelocityVar, nextVelocity_radPs)););
     // Azimuth.realFF.calculateWithVelocities(currentAzimuthVelocity_radPs, nextVelocity_radPs));
   }
 }
