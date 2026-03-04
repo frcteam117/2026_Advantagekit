@@ -111,7 +111,7 @@ public class ModuleIONova implements ModuleIO {
     inputs.driveMotor_State = new Motor_State(
         UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction),
         2 * Math.PI * driveNova.getVelocityInternal() / Drive.reduction,
-        driveNova.getVoltage(),
+        driveNova.getAppliedVoltage(),
         driveNova.getStatorCurrent(),
         driveNova.getSupplyCurrent());
     // inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
@@ -126,7 +126,7 @@ public class ModuleIONova implements ModuleIO {
         UnitUtil.rotTorad(
             azimuthNova.getPositionInternal() / Azimuth.reduction), // - zeroRotation_rad,
         UnitUtil.RPMToradPs(azimuthNova.getVelocityInternal() / Azimuth.reduction),
-        azimuthNova.getVoltage(),
+        azimuthNova.getAppliedVoltage(),
         azimuthNova.getStatorCurrent(),
         azimuthNova.getSupplyCurrent());
     // inputs.azimuthConnected = azimuthConnectedDebounce.calculate(!sparkStickyFault);

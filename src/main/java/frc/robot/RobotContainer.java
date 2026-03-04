@@ -35,6 +35,7 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.states.premade.RadVel_State;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -57,7 +58,7 @@ public class RobotContainer {
 
   // Controller
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
-  private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
+  //   private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -178,9 +179,10 @@ public class RobotContainer {
     controller
         .R2()
         .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
-    controller2
-        .R1()
-        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+    // controller2
+    //     .R1()
+    //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
+    // controller.triangle()));
     controller.L2().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
@@ -192,7 +194,10 @@ public class RobotContainer {
     // zzzzzzzzzzzzzzzzzzzzz
     controller.circle().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
     controller.cross().whileTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
-    intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
+    controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoal(new RadVel_State(-.1))));
+    controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoal(new RadVel_State(.1))));
+    intake.setDefaultCommand(IntakeCommands.stopCommand(intake)
+        .alongWith(Commands.run(() -> intake.setPivotGoal(new RadVel_State(0)))));
     controller.square().onTrue(IntakeCommands.stopCommand(intake));
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));

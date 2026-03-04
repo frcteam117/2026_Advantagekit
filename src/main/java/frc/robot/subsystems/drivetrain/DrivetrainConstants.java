@@ -130,10 +130,10 @@ public class DrivetrainConstants {
 
     // Drive PID configuration
     public static final SimpleMotorFeedforward
-        realFF = new SimpleMotorFeedforward(0.013, 0.01, 0.0, RobotConstants.CODE_PERIOD_s),
+        realFF = new SimpleMotorFeedforward(0.02, 0.011, 0.0008, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.036968, 0.15869, 0.034, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
-        realPID = new PIDController(0.0, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
+        realPID = new PIDController(0.08, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
         simPID = new PIDController(0.23931, 0.0, 0.0, RobotConstants.CODE_PERIOD_s);
 
     static {
@@ -182,7 +182,7 @@ public class DrivetrainConstants {
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
     public static final SimpleMotorFeedforward
-        realFF = new SimpleMotorFeedforward(0.02, 0.051, 0.0, RobotConstants.CODE_PERIOD_s),
+        realFF = new SimpleMotorFeedforward(0.03, 0.055, 0.002, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.004, 0.4960674, 0.006, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
         realPID = new PIDController(0.5, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
@@ -190,7 +190,7 @@ public class DrivetrainConstants {
 
     static {
       config.brakeMode = true;
-      // config.voltageCompensation = RobotConstants.NOMINAL_V;
+      config.voltageCompensation = null;
       config.currentType = CurrentType.STATOR;
       config.maxCurrent = 30.0;
       config.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
