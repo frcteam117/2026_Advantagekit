@@ -13,6 +13,8 @@
 
 package frc.robot.subsystems.drivetrain;
 
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.MathUtil;
@@ -119,15 +121,29 @@ public class DrivetrainCommands {
 
   /** Returns a command to run a drive sysId test with the specified type. */
   public static Command getDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
-    SysIdRoutine routine = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,
-            null,
-            null,
-            (state) -> Logger.recordOutput(
-                DrivetrainConstants.NAME + "/DriveSysIdState", state.toString())),
-        new SysIdRoutine.Mechanism(
-            (voltage) -> drivetrain.setForwardDriveVoltage(voltage.in(Volts)), null, drivetrain));
+    SysIdRoutine routine;
+    if (type == SysIdType.DynamicForward || type == SysIdType.DynamicReverse) {
+      routine = new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Volts.of(0.75).per(Second),
+              Volts.of(2),
+              Seconds.of(1.5),
+              (state) -> Logger.recordOutput(
+                  DrivetrainConstants.NAME + "/DriveSysIdState", state.toString())),
+          new SysIdRoutine.Mechanism(
+              (voltage) -> drivetrain.setForwardDriveVoltage(voltage.in(Volts)), null, drivetrain));
+    } else {
+
+      routine = new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Volts.of(0.75).per(Second),
+              Volts.of(2),
+              Seconds.of(2),
+              (state) -> Logger.recordOutput(
+                  DrivetrainConstants.NAME + "/DriveSysIdState", state.toString())),
+          new SysIdRoutine.Mechanism(
+              (voltage) -> drivetrain.setForwardDriveVoltage(voltage.in(Volts)), null, drivetrain));
+    }
     return drivetrain
         .run(() -> drivetrain.setForwardDriveVoltage(0.0))
         .withTimeout(1.0)
@@ -138,9 +154,9 @@ public class DrivetrainCommands {
   public static Command getAzimuthSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
     SysIdRoutine routine = new SysIdRoutine(
         new SysIdRoutine.Config(
-            null,
-            null,
-            null,
+            Volts.of(0.4).per(Second),
+            Volts.of(4),
+            Seconds.of(8),
             (state) -> Logger.recordOutput(
                 DrivetrainConstants.NAME + "/AzimuthSysIdState", state.toString())),
         new SysIdRoutine.Mechanism(
