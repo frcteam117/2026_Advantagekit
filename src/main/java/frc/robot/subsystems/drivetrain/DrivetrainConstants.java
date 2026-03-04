@@ -138,7 +138,7 @@ public class DrivetrainConstants {
 
     static {
       config.brakeMode = false;
-      config.voltageCompensation = RobotConstants.NOMINAL_V;
+      // config.voltageCompensation = RobotConstants.NOMINAL_V;
       config.currentType = CurrentType.STATOR;
       config.maxCurrent = 50.0;
       config.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
@@ -190,7 +190,7 @@ public class DrivetrainConstants {
 
     static {
       config.brakeMode = true;
-      config.voltageCompensation = RobotConstants.NOMINAL_V;
+      // config.voltageCompensation = RobotConstants.NOMINAL_V;
       config.currentType = CurrentType.STATOR;
       config.maxCurrent = 30.0;
       config.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;

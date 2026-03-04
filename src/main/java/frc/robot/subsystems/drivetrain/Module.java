@@ -87,6 +87,9 @@ public class Module {
     io.setNextAzimuthState(
         state.angle.getRadians(),
         (state.angle.getRadians() - lastAzimuthAngle_rad) / RobotConstants.CODE_PERIOD_s);
+    Logger.recordOutput(
+        NAME + "/2_Next/AzimuthVelocity/" + index,
+        (state.angle.getRadians() - lastAzimuthAngle_rad) / RobotConstants.CODE_PERIOD_s);
     lastAzimuthAngle_rad = state.angle.getRadians();
   }
 
