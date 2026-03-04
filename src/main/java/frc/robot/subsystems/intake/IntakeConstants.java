@@ -58,7 +58,10 @@ public class IntakeConstants {
         .disableVoltageCompensation()
         .idleMode(IdleMode.kCoast)
         .smartCurrentLimit(80)
-        .inverted(true);
+        .inverted(true)
+        .encoder
+        .quadratureMeasurementPeriod(10)
+        .quadratureAverageDepth(4);
     // Motor properties
     PIVOT_CONSTANTS.reduction = 23.80952381;
     PIVOT_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(PIVOT_CONSTANTS.reduction);
@@ -215,7 +218,10 @@ public class IntakeConstants {
         .baseSparkConfig
         .disableVoltageCompensation()
         .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(60);
+        .smartCurrentLimit(60)
+        .encoder
+        .quadratureMeasurementPeriod(10)
+        .quadratureAverageDepth(4);
     // Motor properties
     ROLLER_CONSTANTS.reduction = 5d;
     ROLLER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(ROLLER_CONSTANTS.reduction);

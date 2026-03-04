@@ -27,6 +27,7 @@ import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeCommands;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.led.LedCommands;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIO;
@@ -124,16 +125,29 @@ public class RobotContainer {
         "Drive Wheel Radius Characterization",
         DrivetrainCommands.wheelRadiusCharacterization(drivetrain));
     autoChooser.addOption(
-        "Drive SysId (Quasistatic)",
-        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.Quasistatic));
+        "Drive SysId (QuasistaticForward)",
+        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.QuasistaticForward));
     autoChooser.addOption(
-        "Drive SysId (Dynamic)", DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.Dynamic));
+        "Drive SysId (QuasistaticReverse)",
+        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.QuasistaticReverse));
     autoChooser.addOption(
-        "Azimuth SysId (Quasistatic)",
-        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.Quasistatic));
+        "Drive SysId (DynamicForward)",
+        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.DynamicForward));
     autoChooser.addOption(
-        "Azimuth SysId (Dynamic)",
-        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.Dynamic));
+        "Drive SysId (DynamicReverse)",
+        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.DynamicReverse));
+    autoChooser.addOption(
+        "Azimuth SysId (QuasistaticForward)",
+        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.QuasistaticForward));
+    autoChooser.addOption(
+        "Azimuth SysId (QuasistaticReverse)",
+        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.QuasistaticReverse));
+    autoChooser.addOption(
+        "Azimuth SysId (DynamicForward)",
+        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicForward));
+    autoChooser.addOption(
+        "Azimuth SysId (DynamicReverse)",
+        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicReverse));
     // autoChooser.addOption(
     //     "Flywheel SysId (Quasistatic)",
     //     ShooterCommands.flywheelSysId(shooter, SysIdType.Quasistatic));
@@ -155,6 +169,7 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    LedCommands.ledCommand(() -> ShooterCommands.isAutoAimReady(shooter));
     // Default command, normal field-relative drive
     drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
         drivetrain,
@@ -211,11 +226,11 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // return autoChooser.get();
-    return Commands.parallel(
-            Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
-            RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
-        .withTimeout(8);
+    return autoChooser.get();
+    // return Commands.parallel(
+    //         Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
+    //         RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
+    //     .withTimeout(8);
   }
 
   public void resetSimulationField() {

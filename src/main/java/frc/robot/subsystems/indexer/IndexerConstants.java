@@ -53,7 +53,10 @@ public class IndexerConstants {
         .baseSparkConfig
         .disableVoltageCompensation()
         .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit(30);
+        .smartCurrentLimit(40)
+        .encoder
+        .quadratureMeasurementPeriod(10)
+        .quadratureAverageDepth(4);
     // Motor properties
     HOPPER_CONSTANTS.reduction = 3d;
     HOPPER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(HOPPER_CONSTANTS.reduction);
@@ -105,7 +108,10 @@ public class IndexerConstants {
         .baseSparkConfig
         .disableVoltageCompensation()
         .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit(30);
+        .smartCurrentLimit(40)
+        .encoder
+        .quadratureMeasurementPeriod(10)
+        .quadratureAverageDepth(4);
     // Motor properties
     KICKER_CONSTANTS.reduction = 3d;
     KICKER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(KICKER_CONSTANTS.reduction);
