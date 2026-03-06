@@ -19,6 +19,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.RobotConstants;
 import frc.robot.RobotConstants.FieldType;
+import frc.robot.util.logging.TunableDouble;
+import java.util.function.DoubleSupplier;
 
 public class VisionConstants {
   public static final String logName = "5_Vision";
@@ -47,8 +49,12 @@ public class VisionConstants {
 
   // Standard deviation baselines, for 1 meter distance and 1 tag
   // (Adjusted automatically based on distance and # of tags)
-  public static final double linearStdDevBaseline = 0.02; // Meters
-  public static final double angularStdDevBaseline = 0.06; // Radians
+  // public static final double linearStdDevBaseline = 0.02; // Meters
+  // public static final double angularStdDevBaseline = 0.06; // Radians
+  public static final DoubleSupplier linearStdDevBaseline =
+      new TunableDouble("Tuning/" + logName + "/linearStdDevBaseline", .6, () -> false); // Meters
+  public static final DoubleSupplier angularStdDevBaseline =
+      new TunableDouble("Tuning/" + logName + "/angularStdDevBaseline", 1, () -> false); // Radians
 
   // Standard deviation multipliers for each camera
   // (Adjust to trust some cameras more than others)

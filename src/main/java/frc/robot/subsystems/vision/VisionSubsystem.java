@@ -126,8 +126,8 @@ public class VisionSubsystem extends SubsystemBase {
         // Calculate standard deviations
         double stdDevFactor =
             Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-        double linearStdDev = linearStdDevBaseline * stdDevFactor;
-        double angularStdDev = angularStdDevBaseline * stdDevFactor;
+        double linearStdDev = linearStdDevBaseline.getAsDouble() * stdDevFactor;
+        double angularStdDev = angularStdDevBaseline.getAsDouble() * stdDevFactor;
         if (cameraIndex < cameraStdDevFactors.length) {
           linearStdDev *= cameraStdDevFactors[cameraIndex];
           angularStdDev *= cameraStdDevFactors[cameraIndex];

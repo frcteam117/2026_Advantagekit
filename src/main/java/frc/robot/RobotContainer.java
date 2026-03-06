@@ -14,6 +14,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.FileVersionException;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -36,8 +38,10 @@ import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.states.premade.RadVel_State;
+import java.io.IOException;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.json.simple.parser.ParseException;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -174,7 +178,7 @@ public class RobotContainer {
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> controller.getRightX()));
+        () -> -controller.getRightX()));
 
     controller
         .R2()
@@ -229,7 +233,14 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    // return autoChooser.get();
+    try {
+      return AutoBuilder.followPath(PathPlannerPath.fromPathFile("Example Path"));
+    } catch (FileVersionException | IOException | ParseException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return null;
     // return Commands.parallel(
     //         Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
     //         RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
