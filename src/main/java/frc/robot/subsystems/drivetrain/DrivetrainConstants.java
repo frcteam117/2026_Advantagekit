@@ -116,7 +116,8 @@ public class DrivetrainConstants {
     public static final String name = DrivetrainConstants.NAME + "/Drive";
 
     // physical properties
-    public static final double radius_m = 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
+    public static final double radius_m =
+        0.050; // 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
     public static final double cof = 1.2;
     /** FL, FR, BL, BR */
     public static final int[] canIds = new int[] {7, 1, 5, 3};
@@ -133,7 +134,7 @@ public class DrivetrainConstants {
         realFF = new SimpleMotorFeedforward(0.02, 0.011, 0.0008, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.036968, 0.15869, 0.034, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
-        realPID = new PIDController(0.08, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
+        realPID = new PIDController(0.001, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
         simPID = new PIDController(0.23931, 0.0, 0.0, RobotConstants.CODE_PERIOD_s);
 
     static {
@@ -182,10 +183,10 @@ public class DrivetrainConstants {
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
     public static final SimpleMotorFeedforward
-        realFF = new SimpleMotorFeedforward(0.03, 0.055, 0.002, RobotConstants.CODE_PERIOD_s),
+        realFF = new SimpleMotorFeedforward(0.03, 0.04, 0.00, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.004, 0.4960674, 0.006, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
-        realPID = new PIDController(0.5, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
+        realPID = new PIDController(0.4, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
         simPID = new PIDController(4, 0.0, 0.05, RobotConstants.CODE_PERIOD_s);
 
     static {
@@ -233,6 +234,7 @@ public class DrivetrainConstants {
     //     new double[] {4.26675, 2.99095, 2.40695, 3.355259};
 
     /** FL, FR, BL, BR. Rotation of each absolute encoder when the wheels face forward */
-    public static final int[] zeroRotations_ticks = new int[] {1837, 2565, 2273, 1339};
+    public static final int[] zeroRotations_ticks =
+        new int[] {1837 + 2048, 2565 - 2048, 2273 - 2048, 1339 + 2048};
   }
 }
