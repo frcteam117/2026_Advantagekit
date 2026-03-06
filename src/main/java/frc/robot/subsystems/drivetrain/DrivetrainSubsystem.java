@@ -247,16 +247,16 @@ public class DrivetrainSubsystem extends SubsystemBase {
     setGoalVelocity(new ChassisSpeeds());
   }
 
-  /** Runs the drive in a straight line with the specified drive output. */
-  public void setForwardDriveVoltage(double output_V) {
+  // /** Runs the drive motors at the specified voltage while controlling the heading with pure feedback. */
+  public void setDriveVoltage(double output_V, double[] headings_rad) {
     for (int i = 0; i < 4; i++) {
-      modules[i].runDriveSysId(output_V);
+      modules[i].runDriveVoltage(output_V, headings_rad[i]);
     }
   }
 
   public void setAzimuthVoltage(double output_V) {
     for (int i = 0; i < 4; i++) {
-      modules[i].runAzimuthSysId(output_V);
+      modules[i].runAzimuthVoltage(output_V);
     }
   }
 

@@ -55,6 +55,7 @@ public class DrivetrainConstants {
       new Translation2d(-trackLength_m / 2.0, trackWidth_m / 2.0),
       new Translation2d(-trackLength_m / 2.0, -trackWidth_m / 2.0)
     };
+    public static final Translation2d cmPosition = new Translation2d(0.0, 0.0);
 
     // software limits
     public static final double odometryFrequency_Hz = 100.0;

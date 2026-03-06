@@ -18,6 +18,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -86,27 +87,29 @@ public class DrivetrainCommands {
 
   private static final DoubleSupplier maxAllowableErrorRad =
       new TunableDouble(TUNING_NT_KEY + "/AllowableError", .08, () -> true);
-  private static double autoFacingRad = 0;
+  private static final PIDController autoFacingPID = new PIDController(5, 0, 0, RobotConstants.CODE_PERIOD_s);
+  private static double autoFacingTarget_rad = 0;
+  private static TrapezoidProfile.State prevAutoFacingState;
 
   public static Command stopAndFacePosition(
       DrivetrainSubsystem drivetrain, Supplier<Translation2d> targetSupplier) {
-    return drivetrain.run(() -> {
-      autoFacingRad = targetSupplier
-          .get()
-          .minus(drivetrain.getPose().getTranslation())
-          .getAngle()
-          .getRadians();
-      drivetrain.setGoalVelocity(new ChassisSpeeds(
-          0,
-          0,
-          turningProfile.calculate(
-                  RobotConstants.CODE_PERIOD_s,
-                  new TrapezoidProfile.State(
-                      drivetrain.getPose().getRotation().getRadians(),
-                      drivetrain.getChassisSpeeds().omegaRadiansPerSecond),
-                  new TrapezoidProfile.State(autoFacingRad, 0))
-              .velocity));
-      // Logger.recordOutput(TUNING_NT_KEY, null);
+    return drivetrain.startRun(() -> {
+        prevAutoFacingState.position = drivetrain.getPose().getRotation().getRadians();
+        prevAutoFacingState.velocity = drivetrain.getChassisSpeeds().omegaRadiansPerSecond;},
+      () -> {
+        autoFacingTarget_rad = targetSupplier
+            .get()
+            .minus(drivetrain.getPose().getTranslation())
+            .getAngle()
+            .getRadians();
+        prevAutoFacingState = turningProfile.calculate(
+                    RobotConstants.CODE_PERIOD_s,
+                    prevAutoFacingState,
+                    new TrapezoidProfile.State(autoFacingTarget_rad, 0));
+        drivetrain.setGoalVelocity(new ChassisSpeeds(
+            0,
+            0,
+            autoFacingPID.calculate(drivetrain.getPose().getRotation().getRadians(), prevAutoFacingState.position)));
     });
   }
 
@@ -115,40 +118,52 @@ public class DrivetrainCommands {
     //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
     //   return false;
     // }
-    return Math.abs(drivetrain.getPose().getRotation().getRadians() - autoFacingRad)
+    return Math.abs(drivetrain.getPose().getRotation().getRadians() - autoFacingTarget_rad)
         < maxAllowableErrorRad.getAsDouble();
   }
 
+  private static final double[] linearDriveModuleHeadings_rad = new double[] {0.0, 0.0, 0.0, 0.0};
+
   /** Returns a command to run a drive sysId test with the specified type. */
-  public static Command getDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
-    SysIdRoutine routine;
-    if (type == SysIdType.DynamicForward || type == SysIdType.DynamicReverse) {
-      routine = new SysIdRoutine(
+  public static Command getLinearDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
+    SysIdRoutine routine = new SysIdRoutine(
           new SysIdRoutine.Config(
               Volts.of(0.75).per(Second),
               Volts.of(2),
               Seconds.of(1.5),
               (state) -> Logger.recordOutput(
-                  DrivetrainConstants.NAME + "/DriveSysIdState", state.toString())),
+                  DrivetrainConstants.NAME + "/LinearDriveSysIdState", state.toString())),
           new SysIdRoutine.Mechanism(
-              (voltage) -> drivetrain.setForwardDriveVoltage(voltage.in(Volts)), null, drivetrain));
-    } else {
-
-      routine = new SysIdRoutine(
-          new SysIdRoutine.Config(
-              Volts.of(0.75).per(Second),
-              Volts.of(2),
-              Seconds.of(2),
-              (state) -> Logger.recordOutput(
-                  DrivetrainConstants.NAME + "/DriveSysIdState", state.toString())),
-          new SysIdRoutine.Mechanism(
-              (voltage) -> drivetrain.setForwardDriveVoltage(voltage.in(Volts)), null, drivetrain));
-    }
+              (voltage) -> drivetrain.setDriveVoltage(voltage.in(Volts), linearDriveModuleHeadings_rad), null, drivetrain));
     return drivetrain
-        .run(() -> drivetrain.setForwardDriveVoltage(0.0))
+        .run(() -> drivetrain.setDriveVoltage(0.0, linearDriveModuleHeadings_rad))
         .withTimeout(1.0)
         .andThen(SysIdUtil.getSysIdCommand(routine, type));
   }
+
+  // private static final double[] angularDriveModuleHeadings_rad = new double[] {
+  //   Chassis.moduleTranslations[0].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2,
+  //   Chassis.moduleTranslations[1].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2,
+  //   Chassis.moduleTranslations[2].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2,
+  //   Chassis.moduleTranslations[3].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2
+  // };
+
+  // /** Returns a command to run a drive sysId test with the specified type. */
+  // public static Command getAngularDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
+  //   SysIdRoutine routine = new SysIdRoutine(
+  //         new SysIdRoutine.Config(
+  //             Volts.of(0.6).per(Second),
+  //             Volts.of(2),
+  //             Seconds.of(2),
+  //             (state) -> Logger.recordOutput(
+  //                 DrivetrainConstants.NAME + "/AngularDriveSysIdState", state.toString())),
+  //         new SysIdRoutine.Mechanism(
+  //             (voltage) -> drivetrain.setDriveVoltage(voltage.in(Volts), angularDriveModuleHeadings_rad), null, drivetrain));
+  //   return drivetrain
+  //       .run(() -> drivetrain.setDriveVoltage(0.0, angularDriveModuleHeadings_rad))
+  //       .withTimeout(1.0)
+  //       .andThen(SysIdUtil.getSysIdCommand(routine, type));
+  // }
 
   /** Returns a command to run a drive sysId test with the specified type. */
   public static Command getAzimuthSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
@@ -156,7 +171,7 @@ public class DrivetrainCommands {
         new SysIdRoutine.Config(
             Volts.of(0.4).per(Second),
             Volts.of(4),
-            Seconds.of(8),
+            Seconds.of(5),
             (state) -> Logger.recordOutput(
                 DrivetrainConstants.NAME + "/AzimuthSysIdState", state.toString())),
         new SysIdRoutine.Mechanism(

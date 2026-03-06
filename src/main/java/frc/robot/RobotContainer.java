@@ -126,16 +126,16 @@ public class RobotContainer {
         DrivetrainCommands.wheelRadiusCharacterization(drivetrain));
     autoChooser.addOption(
         "Drive SysId (QuasistaticForward)",
-        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.QuasistaticForward));
+        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.QuasistaticForward));
     autoChooser.addOption(
         "Drive SysId (QuasistaticReverse)",
-        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.QuasistaticReverse));
+        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.QuasistaticReverse));
     autoChooser.addOption(
         "Drive SysId (DynamicForward)",
-        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.DynamicForward));
+        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.DynamicForward));
     autoChooser.addOption(
         "Drive SysId (DynamicReverse)",
-        DrivetrainCommands.getDriveSysId(drivetrain, SysIdType.DynamicReverse));
+        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.DynamicReverse));
     autoChooser.addOption(
         "Azimuth SysId (QuasistaticForward)",
         DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.QuasistaticForward));

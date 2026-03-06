@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.robot.RobotConstants;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.subsystems.drivetrain.ModuleIO.ModuleIOInputs;
 import org.littletonrobotics.junction.Logger;
 
@@ -93,16 +94,15 @@ public class Module {
     lastAzimuthAngle_rad = state.angle.getRadians();
   }
 
-  /** Runs the module with the specified voltage while controlling to zero degrees. */
-  public void runDriveSysId(double voltage_V) {
+  /** Runs the module with the specified voltage while controlling the heading with pure feedback. */
+  public void runDriveVoltage(double voltage_V, double heading_rad) {
     io.setDriveVoltage(voltage_V);
-    io.setNextAzimuthState(0.0, 0.0);
+    io.setNextAzimuthState(heading_rad, 0.0);
   }
 
-  public void runAzimuthSysId(double voltage_V) {
-    io.setDriveVoltage(0);
+  public void runAzimuthVoltage(double voltage_V) {
+    io.setDriveVoltage(0.0);
     io.setAzimuthVoltage(voltage_V);
-    ;
   }
 
   /** Disables all outputs to motors. */

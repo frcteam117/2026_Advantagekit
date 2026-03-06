@@ -155,11 +155,11 @@ public class ModuleIONova implements ModuleIO {
     azimuthNova.setVoltage(voltage_V);
   }
 
-  @Override
-  public void setNextDriveVelocity(double nextVelocity_radPs) {
-    driveNova.setVelocityInternal(nextVelocity_radPs * Drive.reduction / 60);
-    // Drive.realFF.calculateWithVelocities(currentDriveVelocity_radPs, nextVelocity_radPs));
-  }
+//   @Override
+//   public void setNextDriveVelocity(double nextVelocity_radPs) {
+//     driveNova.setVelocityInternal(nextVelocity_radPs * Drive.reduction / 60);
+//     // Drive.realFF.calculateWithVelocities(currentDriveVelocity_radPs, nextVelocity_radPs));
+//   }
 
   @Override
   public void setNextDriveState(double nextVelocity_radPs, double nextAcceleration_radPs2) {
@@ -179,7 +179,5 @@ public class ModuleIONova implements ModuleIO {
             lastNextAzimuthVelocity_radPs, nextVelocity_radPs));
     // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
     lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
-
-    // Azimuth.realFF.calculateWithVelocities(currentAzimuthVelocity_radPs, nextVelocity_radPs));
   }
 }
