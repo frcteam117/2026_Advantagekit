@@ -49,7 +49,7 @@ public class ArmPIDF extends ControlFunctionBase {
     Voltage_State voltage = new Voltage_State(ff.calculateWithVelocities(
             mechanism_State.pos(Radians) + cmOffset_rad,
             lastNext_State.vel(RadiansPerSecond),
-            next_State.vel(Radians))
+            next_State.vel(RadiansPerSecond))
         + pid.calculate(mechanism_State.pos(), lastNext_State.pos()));
     lastNext_State = next_State;
     return voltage;

@@ -45,9 +45,9 @@ public class DrivetrainConstants {
 
     // physical properties
     public static final double bumperLength_m = UnitUtil.inTom(30.625);
-    public static final double bumperWidth_m = UnitUtil.inTom(30.625 + 2);
-    public static final double trackLength_m = UnitUtil.inTom(21.625 - (2 * 1.6875));
-    public static final double trackWidth_m = UnitUtil.inTom(21.625 - (2 * 1.6875) + 2);
+    public static final double bumperWidth_m = UnitUtil.inTom(30.625 + 4);
+    public static final double trackLength_m = UnitUtil.inTom(21.625 - 1.6875); // 19.9375
+    public static final double trackWidth_m = UnitUtil.inTom(25.625 - 1.6875); // 23.9375
     public static final double trackRadius_m = Math.hypot(trackLength_m / 2.0, trackWidth_m / 2.0);
     public static final Translation2d[] moduleTranslations = new Translation2d[] {
       new Translation2d(trackLength_m / 2.0, trackWidth_m / 2.0),

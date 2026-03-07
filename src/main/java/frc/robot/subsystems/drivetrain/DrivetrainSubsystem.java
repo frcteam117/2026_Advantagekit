@@ -186,7 +186,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   }
 
   /**
-   * Runs the drive at the next step to reach the desired velocity. Uses 254's
+   * Runs the drive at the next step to reach the desired velocity. Uses pathplanner's
    * SwerveSetpointGenerator.
    *
    * @param goalSpeeds_mps Target speeds in meters/sec
@@ -247,7 +247,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
     setGoalVelocity(new ChassisSpeeds());
   }
 
-  // /** Runs the drive motors at the specified voltage while controlling the heading with pure feedback. */
+  // /** Runs the drive motors at the specified voltage while controlling the heading with pure
+  // feedback. */
   public void setDriveVoltage(double output_V, double[] headings_rad) {
     for (int i = 0; i < 4; i++) {
       modules[i].runDriveVoltage(output_V, headings_rad[i]);

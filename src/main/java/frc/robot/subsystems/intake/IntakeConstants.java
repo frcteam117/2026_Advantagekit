@@ -81,116 +81,94 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.simpleFF = RobotBase.isReal()
         ? new SimpleMotorFeedforward(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s);
-    PIVOT_CONSTANTS.arbitraryFF = new InterpolatingDoubleTreeMap();
-    PIVOT_CONSTANTS.arbitraryFF.put(0.1, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.0, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.0, 0.0);
-    PIVOT_CONSTANTS.arbitraryFF.put(-0.1, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.2, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.3, 0.0);
-    PIVOT_CONSTANTS.arbitraryFF.put(-0.4, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.5, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.6, 0.0);
-    PIVOT_CONSTANTS.arbitraryFF.put(-0.7, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.8, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-0.9, 0.0);
-    PIVOT_CONSTANTS.arbitraryFF.put(-1.0, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-1.1, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-1.2, 0.0);
-    PIVOT_CONSTANTS.arbitraryFF.put(-1.3, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-1.4, 0.0);
-    // PIVOT_CONSTANTS.arbitraryFF.put(-1.5, 0.0);
-    PIVOT_CONSTANTS.arbitraryFF.put(-1.6, 0.0);
+    PIVOT_CONSTANTS.maxPosError = .02;
+    PIVOT_CONSTANTS.minVel = .02;
+    PIVOT_CONSTANTS.arbitraryForwardS = new InterpolatingDoubleTreeMap();
+    PIVOT_CONSTANTS.arbitraryReverseS = new InterpolatingDoubleTreeMap();
+    PIVOT_CONSTANTS.arbitraryForwardS.put(0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryForwardS.put(-0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryForwardS.put(-0.4, 0.0);
+    PIVOT_CONSTANTS.arbitraryForwardS.put(-0.7, 0.0);
+    PIVOT_CONSTANTS.arbitraryForwardS.put(-1.0, 0.0);
+    PIVOT_CONSTANTS.arbitraryForwardS.put(-1.3, 0.0);
+    PIVOT_CONSTANTS.arbitraryForwardS.put(-1.6, 0.0);
+    PIVOT_CONSTANTS.arbitraryReverseS.put(0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryReverseS.put(-0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryReverseS.put(-0.4, 0.0);
+    PIVOT_CONSTANTS.arbitraryReverseS.put(-0.7, 0.0);
+    PIVOT_CONSTANTS.arbitraryReverseS.put(-1.0, 0.0);
+    PIVOT_CONSTANTS.arbitraryReverseS.put(-1.3, 0.0);
+    PIVOT_CONSTANTS.arbitraryReverseS.put(-1.6, 0.0);
     new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryFF/_0.1",
-        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/_0.1",
+        PIVOT_CONSTANTS.arbitraryForwardS.get(0.1),
         () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryFF.put(0.1, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.0",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.0, value));
+        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(0.1, value));
     new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.1",
-        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.1",
+        PIVOT_CONSTANTS.arbitraryForwardS.get(-0.1),
         () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.1, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.2",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.2, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.3",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.3, value));
+        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.1, value));
     new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.4",
-        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.4",
+        PIVOT_CONSTANTS.arbitraryForwardS.get(-0.4),
         () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.4, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.5",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.5, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.6",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.6, value));
+        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.4, value));
     new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.7",
-        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.7",
+        PIVOT_CONSTANTS.arbitraryForwardS.get(-0.7),
         () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.7, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.8",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.8, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.9",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.9, value));
+        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.7, value));
     new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.0",
-        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.0",
+        PIVOT_CONSTANTS.arbitraryForwardS.get(-1.0),
         () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.0, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.1",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.1, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.2",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.2, value));
+        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.0, value));
     new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.3",
-        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.3",
+        PIVOT_CONSTANTS.arbitraryForwardS.get(-1.3),
         () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.3, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.4",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.4, value));
-    // new TunableDouble(
-    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.5",
-    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
-    //     () -> true,
-    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.5, value));
+        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.3, value));
     new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.6",
-        PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.6",
+        PIVOT_CONSTANTS.arbitraryForwardS.get(-1.6),
         () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.6, value));
+        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.6, value));
+    new TunableDouble(
+        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/_0.1",
+        PIVOT_CONSTANTS.arbitraryReverseS.get(0.1),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(0.1, value));
+    new TunableDouble(
+        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.1",
+        PIVOT_CONSTANTS.arbitraryReverseS.get(-0.1),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.1, value));
+    new TunableDouble(
+        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.4",
+        PIVOT_CONSTANTS.arbitraryReverseS.get(-0.4),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.4, value));
+    new TunableDouble(
+        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.7",
+        PIVOT_CONSTANTS.arbitraryReverseS.get(-0.7),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.7, value));
+    new TunableDouble(
+        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.0",
+        PIVOT_CONSTANTS.arbitraryReverseS.get(-1.0),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.0, value));
+    new TunableDouble(
+        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.3",
+        PIVOT_CONSTANTS.arbitraryReverseS.get(-1.3),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.3, value));
+    new TunableDouble(
+        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.6",
+        PIVOT_CONSTANTS.arbitraryReverseS.get(-1.6),
+        () -> true,
+        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.6, value));
 
     PIVOT_CONFIG.constants = PIVOT_CONSTANTS;
     PIVOT_CONFIG.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};

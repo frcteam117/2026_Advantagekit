@@ -60,6 +60,10 @@ public class MechanismConstants<Output_State extends State> {
   public ArmFeedforward armFF;
   public ElevatorFeedforward elevatorFF;
   public InterpolatingDoubleTreeMap arbitraryFF;
+  public InterpolatingDoubleTreeMap arbitraryForwardS;
+  public InterpolatingDoubleTreeMap arbitraryReverseS;
+  public Double minVel;
+  public Double maxPosError;
   // public PIDController realPID;
   // public PIDController simPID;
   // public SimpleMotorFeedforward realSimpleFF;

@@ -87,30 +87,34 @@ public class DrivetrainCommands {
 
   private static final DoubleSupplier maxAllowableErrorRad =
       new TunableDouble(TUNING_NT_KEY + "/AllowableError", .08, () -> true);
-  private static final PIDController autoFacingPID = new PIDController(5, 0, 0, RobotConstants.CODE_PERIOD_s);
+  private static final PIDController autoFacingPID =
+      new PIDController(5, 0, 0, RobotConstants.CODE_PERIOD_s);
   private static double autoFacingTarget_rad = 0;
   private static TrapezoidProfile.State prevAutoFacingState;
 
   public static Command stopAndFacePosition(
       DrivetrainSubsystem drivetrain, Supplier<Translation2d> targetSupplier) {
-    return drivetrain.startRun(() -> {
-        prevAutoFacingState.position = drivetrain.getPose().getRotation().getRadians();
-        prevAutoFacingState.velocity = drivetrain.getChassisSpeeds().omegaRadiansPerSecond;},
-      () -> {
-        autoFacingTarget_rad = targetSupplier
-            .get()
-            .minus(drivetrain.getPose().getTranslation())
-            .getAngle()
-            .getRadians();
-        prevAutoFacingState = turningProfile.calculate(
-                    RobotConstants.CODE_PERIOD_s,
-                    prevAutoFacingState,
-                    new TrapezoidProfile.State(autoFacingTarget_rad, 0));
-        drivetrain.setGoalVelocity(new ChassisSpeeds(
-            0,
-            0,
-            autoFacingPID.calculate(drivetrain.getPose().getRotation().getRadians(), prevAutoFacingState.position)));
-    });
+    return drivetrain.startRun(
+        () -> {
+          prevAutoFacingState.position = drivetrain.getPose().getRotation().getRadians();
+          prevAutoFacingState.velocity = drivetrain.getChassisSpeeds().omegaRadiansPerSecond;
+        },
+        () -> {
+          autoFacingTarget_rad = targetSupplier
+              .get()
+              .minus(drivetrain.getPose().getTranslation())
+              .getAngle()
+              .getRadians();
+          prevAutoFacingState = turningProfile.calculate(
+              RobotConstants.CODE_PERIOD_s,
+              prevAutoFacingState,
+              new TrapezoidProfile.State(autoFacingTarget_rad, 0));
+          drivetrain.setGoalVelocity(new ChassisSpeeds(
+              0,
+              0,
+              autoFacingPID.calculate(
+                  drivetrain.getPose().getRotation().getRadians(), prevAutoFacingState.position)));
+        });
   }
 
   public static boolean isAutoAimReady(DrivetrainSubsystem drivetrain) {
@@ -127,14 +131,17 @@ public class DrivetrainCommands {
   /** Returns a command to run a drive sysId test with the specified type. */
   public static Command getLinearDriveSysId(DrivetrainSubsystem drivetrain, SysIdType type) {
     SysIdRoutine routine = new SysIdRoutine(
-          new SysIdRoutine.Config(
-              Volts.of(0.75).per(Second),
-              Volts.of(2),
-              Seconds.of(1.5),
-              (state) -> Logger.recordOutput(
-                  DrivetrainConstants.NAME + "/LinearDriveSysIdState", state.toString())),
-          new SysIdRoutine.Mechanism(
-              (voltage) -> drivetrain.setDriveVoltage(voltage.in(Volts), linearDriveModuleHeadings_rad), null, drivetrain));
+        new SysIdRoutine.Config(
+            Volts.of(0.75).per(Second),
+            Volts.of(2),
+            Seconds.of(1.5),
+            (state) -> Logger.recordOutput(
+                DrivetrainConstants.NAME + "/LinearDriveSysIdState", state.toString())),
+        new SysIdRoutine.Mechanism(
+            (voltage) ->
+                drivetrain.setDriveVoltage(voltage.in(Volts), linearDriveModuleHeadings_rad),
+            null,
+            drivetrain));
     return drivetrain
         .run(() -> drivetrain.setDriveVoltage(0.0, linearDriveModuleHeadings_rad))
         .withTimeout(1.0)
@@ -142,9 +149,12 @@ public class DrivetrainCommands {
   }
 
   // private static final double[] angularDriveModuleHeadings_rad = new double[] {
-  //   Chassis.moduleTranslations[0].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2,
-  //   Chassis.moduleTranslations[1].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2,
-  //   Chassis.moduleTranslations[2].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2,
+  //   Chassis.moduleTranslations[0].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI /
+  // 2,
+  //   Chassis.moduleTranslations[1].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI /
+  // 2,
+  //   Chassis.moduleTranslations[2].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI /
+  // 2,
   //   Chassis.moduleTranslations[3].minus(Chassis.cmPosition).getAngle().getRadians() + Math.PI / 2
   // };
 
@@ -158,7 +168,8 @@ public class DrivetrainCommands {
   //             (state) -> Logger.recordOutput(
   //                 DrivetrainConstants.NAME + "/AngularDriveSysIdState", state.toString())),
   //         new SysIdRoutine.Mechanism(
-  //             (voltage) -> drivetrain.setDriveVoltage(voltage.in(Volts), angularDriveModuleHeadings_rad), null, drivetrain));
+  //             (voltage) -> drivetrain.setDriveVoltage(voltage.in(Volts),
+  // angularDriveModuleHeadings_rad), null, drivetrain));
   //   return drivetrain
   //       .run(() -> drivetrain.setDriveVoltage(0.0, angularDriveModuleHeadings_rad))
   //       .withTimeout(1.0)
@@ -252,17 +263,27 @@ public class DrivetrainCommands {
           linearVelocity.getX() * DRIVE_MAX_VELOCITY,
           linearVelocity.getY() * DRIVE_MAX_VELOCITY,
           omega * DRIVE_MAX_ANGULAR_VELOCITY);
-      // boolean isFlipped = DriverStation.getAlliance().isPresent()
-      //     && DriverStation.getAlliance().get() == Alliance.Red;
+      boolean isFlipped = DriverStation.getAlliance().isPresent()
+          && DriverStation.getAlliance().get() == Alliance.Red;
       speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
           speeds,
-          // isFlipped ? drivetrain.getNavXYaw().plus(Rotation2d.k180deg) :
-          drivetrain.getNavXYaw());
-      if (speeds.equals(new ChassisSpeeds())) {
+          isFlipped
+              ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+              : drivetrain.getPose().getRotation());
+      if (Math.abs(speeds.omegaRadiansPerSecond) < 0.01
+          && Math.abs(speeds.vxMetersPerSecond) < 0.01
+          && Math.abs(speeds.vyMetersPerSecond) < 0.01) {
         drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
       } else {
         drivetrain.setGoalVelocity(speeds);
       }
+      // AutoBuilder.followPath(new PathPlannerPath(
+      //     PathPlannerPath.waypointsFromPoses(),
+      //     new PathConstraints(1, 0, 0, 0, RobotConstants.NOMINAL_V, false),
+      //     new IdealStartingState(
+      //         drivetrain.getChassisSpeeds().vxMetersPerSecond,
+      //         drivetrain.getPose().getRotation()),
+      //     new GoalEndState(0, drivetrain.getPose().getRotation())));
     });
   }
 
@@ -360,13 +381,13 @@ public class DrivetrainCommands {
             // Record starting measurement
             Commands.runOnce(() -> {
               state.positions = drive.getWheelRadiusCharacterizationPositions();
-              state.lastAngle = drive.getPose().getRotation();
+              state.lastAngle = drive.getNavXYaw();
               state.gyroDelta = 0.0;
             }),
 
             // Update gyro delta
             Commands.run(() -> {
-                  var rotation = drive.getPose().getRotation();
+                  var rotation = drive.getNavXYaw();
                   state.gyroDelta += Math.abs(rotation.minus(state.lastAngle).getRadians());
                   state.lastAngle = rotation;
                 })

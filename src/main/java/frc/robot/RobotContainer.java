@@ -187,7 +187,7 @@ public class RobotContainer {
     //     .R1()
     //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
     // controller.triangle()));
-    controller.L2().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
+    controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
     controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
@@ -196,13 +196,27 @@ public class RobotContainer {
     shooter.setDefaultCommand(ShooterCommands.stop(shooter));
     controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
     // zzzzzzzzzzzzzzzzzzzzz
-    controller.circle().whileTrue(IntakeCommands.RunRollerForwardForTuning(intake));
-    controller.cross().whileTrue(IntakeCommands.RunRollerBackwardForTuning(intake));
+    controller.circle().whileTrue(IntakeCommands.runRollerForward(intake));
+    controller.cross().whileTrue(IntakeCommands.runRollerBackward(intake));
     controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoal(new RadVel_State(-.1))));
     controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoal(new RadVel_State(.1))));
     intake.setDefaultCommand(IntakeCommands.stopCommand(intake)
         .alongWith(Commands.run(() -> intake.setPivotGoal(new RadVel_State(0)))));
     controller.square().onTrue(IntakeCommands.stopCommand(intake));
+
+    // new button bindings:
+    // controller.L2().whileTrue(IntakeCommands.RunRollerAndLowerPivot(intake));
+    // controller.L1().whileTrue(ShooterCommands.runForward(shooter));
+    // // should this be whileTrue? vvv
+    // controller
+    //     .R2()
+    //     .whileTrue(RobotCommands.hubAutoShoot(
+    //         drivetrain, shooter, indexer, () -> ShooterCommands.isAutoAimReady(shooter)));
+    // // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
+    // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    // // controller.cross().whileTrue(ShooterCommands.aimToPass(shooter)); // make aimToPass
+    // command?
+    // controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));

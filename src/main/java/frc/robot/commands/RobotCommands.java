@@ -7,7 +7,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotConstants;
 import frc.robot.RobotConstants.FieldType;
+import frc.robot.subsystems.drivetrain.DrivetrainCommands;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
+import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -29,14 +31,14 @@ public class RobotCommands {
       BooleanSupplier shootWhenReady) {
     Translation2d target =
         DriverStation.getAlliance().get().equals(Alliance.Blue) ? blueHub : redHub;
-    Logger.recordOutput("Tuning/alliance", DriverStation.getAlliance().get().name());
+    Logger.recordOutput("Commands/alliance", DriverStation.getAlliance().get().name());
     return Commands.parallel(
-        ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> target));
-    // DrivetrainCommands.stopAndFacePosition(drivetrain, () -> target),
-    // IndexerCommands.conditionalRunForward(
-    //     indexer,
-    //     () -> shootWhenReady.getAsBoolean()
-    //         && ShooterCommands.isAutoAimReady(shooter)
-    //         && DrivetrainCommands.isAutoAimReady(drivetrain)));
+        ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> target),
+        DrivetrainCommands.stopAndFacePosition(drivetrain, () -> target),
+        IndexerCommands.conditionalRunForward(
+            indexer,
+            () -> shootWhenReady.getAsBoolean()
+                && ShooterCommands.isAutoAimReady(shooter)
+                && DrivetrainCommands.isAutoAimReady(drivetrain)));
   }
 }
