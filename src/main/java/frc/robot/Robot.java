@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.commands.RobotCommands;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.util.logging.LogUtil;
 import org.ironmaple.simulation.SimulatedArena;
@@ -150,7 +151,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    RobotCommands.controllerRumble(RobotContainer.getController());
+  }
 
   /** This function is called once when test mode is enabled. */
   @Override

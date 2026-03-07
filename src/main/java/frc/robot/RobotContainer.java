@@ -59,7 +59,7 @@ public class RobotContainer {
   private SwerveDriveSimulation driveSimulation = null;
 
   // Controller
-  private final CommandPS5Controller controller = new CommandPS5Controller(0);
+  private static final CommandPS5Controller controller = new CommandPS5Controller(0);
   //   private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
 
   // Dashboard inputs
@@ -270,4 +270,7 @@ public class RobotContainer {
   //       new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -shooter.getHoodState().pos(), 0))
   //     };
   //   }
+  public static CommandPS5Controller getController() {
+    return controller;
+  }
 }

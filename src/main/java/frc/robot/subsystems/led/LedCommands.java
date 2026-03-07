@@ -21,7 +21,7 @@ public class LedCommands {
         this.shooter = shooter;
 
         led = new AddressableLED(pwmPort);
-        buffer = new AddressableLEDBuffer(length);
+        buffer = new AddressableLEDBuffer(length); 
 
         led.setLength(buffer.getLength());
         led.setData(buffer);
@@ -31,7 +31,7 @@ public class LedCommands {
     public void updateShooterLEDs(double targetSpeedRadPerSec) {
 
         double rioSpeed =
-            shooter.getRIOFlywheelState().vel(RadiansPerSecond);
+            shooter.getRIOFlywheelState().vel(RadiansPerSecond); 
         double pdhSpeed =
             shooter.getPDHFlywheelState().vel(RadiansPerSecond);
 
