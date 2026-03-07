@@ -27,6 +27,7 @@ import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeCommands;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.led.LedCommands;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIO;
@@ -54,6 +55,7 @@ public class RobotContainer {
   private final IntakeSubsystem intake;
   private final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
+  public final LedCommands led;
   private SwerveDriveSimulation driveSimulation = null;
 
   // Controller
@@ -114,6 +116,9 @@ public class RobotContainer {
     intake = new IntakeSubsystem();
     indexer = new IndexerSubsystem();
     shooter = new ShooterSubsystem();
+    led = new LedCommands(0, 30, shooter); 
+    // 30 =  length of one ledsection, change if we add more sections
+
 
     SysIdUtil.registerController(controller);
 
