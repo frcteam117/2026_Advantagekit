@@ -14,8 +14,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.util.FileVersionException;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -28,6 +27,7 @@ import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeCommands;
+import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -37,11 +37,8 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
-import frc.robot.util.states.premade.RadVel_State;
-import java.io.IOException;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.json.simple.parser.ParseException;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -176,53 +173,69 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
         drivetrain,
+        () -> 1
+            - MathUtil.inverseInterpolate(
+                IntakeConstants.PIVOT_CONSTANTS.min_Pos.pos(),
+                IntakeConstants.PIVOT_CONSTANTS.max_Pos.pos(),
+                intake.getPivotState().pos()),
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
         () -> -controller.getRightX()));
 
-    controller
-        .R2()
-        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+    // controller
+    //     .R2()
+    //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
+    // controller.button(13)));
     // controller2
     //     .R1()
     //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
     // controller.triangle()));
-    controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
+    // controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
 
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
-    controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    // controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    // controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     shooter.setDefaultCommand(ShooterCommands.stop(shooter));
-    controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
+    // controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
     // zzzzzzzzzzzzzzzzzzzzz
-    controller.circle().whileTrue(IntakeCommands.runRollerForward(intake));
-    controller.cross().whileTrue(IntakeCommands.runRollerBackward(intake));
-    controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoal(new RadVel_State(-.1))));
-    controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoal(new RadVel_State(.1))));
-    intake.setDefaultCommand(IntakeCommands.stopCommand(intake)
-        .alongWith(Commands.run(() -> intake.setPivotGoal(new RadVel_State(0)))));
-    controller.square().onTrue(IntakeCommands.stopCommand(intake));
+    // controller.circle().whileTrue(IntakeCommands.runRollerForward(intake));
+    controller.circle().whileTrue(IntakeCommands.runRollerBackward(intake));
+    controller
+        .button(10)
+        .whileTrue(
+            Commands.run(() -> intake.setPivotGoal(IntakeConstants.PIVOT_CONSTANTS.min_Pos)));
+    controller
+        .button(9)
+        .whileTrue(
+            Commands.run(() -> intake.setPivotGoal(IntakeConstants.PIVOT_CONSTANTS.max_Pos)));
+    intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
+    // controller.square().onTrue(IntakeCommands.stopCommand(intake));
 
     // new button bindings:
-    // controller.L2().whileTrue(IntakeCommands.RunRollerAndLowerPivot(intake));
-    // controller.L1().whileTrue(ShooterCommands.runForward(shooter));
-    // // should this be whileTrue? vvv
-    // controller
-    //     .R2()
-    //     .whileTrue(RobotCommands.hubAutoShoot(
-    //         drivetrain, shooter, indexer, () -> ShooterCommands.isAutoAimReady(shooter)));
-    // // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
-    // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
-    // // controller.cross().whileTrue(ShooterCommands.aimToPass(shooter)); // make aimToPass
-    // command?
-    // controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
-
-    controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
-    controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
+    controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
+    controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    // should this be whileTrue? vvv
     controller
-        .povLeft()
-        .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()));
+        .R2()
+        .whileTrue(RobotCommands.hubAutoShoot(
+            drivetrain, shooter, indexer, () -> ShooterCommands.isAutoAimReady(shooter)));
+    // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
+    controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    controller
+        .cross()
+        .whileTrue(RobotCommands.hubAutoShoot(
+            drivetrain, shooter, indexer, controller.button(13))); // make aimToPass
+    // command?
+    controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
+
+    // controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
+    // controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
+    // controller
+    //     .povLeft()
+    //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
+    // controller.triangle()));
     //
     // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
     // controller.circle().whileFalse(IntakeCommands.(intake));
@@ -248,17 +261,17 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // return autoChooser.get();
-    try {
-      return AutoBuilder.followPath(PathPlannerPath.fromPathFile("Example Path"));
-    } catch (FileVersionException | IOException | ParseException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    return null;
-    // return Commands.parallel(
-    //         Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
-    //         RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
-    //     .withTimeout(8);
+    // try {
+    //   return AutoBuilder.followPath(PathPlannerPath.fromPathFile("Example Path"));
+    // } catch (FileVersionException | IOException | ParseException e) {
+    //   // TODO Auto-generated catch block
+    //   e.printStackTrace();
+    // }
+    // return null;
+    return Commands.parallel(
+            Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
+            RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
+        .withTimeout(8);
   }
 
   public void resetSimulationField() {

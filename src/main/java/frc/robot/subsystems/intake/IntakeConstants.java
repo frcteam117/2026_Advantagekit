@@ -23,7 +23,6 @@ import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.control_functions.feedback.ArbitraryPIDSVAF;
 import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
-import frc.robot.util.logging.TunableDouble;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
 import frc.robot.util.states.StateValue;
@@ -72,103 +71,147 @@ public class IntakeConstants {
     PIVOT_CONSTANTS.min_Pos = new RadPos_State(-1.495396); // -1.54566358557);
     PIVOT_CONSTANTS.max_Pos = new RadPos_State(0);
     PIVOT_CONSTANTS.limits_State = VelAcc_State.create(
-        new StateValue(4, RadiansPerSecond), new StateValue(12, RadiansPerSecondPerSecond));
+        new StateValue(3, RadiansPerSecond), new StateValue(8, RadiansPerSecondPerSecond));
     PIVOT_CONSTANTS.isLoop = false;
     // Feedback
     PIVOT_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
+        ? new PIDController(3, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
         : new PIDController(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s);
     PIVOT_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s)
+        ? new SimpleMotorFeedforward(0.5, 0.6, 0.08, PIVOT_CONSTANTS.codePeriod_s)
         : new SimpleMotorFeedforward(0, 0, 0, PIVOT_CONSTANTS.codePeriod_s);
-    PIVOT_CONSTANTS.maxPosError = .02;
-    PIVOT_CONSTANTS.minVel = .02;
-    PIVOT_CONSTANTS.arbitraryForwardS = new InterpolatingDoubleTreeMap();
-    PIVOT_CONSTANTS.arbitraryReverseS = new InterpolatingDoubleTreeMap();
-    PIVOT_CONSTANTS.arbitraryForwardS.put(0.1, 0.0);
-    PIVOT_CONSTANTS.arbitraryForwardS.put(-0.1, 0.0);
-    PIVOT_CONSTANTS.arbitraryForwardS.put(-0.4, 0.0);
-    PIVOT_CONSTANTS.arbitraryForwardS.put(-0.7, 0.0);
-    PIVOT_CONSTANTS.arbitraryForwardS.put(-1.0, 0.0);
-    PIVOT_CONSTANTS.arbitraryForwardS.put(-1.3, 0.0);
-    PIVOT_CONSTANTS.arbitraryForwardS.put(-1.6, 0.0);
-    PIVOT_CONSTANTS.arbitraryReverseS.put(0.1, 0.0);
-    PIVOT_CONSTANTS.arbitraryReverseS.put(-0.1, 0.0);
-    PIVOT_CONSTANTS.arbitraryReverseS.put(-0.4, 0.0);
-    PIVOT_CONSTANTS.arbitraryReverseS.put(-0.7, 0.0);
-    PIVOT_CONSTANTS.arbitraryReverseS.put(-1.0, 0.0);
-    PIVOT_CONSTANTS.arbitraryReverseS.put(-1.3, 0.0);
-    PIVOT_CONSTANTS.arbitraryReverseS.put(-1.6, 0.0);
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/_0.1",
-        PIVOT_CONSTANTS.arbitraryForwardS.get(0.1),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(0.1, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.1",
-        PIVOT_CONSTANTS.arbitraryForwardS.get(-0.1),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.1, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.4",
-        PIVOT_CONSTANTS.arbitraryForwardS.get(-0.4),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.4, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.7",
-        PIVOT_CONSTANTS.arbitraryForwardS.get(-0.7),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.7, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.0",
-        PIVOT_CONSTANTS.arbitraryForwardS.get(-1.0),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.0, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.3",
-        PIVOT_CONSTANTS.arbitraryForwardS.get(-1.3),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.3, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.6",
-        PIVOT_CONSTANTS.arbitraryForwardS.get(-1.6),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.6, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/_0.1",
-        PIVOT_CONSTANTS.arbitraryReverseS.get(0.1),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(0.1, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.1",
-        PIVOT_CONSTANTS.arbitraryReverseS.get(-0.1),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.1, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.4",
-        PIVOT_CONSTANTS.arbitraryReverseS.get(-0.4),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.4, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.7",
-        PIVOT_CONSTANTS.arbitraryReverseS.get(-0.7),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.7, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.0",
-        PIVOT_CONSTANTS.arbitraryReverseS.get(-1.0),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.0, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.3",
-        PIVOT_CONSTANTS.arbitraryReverseS.get(-1.3),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.3, value));
-    new TunableDouble(
-        "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.6",
-        PIVOT_CONSTANTS.arbitraryReverseS.get(-1.6),
-        () -> true,
-        value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.6, value));
+    PIVOT_CONSTANTS.arbitraryFF = new InterpolatingDoubleTreeMap();
+    PIVOT_CONSTANTS.arbitraryFF.put(0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.1, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.4, 0.0);
+    PIVOT_CONSTANTS.arbitraryFF.put(-0.7, 0.03);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.0, 0.09);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.3, 0.13);
+    PIVOT_CONSTANTS.arbitraryFF.put(-1.6, 0.16);
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/_0.1",
+    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(0.1, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.1",
+    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.1, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.4",
+    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.4, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-0.7",
+    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-0.7, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.0",
+    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.0, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.3",
+    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.3, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryFF/-1.6",
+    //     PIVOT_CONSTANTS.arbitraryFF.get(0.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryFF.put(-1.6, value));
+
+    // PIVOT_CONSTANTS.maxPosError = .02;
+    // PIVOT_CONSTANTS.maxPosError = .02;
+    // PIVOT_CONSTANTS.arbitraryForwardS = new InterpolatingDoubleTreeMap();
+    // PIVOT_CONSTANTS.arbitraryReverseS = new InterpolatingDoubleTreeMap();
+    // PIVOT_CONSTANTS.arbitraryForwardS.put(0.1, 0.0);
+    // PIVOT_CONSTANTS.arbitraryForwardS.put(-0.1, 0.0);
+    // PIVOT_CONSTANTS.arbitraryForwardS.put(-0.4, 0.0);
+    // PIVOT_CONSTANTS.arbitraryForwardS.put(-0.7, 0.0);
+    // PIVOT_CONSTANTS.arbitraryForwardS.put(-1.0, 0.0);
+    // PIVOT_CONSTANTS.arbitraryForwardS.put(-1.3, 0.0);
+    // PIVOT_CONSTANTS.arbitraryForwardS.put(-1.6, 0.0);
+    // PIVOT_CONSTANTS.arbitraryReverseS.put(0.1, 0.0);
+    // PIVOT_CONSTANTS.arbitraryReverseS.put(-0.1, 0.0);
+    // PIVOT_CONSTANTS.arbitraryReverseS.put(-0.4, 0.0);
+    // PIVOT_CONSTANTS.arbitraryReverseS.put(-0.7, 0.0);
+    // PIVOT_CONSTANTS.arbitraryReverseS.put(-1.0, 0.0);
+    // PIVOT_CONSTANTS.arbitraryReverseS.put(-1.3, 0.0);
+    // PIVOT_CONSTANTS.arbitraryReverseS.put(-1.6, 0.0);
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryForwardS/_0.1",
+    //     PIVOT_CONSTANTS.arbitraryForwardS.get(0.1),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryForwardS.put(0.1, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.1",
+    //     PIVOT_CONSTANTS.arbitraryForwardS.get(-0.1),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.1, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.4",
+    //     PIVOT_CONSTANTS.arbitraryForwardS.get(-0.4),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.4, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-0.7",
+    //     PIVOT_CONSTANTS.arbitraryForwardS.get(-0.7),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-0.7, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.0",
+    //     PIVOT_CONSTANTS.arbitraryForwardS.get(-1.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.0, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.3",
+    //     PIVOT_CONSTANTS.arbitraryForwardS.get(-1.3),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.3, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryForwardS/-1.6",
+    //     PIVOT_CONSTANTS.arbitraryForwardS.get(-1.6),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryForwardS.put(-1.6, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryReverseS/_0.1",
+    //     PIVOT_CONSTANTS.arbitraryReverseS.get(0.1),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryReverseS.put(0.1, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.1",
+    //     PIVOT_CONSTANTS.arbitraryReverseS.get(-0.1),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.1, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.4",
+    //     PIVOT_CONSTANTS.arbitraryReverseS.get(-0.4),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.4, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-0.7",
+    //     PIVOT_CONSTANTS.arbitraryReverseS.get(-0.7),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-0.7, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.0",
+    //     PIVOT_CONSTANTS.arbitraryReverseS.get(-1.0),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.0, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.3",
+    //     PIVOT_CONSTANTS.arbitraryReverseS.get(-1.3),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.3, value));
+    // new TunableDouble(
+    //     "Tuning/" + LOG_NAME + "/ArbitraryReverseS/-1.6",
+    //     PIVOT_CONSTANTS.arbitraryReverseS.get(-1.6),
+    //     () -> true,
+    //     value -> PIVOT_CONSTANTS.arbitraryReverseS.put(-1.6, value));
 
     PIVOT_CONFIG.constants = PIVOT_CONSTANTS;
     PIVOT_CONFIG.realComponents = new ComponentBase[0]; // {absoluteEncoderComponent};

@@ -38,6 +38,17 @@ public class IntakeCommands {
         instance);
   }
 
+  public static Command runRollerAndLowerPivot(IntakeSubsystem instance) {
+    return Commands.run(
+        () -> {
+          // instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
+          instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+          // runRollerWhenLowered(instance);
+          // instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+        },
+        instance);
+  }
+
   // private static void runRollerWhenLowered(IntakeSubsystem instance) {
   //   if (instance.getPivotState().pos(Radians) < lowered_rad.getAsDouble()) {
   //     instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
@@ -66,6 +77,7 @@ public class IntakeCommands {
     return Commands.run(
         () -> {
           instance.setRollerGoal(new RadVel_State(0));
+          // instance.setPivotGoal(new RadVel_State(0));
         },
         instance);
   }

@@ -37,11 +37,14 @@ import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.UnitUtil;
+import frc.robot.util.logging.LogUtil;
 import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainCommands {
@@ -65,7 +68,7 @@ public class DrivetrainCommands {
   public static Rotation2d robotRotation2d[];
 
   private static TrapezoidProfile.Constraints turningConstraints =
-      new TrapezoidProfile.Constraints(2, 4);
+      new TrapezoidProfile.Constraints(4, 5);
   private static TrapezoidProfile turningProfile = new TrapezoidProfile(turningConstraints);
 
   static {
@@ -89,14 +92,24 @@ public class DrivetrainCommands {
       new TunableDouble(TUNING_NT_KEY + "/AllowableError", .08, () -> true);
   private static final PIDController autoFacingPID =
       new PIDController(5, 0, 0, RobotConstants.CODE_PERIOD_s);
+
+  static {
+    LogUtil.createTunablePID(TUNING_NT_KEY + "/autoFacingPID", autoFacingPID, () -> true);
+  }
+
+  static {
+    autoFacingPID.enableContinuousInput(0, 2 * Math.PI);
+  }
+
   private static double autoFacingTarget_rad = 0;
-  private static TrapezoidProfile.State prevAutoFacingState;
+  private static TrapezoidProfile.State prevAutoFacingState = new TrapezoidProfile.State();
 
   public static Command stopAndFacePosition(
       DrivetrainSubsystem drivetrain, Supplier<Translation2d> targetSupplier) {
     return drivetrain.startRun(
         () -> {
-          prevAutoFacingState.position = drivetrain.getPose().getRotation().getRadians();
+          prevAutoFacingState.position =
+              drivetrain.getPose().getRotation().plus(Rotation2d.k180deg).getRadians();
           prevAutoFacingState.velocity = drivetrain.getChassisSpeeds().omegaRadiansPerSecond;
         },
         () -> {
@@ -112,11 +125,18 @@ public class DrivetrainCommands {
           drivetrain.setGoalVelocity(new ChassisSpeeds(
               0,
               0,
-              autoFacingPID.calculate(
-                  drivetrain.getPose().getRotation().getRadians(), prevAutoFacingState.position)));
+              prevAutoFacingState.velocity
+                  + autoFacingPID.calculate(
+                      drivetrain
+                          .getPose()
+                          .getRotation()
+                          .plus(Rotation2d.k180deg)
+                          .getRadians(),
+                      prevAutoFacingState.position)));
         });
   }
 
+  @AutoLogOutput(key = TUNING_NT_KEY + "/isAutoAimReady")
   public static boolean isAutoAimReady(DrivetrainSubsystem drivetrain) {
     // if (!stopAndFacePosition(drivetrain, null)
     //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
@@ -198,6 +218,7 @@ public class DrivetrainCommands {
    */
   public static Command joystickDrive(
       DrivetrainSubsystem drivetrain,
+      DoubleSupplier pivotFractionLoweredSupplier,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
@@ -275,6 +296,15 @@ public class DrivetrainCommands {
           && Math.abs(speeds.vyMetersPerSecond) < 0.01) {
         drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
       } else {
+        // 7 in extra from intake
+        // move center of rotation by 3.5 in in the x direction
+        // omega cross r = v
+        // r is (-3.5 in, 0.0 in) and omega is vertical, so positive omega results in negative y
+        // velocity at the old center of rotation
+        speeds.vyMetersPerSecond = speeds.vyMetersPerSecond
+            - speeds.omegaRadiansPerSecond
+                * UnitUtil.inTom(3.5)
+                * pivotFractionLoweredSupplier.getAsDouble();
         drivetrain.setGoalVelocity(speeds);
       }
       // AutoBuilder.followPath(new PathPlannerPath(

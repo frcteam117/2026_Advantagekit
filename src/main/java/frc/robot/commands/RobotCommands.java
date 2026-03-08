@@ -9,7 +9,6 @@ import frc.robot.RobotConstants;
 import frc.robot.RobotConstants.FieldType;
 import frc.robot.subsystems.drivetrain.DrivetrainCommands;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
-import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -34,11 +33,11 @@ public class RobotCommands {
     Logger.recordOutput("Commands/alliance", DriverStation.getAlliance().get().name());
     return Commands.parallel(
         ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> target),
-        DrivetrainCommands.stopAndFacePosition(drivetrain, () -> target),
-        IndexerCommands.conditionalRunForward(
-            indexer,
-            () -> shootWhenReady.getAsBoolean()
-                && ShooterCommands.isAutoAimReady(shooter)
-                && DrivetrainCommands.isAutoAimReady(drivetrain)));
+        DrivetrainCommands.stopAndFacePosition(drivetrain, () -> target));
+    // IndexerCommands.conditionalRunForward(
+    //     indexer,
+    //     () -> shootWhenReady.getAsBoolean()
+    //         && ShooterCommands.isAutoAimReady(shooter)
+    //         && DrivetrainCommands.isAutoAimReady(drivetrain)));
   }
 }

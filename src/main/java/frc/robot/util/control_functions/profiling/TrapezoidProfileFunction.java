@@ -24,6 +24,7 @@ public class TrapezoidProfileFunction extends ControlFunctionBase {
   private double max_Acc;
   private boolean isLoop;
   private boolean enableTuning = false;
+  private double prevStateVel = 0;
 
   public TrapezoidProfileFunction(MechanismConstants<?> config) {
     this(config, "TrapezoidProfile");
@@ -122,6 +123,7 @@ public class TrapezoidProfileFunction extends ControlFunctionBase {
   }
 
   public PosVel_State calculate(Pos_State goal_State, PosVel_State mechanism_State) {
+    prevState.velocity = prevStateVel;
     prevState = trapezoidProfile.calculate(
         period_s,
         prevState,
@@ -132,6 +134,7 @@ public class TrapezoidProfileFunction extends ControlFunctionBase {
                         goal_State.pos() - prevState.position, -maxError_Pos, maxError_Pos)
                 : goal_State.pos(),
             0));
+    prevStateVel = prevState.velocity;
     return PosVel_State.create(
         new StateValue(prevState.position, mechanism_State.posValue().getUnit()),
         new StateValue(prevState.velocity, mechanism_State.velValue().getUnit()));

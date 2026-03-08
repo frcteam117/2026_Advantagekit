@@ -52,9 +52,9 @@ public class VisionConstants {
   // public static final double linearStdDevBaseline = 0.02; // Meters
   // public static final double angularStdDevBaseline = 0.06; // Radians
   public static final DoubleSupplier linearStdDevBaseline =
-      new TunableDouble("Tuning/" + logName + "/linearStdDevBaseline", .6, () -> false); // Meters
+      new TunableDouble("Tuning/" + logName + "/linearStdDevBaseline", .6, () -> true); // Meters
   public static final DoubleSupplier angularStdDevBaseline =
-      new TunableDouble("Tuning/" + logName + "/angularStdDevBaseline", 1, () -> false); // Radians
+      new TunableDouble("Tuning/" + logName + "/angularStdDevBaseline", 3, () -> true); // Radians
 
   // Standard deviation multipliers for each camera
   // (Adjust to trust some cameras more than others)
