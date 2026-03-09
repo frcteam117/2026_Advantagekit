@@ -14,10 +14,10 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -173,14 +173,12 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
         drivetrain,
-        () -> 1
-            - MathUtil.inverseInterpolate(
-                IntakeConstants.PIVOT_CONSTANTS.min_Pos.pos(),
-                IntakeConstants.PIVOT_CONSTANTS.max_Pos.pos(),
-                intake.getPivotState().pos()),
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRightX()));
+        () -> -controller.getRightX(),
+        () ->
+            DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
+        () -> false));
 
     // controller
     //     .R2()
@@ -230,6 +228,41 @@ public class RobotContainer {
     // command?
     controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
 
+    // snake mode around middle
+    controller
+        .triangle()
+        .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+            drivetrain,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () ->
+                Rotation2d.fromRadians(Math.atan2(-controller.getLeftX(), -controller.getLeftY())),
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+                intake.getPivotState().pos()),
+            () -> false));
+
+    // snake mode around intake
+    // controller.triangle().whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+    //   drivetrain,
+    //     () -> -controller.getLeftY(),
+    //     () -> -controller.getLeftX(),
+    //     () -> Rotation2d.fromRadians(Math.atan2(-controller.getLeftX(), -controller.getLeftY())),
+    //     () ->
+    //         new Translation2d((DrivetrainConstants.Chassis.bumperLength_m / 2) +
+    // UnitUtil.inTom(2), 0),
+    //     () -> false));
+
+    // angle from right joystick mode
+    // controller.triangle().whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+    //   drivetrain,
+    //     () -> -controller.getLeftY(),
+    //     () -> -controller.getLeftX(),
+    //     () -> Rotation2d.fromRadians(Math.atan2(-controller.getRightX(),
+    // -controller.getRightY())),
+    //     () ->
+    //         DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
+    //     () -> false));
+
     // controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     // controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     // controller
@@ -247,7 +280,12 @@ public class RobotContainer {
                 .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
         // simulation
         : () -> drivetrain.resetNavX(); // zero gyro
-    controller.touchpad().onTrue(Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
+    controller
+        .touchpad()
+        .onTrue(
+            RobotBase.isReal()
+                ? DrivetrainCommands.replacePoseWithVision(drivetrain)
+                : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
     // controller
     //     .button(1)
     //     .onTrue(Commands.runOnce(() -> {})

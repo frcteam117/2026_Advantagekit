@@ -33,7 +33,7 @@ public class RobotCommands {
     Logger.recordOutput("Commands/alliance", DriverStation.getAlliance().get().name());
     return Commands.parallel(
         ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> target),
-        DrivetrainCommands.stopAndFacePosition(drivetrain, () -> target));
+        DrivetrainCommands.stopAndShootToward(drivetrain, () -> target));
     // IndexerCommands.conditionalRunForward(
     //     indexer,
     //     () -> shootWhenReady.getAsBoolean()

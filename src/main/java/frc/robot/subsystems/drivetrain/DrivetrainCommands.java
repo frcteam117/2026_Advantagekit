@@ -18,7 +18,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,6 +26,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -35,13 +35,17 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
+import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.UnitUtil;
 import frc.robot.util.logging.LogUtil;
-import frc.robot.util.logging.TunableDouble;
+import frc.robot.util.logging.TunableBoolean;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -49,13 +53,18 @@ import org.littletonrobotics.junction.Logger;
 
 public class DrivetrainCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + DrivetrainConstants.NAME + "/Commands";
+  private static final BooleanSupplier TUNABLE =
+      new TunableBoolean(TUNING_NT_KEY + "/.Tunable", false, () -> true);
   private static final double JOYSTICK_DEADBAND = 0.04;
-  private static final double ANGLE_KP = 0.5;
-  private static final double ANGLE_KD = 0;
-  private static final double ANGLE_MAX_VELOCITY = 4.0;
-  private static final double ANGLE_MAX_ACCELERATION = 12.0;
+  private static final ProfiledPIDController ANGLE_CONTROLLER = new ProfiledPIDController(
+      0.5, 0.0, 0.0, new Constraints(6.0, 10.0), RobotConstants.CODE_PERIOD_s);
+  // private static final double ANGLE_KP = 0.5;
+  // private static final double ANGLE_KD = 0;
+  // private static final double ANGLE_MAX_VELOCITY = 4.0;
+  // private static final double ANGLE_MAX_ACCELERATION = 12.0;
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+  private static final double DRIVE_MAX_ACCELERATION = 6;
   private static final double DRIVE_MAX_VELOCITY = 3;
   private static final double DRIVE_MAX_ANGULAR_VELOCITY = 4;
   private static final Rotation2d[] X_MODULE_HEADINGS = new Rotation2d[] {
@@ -67,72 +76,32 @@ public class DrivetrainCommands {
   public static Rotation2d targetTagRotation2d;
   public static Rotation2d robotRotation2d[];
 
-  private static TrapezoidProfile.Constraints turningConstraints =
-      new TrapezoidProfile.Constraints(4, 5);
-  private static TrapezoidProfile turningProfile = new TrapezoidProfile(turningConstraints);
-
   static {
-    new TunableDouble(
-        TUNING_NT_KEY + "/Max_Vel", turningConstraints.maxVelocity, () -> true, value -> {
-          turningConstraints =
-              new TrapezoidProfile.Constraints(value, turningConstraints.maxAcceleration);
-          turningProfile = new TrapezoidProfile(turningConstraints);
-        });
-    new TunableDouble(
-        TUNING_NT_KEY + "/Max_Acc", turningConstraints.maxAcceleration, () -> true, value -> {
-          turningConstraints =
-              new TrapezoidProfile.Constraints(turningConstraints.maxVelocity, value);
-          turningProfile = new TrapezoidProfile(turningConstraints);
-        });
+    ANGLE_CONTROLLER.enableContinuousInput(-Math.PI, Math.PI);
+    LogUtil.createTunableProfiledPID(TUNING_NT_KEY + "/AnglePID", ANGLE_CONTROLLER, TUNABLE);
   }
 
   private DrivetrainCommands() {} // Stops DrivetrainCommands from being instantiated
 
-  private static final DoubleSupplier maxAllowableErrorRad =
-      new TunableDouble(TUNING_NT_KEY + "/AllowableError", .08, () -> true);
-  private static final PIDController autoFacingPID =
-      new PIDController(5, 0, 0, RobotConstants.CODE_PERIOD_s);
-
-  static {
-    LogUtil.createTunablePID(TUNING_NT_KEY + "/autoFacingPID", autoFacingPID, () -> true);
-  }
-
-  static {
-    autoFacingPID.enableContinuousInput(0, 2 * Math.PI);
-  }
-
-  private static double autoFacingTarget_rad = 0;
-  private static TrapezoidProfile.State prevAutoFacingState = new TrapezoidProfile.State();
-
-  public static Command stopAndFacePosition(
+  public static Command stopAndShootToward(
       DrivetrainSubsystem drivetrain, Supplier<Translation2d> targetSupplier) {
     return drivetrain.startRun(
         () -> {
-          prevAutoFacingState.position =
-              drivetrain.getPose().getRotation().plus(Rotation2d.k180deg).getRadians();
-          prevAutoFacingState.velocity = drivetrain.getChassisSpeeds().omegaRadiansPerSecond;
+          resetAngleController(drivetrain);
         },
         () -> {
-          autoFacingTarget_rad = targetSupplier
-              .get()
-              .minus(drivetrain.getPose().getTranslation())
-              .getAngle()
-              .getRadians();
-          prevAutoFacingState = turningProfile.calculate(
-              RobotConstants.CODE_PERIOD_s,
-              prevAutoFacingState,
-              new TrapezoidProfile.State(autoFacingTarget_rad, 0));
-          drivetrain.setGoalVelocity(new ChassisSpeeds(
-              0,
-              0,
-              prevAutoFacingState.velocity
-                  + autoFacingPID.calculate(
-                      drivetrain
-                          .getPose()
-                          .getRotation()
-                          .plus(Rotation2d.k180deg)
-                          .getRadians(),
-                      prevAutoFacingState.position)));
+          double feedback = ANGLE_CONTROLLER.calculate(
+              drivetrain.getPose().getRotation().getRadians(),
+              new TrapezoidProfile.State(
+                  targetSupplier
+                      .get()
+                      .minus(drivetrain.getPose().getTranslation())
+                      .getAngle()
+                      .plus(Rotation2d.k180deg)
+                      .getRadians(),
+                  0));
+          drivetrain.setGoalVelocity(
+              new ChassisSpeeds(0, 0, ANGLE_CONTROLLER.getSetpoint().velocity + feedback));
         });
   }
 
@@ -142,8 +111,7 @@ public class DrivetrainCommands {
     //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
     //   return false;
     // }
-    return Math.abs(drivetrain.getPose().getRotation().getRadians() - autoFacingTarget_rad)
-        < maxAllowableErrorRad.getAsDouble();
+    return ANGLE_CONTROLLER.atGoal();
   }
 
   private static final double[] linearDriveModuleHeadings_rad = new double[] {0.0, 0.0, 0.0, 0.0};
@@ -210,111 +178,109 @@ public class DrivetrainCommands {
     return SysIdUtil.getSysIdCommand(routine, type);
   }
 
-  private static final double approximateZero = 1e-6;
-  private static Double radTarget = null;
+  private static final double joystickDrive_velTolerance = .03;
+  private static double joystickDrive_target_rad;
 
   /**
    * Field relative drive command using two joysticks (controlling linear and angular velocities).
    */
   public static Command joystickDrive(
       DrivetrainSubsystem drivetrain,
-      DoubleSupplier pivotFractionLoweredSupplier,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      DoubleSupplier omegaSupplier) {
-    // return drivetrain
-    //     .run(() -> {
-    //       // Get linear velocity
-    //       Translation2d linearVelocity =
-    //           getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+      DoubleSupplier omegaSupplier,
+      Supplier<Translation2d> centerOfRotationSupplier,
+      BooleanSupplier driveAssistSupplier) {
+    return drivetrain
+        .run(() -> {
+          // Get linear velocity
+          Translation2d linearVelocity =
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-    //       // Apply rotation deadband
-    //       double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), JOYSTICK_DEADBAND);
+          // Apply rotation deadband
+          double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), JOYSTICK_DEADBAND);
 
-    //       // Square rotation value for more precise control
-    //       omega = MathUtil.copyDirectionPow(omega, 2);
+          // Square rotation value for more precise control
+          omega = MathUtil.copyDirectionPow(omega, 2);
 
-    //       // Convert to field relative speeds & send command
-    //       ChassisSpeeds speeds = new ChassisSpeeds(
-    //           linearVelocity.getX() * DRIVE_MAX_VELOCITY,
-    //           linearVelocity.getY() * DRIVE_MAX_VELOCITY,
-    //           omega * DRIVE_MAX_ANGULAR_VELOCITY);
-    //       boolean isFlipped = DriverStation.getAlliance().isPresent()
-    //           && DriverStation.getAlliance().get() == Alliance.Red;
-    //       speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-    //           speeds,
-    //           isFlipped
-    //               ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
-    //               : drivetrain.getPose().getRotation());
-    //       if (Math.abs(speeds.omegaRadiansPerSecond) > approximateZero) {
-    //         radTarget = null;
-    //         drivetrain.setGoalVelocity(speeds);
-    //       } else if (Math.abs(speeds.vxMetersPerSecond) < approximateZero
-    //           && Math.abs(speeds.vyMetersPerSecond) < approximateZero) {
-    //         radTarget = null;
-    //         drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
-    //       } else {
-    //         if (radTarget == null) {
-    //           radTarget = drivetrain.getPose().getRotation().getRadians();
-    //         }
-    //         speeds.omegaRadiansPerSecond = turningProfile.calculate(
-    //                 RobotConstants.CODE_PERIOD_s,
-    //                 new TrapezoidProfile.State(
-    //                     drivetrain.getPose().getRotation().getRadians(),
-    //                     drivetrain.getChassisSpeeds().omegaRadiansPerSecond),
-    //                 new TrapezoidProfile.State(radTarget, 0))
-    //             .velocity;
-    //         drivetrain.setGoalVelocity(speeds);
-    //       }
-    //     })
-    //     .withName("JoystickDrive");
-    return drivetrain.run(() -> {
-      // Get linear velocity
-      Translation2d linearVelocity =
-          getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+          // Convert to field relative speeds & send command
+          ChassisSpeeds speeds = new ChassisSpeeds(
+              linearVelocity.getX() * DRIVE_MAX_VELOCITY,
+              linearVelocity.getY() * DRIVE_MAX_VELOCITY,
+              omega * DRIVE_MAX_ANGULAR_VELOCITY);
+          boolean isFlipped = DriverStation.getAlliance().isPresent()
+              && DriverStation.getAlliance().get() == Alliance.Red;
+          speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+              speeds,
+              isFlipped
+                  ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+                  : drivetrain.getPose().getRotation());
 
-      // Apply rotation deadband
-      double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), JOYSTICK_DEADBAND);
+          if (Math.abs(speeds.omegaRadiansPerSecond) > joystickDrive_velTolerance) {
+            resetAngleController(drivetrain);
+            joystickDrive_target_rad = drivetrain.getPose().getRotation().getRadians();
+            setGoalVelocity(
+                drivetrain,
+                speeds,
+                centerOfRotationSupplier.get(),
+                driveAssistSupplier.getAsBoolean());
+          } else {
+            double feedback = ANGLE_CONTROLLER.calculate(
+                drivetrain.getPose().getRotation().getRadians(),
+                new TrapezoidProfile.State(joystickDrive_target_rad, 0));
+            speeds.omegaRadiansPerSecond = ANGLE_CONTROLLER.getSetpoint().velocity + feedback;
+            setGoalVelocity(
+                drivetrain,
+                speeds,
+                centerOfRotationSupplier.get(),
+                driveAssistSupplier.getAsBoolean());
+          }
+        })
+        .beforeStarting(() -> {
+          resetAngleController(drivetrain);
+          joystickDrive_target_rad = drivetrain.getPose().getRotation().getRadians();
+        })
+        .withName("JoystickDrive");
+    // return drivetrain.run(() -> {
+    //   // Get linear velocity
+    //   Translation2d linearVelocity =
+    //       getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-      // Square rotation value for more precise control
-      omega = MathUtil.copyDirectionPow(omega, 2);
+    //   // Apply rotation deadband
+    //   double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), JOYSTICK_DEADBAND);
 
-      // Convert to field relative speeds & send command
-      ChassisSpeeds speeds = new ChassisSpeeds(
-          linearVelocity.getX() * DRIVE_MAX_VELOCITY,
-          linearVelocity.getY() * DRIVE_MAX_VELOCITY,
-          omega * DRIVE_MAX_ANGULAR_VELOCITY);
-      boolean isFlipped = DriverStation.getAlliance().isPresent()
-          && DriverStation.getAlliance().get() == Alliance.Red;
-      speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-          speeds,
-          isFlipped
-              ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
-              : drivetrain.getPose().getRotation());
-      if (Math.abs(speeds.omegaRadiansPerSecond) < 0.01
-          && Math.abs(speeds.vxMetersPerSecond) < 0.01
-          && Math.abs(speeds.vyMetersPerSecond) < 0.01) {
-        drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
-      } else {
-        // 7 in extra from intake
-        // move center of rotation by 3.5 in in the x direction
-        // omega cross r = v
-        // r is (-3.5 in, 0.0 in) and omega is vertical, so positive omega results in negative y
-        // velocity at the old center of rotation
-        speeds.vyMetersPerSecond = speeds.vyMetersPerSecond
-            - speeds.omegaRadiansPerSecond
-                * UnitUtil.inTom(3.5)
-                * pivotFractionLoweredSupplier.getAsDouble();
-        drivetrain.setGoalVelocity(speeds);
-      }
-      // AutoBuilder.followPath(new PathPlannerPath(
-      //     PathPlannerPath.waypointsFromPoses(),
-      //     new PathConstraints(1, 0, 0, 0, RobotConstants.NOMINAL_V, false),
-      //     new IdealStartingState(
-      //         drivetrain.getChassisSpeeds().vxMetersPerSecond,
-      //         drivetrain.getPose().getRotation()),
-      //     new GoalEndState(0, drivetrain.getPose().getRotation())));
-    });
+    //   // Square rotation value for more precise control
+    //   omega = MathUtil.copyDirectionPow(omega, 2);
+
+    //   // Convert to field relative speeds & send command
+    //   ChassisSpeeds speeds = new ChassisSpeeds(
+    //       linearVelocity.getX() * DRIVE_MAX_VELOCITY,
+    //       linearVelocity.getY() * DRIVE_MAX_VELOCITY,
+    //       omega * DRIVE_MAX_ANGULAR_VELOCITY);
+    //   boolean isFlipped = DriverStation.getAlliance().isPresent()
+    //       && DriverStation.getAlliance().get() == Alliance.Red;
+    //   speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+    //       speeds,
+    //       isFlipped
+    //           ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+    //           : drivetrain.getPose().getRotation());
+    //   if (Math.abs(speeds.omegaRadiansPerSecond) < 0.01
+    //       && Math.abs(speeds.vxMetersPerSecond) < 0.01
+    //       && Math.abs(speeds.vyMetersPerSecond) < 0.01) {
+    //     drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
+    //   } else {
+    //     // 7 in extra from intake
+    //     // move center of rotation by 3.5 in in the x direction
+    //     // omega cross r = v
+    //     // r is (-3.5 in, 0.0 in) and omega is vertical, so positive omega results in negative y
+    //     // velocity at the old center of rotation
+    //     speeds.vyMetersPerSecond = speeds.vyMetersPerSecond
+    //         - speeds.omegaRadiansPerSecond
+    //             * UnitUtil.inTom(3.5)
+    //             * pivotFractionLoweredSupplier.getAsDouble();
+    //     drivetrain.setGoalVelocity(speeds);
+    //   }
+    // });
   }
 
   /**
@@ -326,15 +292,9 @@ public class DrivetrainCommands {
       DrivetrainSubsystem drivetrain,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      Supplier<Rotation2d> rotationSupplier) {
-
-    // Create PID controller
-    ProfiledPIDController angleController = new ProfiledPIDController(
-        ANGLE_KP,
-        0.0,
-        ANGLE_KD,
-        new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
+      Supplier<Rotation2d> rotationSupplier,
+      Supplier<Translation2d> centerOfRotationSupplier,
+      BooleanSupplier driveAssistSupplier) {
 
     // Construct command
     return drivetrain
@@ -343,45 +303,37 @@ public class DrivetrainCommands {
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
+          boolean isFlipped = DriverStation.getAlliance().isPresent()
+              && DriverStation.getAlliance().get() == Alliance.Red;
+
           // Calculate angular speed
-          double omega = angleController.calculate(
+          double omega = ANGLE_CONTROLLER.calculate(
               drivetrain.getPose().getRotation().getRadians(),
-              rotationSupplier.get().getRadians());
+              isFlipped
+                  ? rotationSupplier.get().plus(Rotation2d.k180deg).getRadians()
+                  : rotationSupplier.get().getRadians());
+          omega += ANGLE_CONTROLLER.getSetpoint().velocity;
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
               linearVelocity.getX() * DRIVE_MAX_VELOCITY,
               linearVelocity.getY() * DRIVE_MAX_VELOCITY,
               omega);
-          boolean isFlipped = DriverStation.getAlliance().isPresent()
-              && DriverStation.getAlliance().get() == Alliance.Red;
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
               speeds,
               isFlipped
-                  ? drivetrain.getPose().getRotation().plus(new Rotation2d(Math.PI))
+                  ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
                   : drivetrain.getPose().getRotation());
-          drivetrain.setGoalVelocity(speeds);
+          setGoalVelocity(
+              drivetrain,
+              speeds,
+              centerOfRotationSupplier.get(),
+              driveAssistSupplier.getAsBoolean());
         })
-
         // Reset PID controller when command starts
-        .beforeStarting(
-            () -> angleController.reset(drivetrain.getPose().getRotation().getRadians()));
+        .beforeStarting(() -> resetAngleController(drivetrain));
   }
 
-  // public void StoreVisionValues(Rotation2d targetTagRotation2d, Rotation2d robotRotation2d[]) {
-  //   this.targetTagRotation2d = targetTagRotation2d;
-  //   this.robotRotation2d = robotRotation2d;
-  //   // TODO: figure out how wrong i did this
-  // }
-
-  // public static Command AimAtHubFromTag(DrivetrainSubsystem drivetrain) {
-  //   return drivetrain.run(() -> {
-  //     // run align code!!!
-
-  //   });
-  // }
-
-  //
   /** Measures the robot's wheel radius by spinning in a circle. */
   public static Command wheelRadiusCharacterization(DrivetrainSubsystem drive) {
     SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
@@ -458,163 +410,117 @@ public class DrivetrainCommands {
         .getTranslation();
   }
 
+  private static void resetAngleController(DrivetrainSubsystem drivetrain) {
+    ANGLE_CONTROLLER.reset(
+        drivetrain.getPose().getRotation().getRadians(),
+        drivetrain.getChassisSpeeds().omegaRadiansPerSecond);
+  }
+
+  private static final Translation2d[] driveAssistRobotCorners = new Translation2d[] {
+    new Translation2d(
+        (DrivetrainConstants.Chassis.bumperLength_m / 2) + UnitUtil.inTom(4),
+        DrivetrainConstants.Chassis.bumperWidth_m / 2),
+    new Translation2d(
+        (DrivetrainConstants.Chassis.bumperLength_m / 2) + UnitUtil.inTom(4),
+        -DrivetrainConstants.Chassis.bumperWidth_m / 2),
+    new Translation2d(
+        -(DrivetrainConstants.Chassis.bumperLength_m / 2),
+        DrivetrainConstants.Chassis.bumperWidth_m / 2),
+    new Translation2d(
+        -(DrivetrainConstants.Chassis.bumperLength_m / 2),
+        -DrivetrainConstants.Chassis.bumperWidth_m / 2),
+  };
+  private static final DriveAssistWall[] DRIVE_ASSIST_MAP = new DriveAssistWall[] {
+    new DriveAssistWall(
+        new Translation2d(0, 0),
+        new Translation2d(8, 0),
+        new Translation2d(1, Rotation2d.kCCW_90deg),
+        false),
+    new DriveAssistWall(
+        new Translation2d(0, 0),
+        new Translation2d(0, 5),
+        new Translation2d(1, Rotation2d.kZero),
+        false),
+    new DriveAssistWall(
+        new Translation2d(8, 0),
+        new Translation2d(8, 5),
+        new Translation2d(1, Rotation2d.k180deg),
+        false),
+    new DriveAssistWall(
+        new Translation2d(0, 5),
+        new Translation2d(8, 5),
+        new Translation2d(1, Rotation2d.kCW_90deg),
+        false)
+  };
+
+  private static void setGoalVelocity(
+      DrivetrainSubsystem drivetrain,
+      ChassisSpeeds speeds,
+      Translation2d centerOfRotation,
+      boolean driveAssist) {
+    if (Math.abs(speeds.omegaRadiansPerSecond) < joystickDrive_velTolerance
+        && Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond)
+            < joystickDrive_velTolerance) {
+      drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
+    } else {
+      Translation2d linearVelFromRotation = centerOfRotation
+          .unaryMinus()
+          .rotateBy(Rotation2d.kCCW_90deg)
+          .times(speeds.omegaRadiansPerSecond);
+      speeds.vxMetersPerSecond += linearVelFromRotation.getX();
+      speeds.vyMetersPerSecond += linearVelFromRotation.getY();
+      if (driveAssist) {
+        final Translation2d robotVelocity =
+            new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        Translation2d[] cornerSpeeds = new Translation2d[4];
+        Translation2d[] fieldCenteredRobotCorners = new Translation2d[4];
+        Translation2d robotSpeedsDelta = new Translation2d();
+        List<DriveAssistWall> relavantMap = new ArrayList<>();
+
+        for (int i = 0; i < 4; i++) {
+          fieldCenteredRobotCorners[i] = driveAssistRobotCorners[i]
+              .rotateBy(drivetrain.getPose().getRotation())
+              .plus(drivetrain.getPose().getTranslation());
+          cornerSpeeds[i] = robotVelocity
+              .plus(driveAssistRobotCorners[i]
+                  .minus(centerOfRotation)
+                  .rotateBy(Rotation2d.kCCW_90deg)
+                  .times(speeds.omegaRadiansPerSecond))
+              .rotateBy(drivetrain.getPose().getRotation());
+        }
+
+        for (DriveAssistWall wall : DRIVE_ASSIST_MAP) {}
+      }
+      // double scaleFactor = Math.max(
+      //     1.0,
+      //     Math.max(
+      //         speeds.omegaRadiansPerSecond / DRIVE_MAX_ANGULAR_VELOCITY,
+      //         Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) /
+      // DRIVE_MAX_VELOCITY));
+      // speeds.times(1 / scaleFactor);
+      drivetrain.setGoalVelocity(speeds);
+    }
+  }
+
+  public static record DriveAssistWall(
+      Translation2d p1, Translation2d p2, Translation2d unitNormalVector, boolean checkCorners) {}
+
+  public static Command replacePoseWithVision(DrivetrainSubsystem drivetrain) {
+    return Commands.runOnce(() -> drivetrain.replacePoseWithVision());
+  }
+
+  public static Translation2d pivotBasedCenterOfRotation(double pivot_rad) {
+    return new Translation2d(UnitUtil.inTom(-3.5), 0.0)
+        .times(1
+            - MathUtil.inverseInterpolate(
+                IntakeConstants.PIVOT_CONSTANTS.min_Pos.pos(),
+                IntakeConstants.PIVOT_CONSTANTS.max_Pos.pos(),
+                pivot_rad));
+  }
+
   private static class WheelRadiusCharacterizationState {
     double[] positions = new double[4];
     Rotation2d lastAngle = new Rotation2d();
     double gyroDelta = 0.0;
   }
-  // get directly from drive consumer?
-
-  // public static Command pathToReef(Supplier<Pose2d> poseSupplier, BooleanSupplier getButton) {
-  //   Pose2d waypoint;
-  //   Pose2d waypoint1;
-  //   Pose2d waypoint2;
-  //   double x = poseSupplier.get().getX();
-  //   double y = poseSupplier.get().getY();
-
-  //   if (x < 4.489) {
-  //     if (y < (0.5774 * x) + 1.4343) {
-  //       waypoint = new Pose2d(3.389, 2.1207, Rotation2d.fromDegrees(60));
-  //       waypoint1 = new Pose2d(3.534, 2.373, Rotation2d.fromDegrees(60));
-  //       waypoint2 = new Pose2d(3.809, 2.849, Rotation2d.fromDegrees(60));
-  //     } else if (y < (-0.5774 * x) + 6.6177) {
-  //       waypoint = new Pose2d(2.289, 4.026, Rotation2d.fromDegrees(0));
-  //       waypoint1 = new Pose2d(2.58, 4.026, Rotation2d.fromDegrees(0));
-  //       waypoint2 = new Pose2d(3.13, 4.026, Rotation2d.fromDegrees(0));
-  //     } else {
-  //       waypoint = new Pose2d(3.389, 5.93126, Rotation2d.fromDegrees(300));
-  //       waypoint1 = new Pose2d(3.534, 5.679, Rotation2d.fromDegrees(300));
-  //       waypoint2 = new Pose2d(3.809, 5.203, Rotation2d.fromDegrees(300));
-  //     }
-  //   } else if (x < 8.775) {
-  //     if (y < (-0.5774 * x) + 6.6177) {
-  //       waypoint = new Pose2d(5.589, 2.12074, Rotation2d.fromDegrees(120));
-  //       waypoint1 = new Pose2d(5.444, 2.373, Rotation2d.fromDegrees(120));
-  //       waypoint2 = new Pose2d(5.169, 2.849, Rotation2d.fromDegrees(120));
-  //     } else if (y < (0.5774 * x) + 1.4343) {
-  //       waypoint = new Pose2d(6.689, 4.026, Rotation2d.fromDegrees(180));
-  //       waypoint1 = new Pose2d(6.398, 4.026, Rotation2d.fromDegrees(180));
-  //       waypoint2 = new Pose2d(5.848, 4.026, Rotation2d.fromDegrees(180));
-  //     } else {
-  //       waypoint = new Pose2d(5.589, 5.93126, Rotation2d.fromDegrees(240));
-  //       waypoint1 = new Pose2d(5.444, 5.679, Rotation2d.fromDegrees(240));
-  //       waypoint2 = new Pose2d(5.169, 5.203, Rotation2d.fromDegrees(240));
-  //     }
-  //   } else if (x > 13.061) {
-  //     if (y < (-0.5774 * x) + 11.56677) {
-  //       waypoint = new Pose2d(14.161, 2.12074, Rotation2d.fromDegrees(120));
-  //       waypoint1 = new Pose2d(14.016, 2.373, Rotation2d.fromDegrees(120));
-  //       waypoint2 = new Pose2d(13.741, 2.849, Rotation2d.fromDegrees(120));
-  //     } else if (y < (0.5774 * x) - 3.51477) {
-  //       waypoint = new Pose2d(15.261, 4.026, Rotation2d.fromDegrees(180));
-  //       waypoint1 = new Pose2d(14.97, 4.026, Rotation2d.fromDegrees(180));
-  //       waypoint2 = new Pose2d(14.42, 4.026, Rotation2d.fromDegrees(180));
-  //     } else {
-  //       waypoint = new Pose2d(14.161, 5.93126, Rotation2d.fromDegrees(240));
-  //       waypoint1 = new Pose2d(14.016, 5.679, Rotation2d.fromDegrees(240));
-  //       waypoint2 = new Pose2d(13.741, 5.203, Rotation2d.fromDegrees(240));
-  //     }
-  //   } else if (x > 8.775) {
-  //     if (y < (0.5774 * x) - 3.51477) {
-  //       waypoint = new Pose2d(11.961, 2.12074, Rotation2d.fromDegrees(60));
-  //       waypoint1 = new Pose2d(12.106, 2.373, Rotation2d.fromDegrees(60));
-  //       waypoint2 = new Pose2d(12.381, 2.849, Rotation2d.fromDegrees(60));
-  //     } else if (y < (-0.5774 * x) + 11.56677) {
-  //       waypoint = new Pose2d(10.861, 4.026, Rotation2d.fromDegrees(0));
-  //       waypoint1 = new Pose2d(11.152, 4.026, Rotation2d.fromDegrees(0));
-  //       waypoint2 = new Pose2d(11.702, 4.026, Rotation2d.fromDegrees(0));
-  //     } else {
-  //       waypoint = new Pose2d(11.961, 5.93126, Rotation2d.fromDegrees(300));
-  //       waypoint1 = new Pose2d(12.106, 5.679, Rotation2d.fromDegrees(300));
-  //       waypoint2 = new Pose2d(12.381, 5.203, Rotation2d.fromDegrees(300));
-  //     }
-  //   } else {
-  //     return Commands.none();
-  //   }
-
-  //   PathConstraints constraints = new PathConstraints(5, 8, 12, 15, 12);
-  //   PathConstraints constraintsSlow = new PathConstraints(1.8, 1.2, 3, 2, 12);
-  //   PathPlannerPath path = new PathPlannerPath(
-  //       PathPlannerPath.waypointsFromPoses(waypoint1, waypoint2),
-  //       constraints,
-  //       null,
-  //       new GoalEndState(0.0, waypoint2.getRotation()),
-  //       false);
-  //   path.preventFlipping = true;
-  //   // PathPlannerPath path =
-  //   //     new PathPlannerPath(
-  //   //         waypoints,
-  //   //         constraints,
-  //   //         null, // The ideal starting state, this is only relevant for pre-planned paths, so
-  //   // can
-  //   //         // be null for on-the-fly paths.
-  //   //         new GoalEndState(
-  //   //             0.0,
-  //   //             Rotation2d.fromDegrees(
-  //   //                 0)) // Goal end state. You can set a holonomic rotation here. If using a
-  //   //         // differential drivetrain, the rotation will have no effect.
-  //   //         );
-  //   // path.preventFlipping = true;
-  //   // Command pathCommand = AutoBuilder.pathfindToPose(waypoint, constraints,
-  //   // constraintsSlow.maxVelocity());
-  //   // PathPlannerAuto pathAuto = new PathPlannerAuto(pathCommand);
-  //   // if (algaePosition == 2) {
-  //   // pathAuto
-  //   //     .nearFieldPosition(waypoint1.getTranslation(), 0.2)
-  //   //     .onTrue(
-  //   //         AutoBuilder.pathfindThenFollowPath(path, constraintsSlow));
-  //   // .alongWith(elevator.commandElevatorTo(ElevatorConstants.posAlgaeOnReef2))
-  //   // .alongWith(arm.commandArmTo(ArmConstants.posDown))
-  //   // .alongWith(intake.intakeAlgae())
-  //   // .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-  //   // .until(
-  //   //     () -> {
-  //   //       return !getButton.getAsBoolean();
-  //   //     }));
-  //   // } else {
-  //   // .until(() -> {return !getButton.getAsBoolean();})
-  //   //     );
-  //   // }
-  //   // pathAuto
-  //   // pathAuto.until(
-  //   //     () -> {
-  //   //       return !getButton.getAsBoolean();
-  //   //     });
-
-  //   // WrapperCommand wrapperAuto = pathAuto.finallyDo(() -> {
-  //   //     List<Waypoint> waypointsSlow = PathPlannerPath.waypointsFromPoses(poseSupplier.get(),
-  //   // waypoint1,
-  //   // waypoint2);
-  //   //     PathPlannerPath pathSlow = new PathPlannerPath(
-  //   //             waypointsSlow,
-  //   //             constraintsSlow,
-  //   //             null, // The ideal starting state, this is only relevant for pre-planned
-  //   //             // paths, so
-  //   //             // can
-  //   //             // be null for on-the-fly paths.
-  //   //             new GoalEndState(
-  //   //                     0.0,
-  //   //                     waypoint2.getRotation()) // Goal end state. You can set a holonomic
-  //   // rotation here. If
-  //   // using
-  //   //             // a
-  //   //             // differential drivetrain, the rotation will have no effect.
-  //   //             );
-  //   //     pathSlow.preventFlipping = true;
-  //   //     Command pathSlowCommand = AutoBuilder.followPath(pathSlow);
-  //   //     // .alongWith(elevator.commandElevatorTo(ElevatorConstants.posAlgaeOnReef1))
-  //   //     // .alongWith(arm.commandArmTo(ArmConstants.posDown))
-  //   //     // .alongWith(intake.intakeAlgae())
-  //   //     ParallelRaceGroup pathSlowCommandGroup = pathSlowCommand
-  //   //             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-  //   //             .onlyWhile(getButton);
-
-  //   //     pathSlowCommandGroup.schedule();
-  //   // });
-  //   // ParallelRaceGroup finalPath = wrapperAuto
-  //   //         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-  //   //         .until(pathAuto.nearFieldPosition(waypoint1.getTranslation(), 0.65))
-  //   //         .onlyWhile(getButton);
-  //   return AutoBuilder.pathfindThenFollowPath(path, constraints).onlyWhile(getButton);
-  // }
 }

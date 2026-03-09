@@ -3,7 +3,9 @@ package frc.robot.util.logging;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -56,7 +58,41 @@ public class LogUtil {
         min -> pidController.setIntegratorRange(min, maxIntegral.getAsDouble()));
   }
 
-  public static void createTunableProfiledPID() {}
+  public static void createTunableProfiledPID(
+      String key, ProfiledPIDController profiledPID, BooleanSupplier shouldPublish) {
+    new TunableDouble(key + "/0 P", profiledPID.getP(), shouldPublish, profiledPID::setP); // 0 P
+    new TunableDouble(key + "/1 I", profiledPID.getI(), shouldPublish, profiledPID::setI); // 1 I
+    new TunableDouble(key + "/2 D", profiledPID.getD(), shouldPublish, profiledPID::setD); // 2 D
+    new TunableDouble(
+        key + "/3 IZone", profiledPID.getIZone(), shouldPublish, profiledPID::setIZone); // 3 IZone
+    TunableDouble minIntegral =
+        new TunableDouble(key + "/4 MinIntegral", -1, shouldPublish); // 4 min integral
+    TunableDouble maxIntegral = new TunableDouble(
+        key + "/5 MaxIntegral",
+        1,
+        shouldPublish,
+        max -> profiledPID.setIntegratorRange(minIntegral.getAsDouble(), max)); // 5 max integral
+    minIntegral.runOnChange(min -> profiledPID.setIntegratorRange(min, maxIntegral.getAsDouble()));
+    TunableDouble maxV = new TunableDouble(
+        key + "/6 MaxVelocity", profiledPID.getConstraints().maxVelocity, shouldPublish); // 6 max V
+    TunableDouble maxA = new TunableDouble(
+        key + "/7 MaxAcceleration",
+        profiledPID.getConstraints().maxAcceleration,
+        shouldPublish,
+        value -> profiledPID.setConstraints(new Constraints(maxV.getAsDouble(), value))); // 7 max A
+    minIntegral.runOnChange(
+        value -> profiledPID.setConstraints(new Constraints(value, maxA.getAsDouble())));
+    TunableDouble posTolerance = new TunableDouble(
+        key + "/8 PosTolerance",
+        profiledPID.getPositionTolerance(),
+        shouldPublish); // 8 pos tolerance
+    TunableDouble velTolerance = new TunableDouble(
+        key + "/9 VelTolerance",
+        profiledPID.getVelocityTolerance(),
+        shouldPublish,
+        value -> profiledPID.setTolerance(posTolerance.getAsDouble(), value)); // 9 vel tolerance
+    posTolerance.runOnChange(value -> profiledPID.setTolerance(value, velTolerance.getAsDouble()));
+  }
 
   // public static void createTunablePID(
   //     String key, SparkBase spark, BooleanSupplier shouldPublish) {

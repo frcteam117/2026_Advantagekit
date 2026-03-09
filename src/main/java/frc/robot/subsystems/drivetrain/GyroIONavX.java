@@ -14,10 +14,11 @@
 package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.studica.frc.Navx;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import java.util.Queue;
 
 /** IO implementation for NavX. */
@@ -25,6 +26,7 @@ public class GyroIONavX implements GyroIO {
   private final Navx navX = new Navx(0, 100); // rate in Hz
   private final Queue<Double> yawPositionQueue;
   private final Queue<Double> yawTimestampQueue;
+  private final Translation3d zHat = new Translation3d(0, 0, 1);
 
   public GyroIONavX() {
     navX.enableOptionalMessages(
@@ -45,9 +47,11 @@ public class GyroIONavX implements GyroIO {
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
-    inputs.connected = true;
+    // inputs.connected = true;
     inputs.yawPosition = Rotation2d.fromDegrees(navX.getYaw().in(Degrees));
-    inputs.yawVelocityRadPerSec = navX.getAngularVel()[2].in(RadiansPerSecond);
+    // inputs.yawVelocityRadPerSec = navX.getAngularVel()[2].in(RadiansPerSecond);
+    inputs.angleFromHorizontal = Rotation2d.fromRadians(
+        Math.acos(zHat.rotateBy(new Rotation3d(navX.getQuat6D())).dot(zHat)));
 
     inputs.odometryYawTimestamps =
         yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();

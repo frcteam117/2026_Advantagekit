@@ -26,7 +26,6 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -40,7 +39,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConstants;
-import frc.robot.RobotConstants.Mode;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.util.LocalADStarAK;
@@ -81,6 +79,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
       new TrapezoidProfile(new TrapezoidProfile.Constraints(20, 50));
   private boolean controllingHeadings = false;
   private Rotation2d gyroOffset = Rotation2d.kZero;
+  private boolean replacePoseWithVision = true;
 
   public DrivetrainSubsystem(
       GyroIO gyroIO,
@@ -152,11 +151,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
     // Update odometry
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
+    SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
+    SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       // Read wheel positions and deltas from each module
-      SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-      SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
       for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
         modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
         moduleDeltas[moduleIndex] = new SwerveModulePosition(
@@ -167,22 +166,19 @@ public class DrivetrainSubsystem extends SubsystemBase {
       }
 
       // Update gyro angle
-      if (gyroInputs.connected) {
-        // Use the real gyro angle
-        rawGyroRotation = gyroInputs.odometryYawPositions[i];
-      } else {
-        // Use the angle delta from the kinematics and module deltas
-        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-        rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(twist.dtheta));
-      }
+      // if (gyroInputs.connected) {
+      //   // Use the real gyro angle
+      rawGyroRotation = gyroInputs.odometryYawPositions[i];
+      // } else {
+      //   // Use the angle delta from the kinematics and module deltas
+      //   Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+      //   rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(twist.dtheta));
+      // }
 
       // Apply update
       poseEstimator.updateWithTime(
           sampleTimestamps[i], rawGyroRotation.plus(gyroOffset), modulePositions);
     }
-
-    // Update gyro alert
-    gyroDisconnectedAlert.set(!gyroInputs.connected && RobotConstants.currentMode != Mode.SIM);
   }
 
   /**
@@ -293,15 +289,20 @@ public class DrivetrainSubsystem extends SubsystemBase {
     poseEstimator.resetPosition(rawGyroRotation.plus(gyroOffset), modulePositions, pose);
   }
 
-  /** Resets the current odometry pose. */
+  /** Resets the NavX yaw angle to zero. */
   public void resetNavX() {
     gyroOffset = gyroOffset.plus(gyroInputs.yawPosition);
     gyroIO.resetNavX();
   }
 
-  /** Resets the current odometry pose. */
+  /** Returns the NavX yaw angle. */
   public Rotation2d getNavXYaw() {
     return gyroInputs.yawPosition;
+  }
+
+  /** Returns the robot's angle from horizontal according to the NavX. */
+  public Rotation2d getNavXAngleFromHorizontal() {
+    return gyroInputs.angleFromHorizontal;
   }
 
   /** Adds a new timestamped vision measurement. */
@@ -309,10 +310,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
+    if (replacePoseWithVision) {
+      poseEstimator.resetPose(visionRobotPoseMeters);
+      replacePoseWithVision = false;
+    }
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     // TODO: when should this be run? Max's answer: DrivetrainSubsystem.accept() should be run each
     // timestep that photonvision was able to predict the robot pose
+  }
+
+  public void replacePoseWithVision() {
+    replacePoseWithVision = true;
   }
 
   /** Returns the position of each module in radians. */
