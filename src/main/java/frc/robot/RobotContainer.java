@@ -116,9 +116,8 @@ public class RobotContainer {
     intake = new IntakeSubsystem();
     indexer = new IndexerSubsystem();
     shooter = new ShooterSubsystem();
-    led = new LedCommands(0, 30, shooter); 
+    led = new LedCommands(0, 30);
     // 30 =  length of one ledsection, change if we add more sections
-
 
     SysIdUtil.registerController(controller);
 
@@ -203,7 +202,7 @@ public class RobotContainer {
     controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoal(new RadVel_State(.1))));
     intake.setDefaultCommand(IntakeCommands.stopCommand(intake)
         .alongWith(Commands.run(() -> intake.setPivotGoal(new RadVel_State(0)))));
-    controller.square().onTrue(IntakeCommands.stopCommand(intake));
+    controller.square().whileTrue(LedCommands.updateShooterLEDs(shooter, 0));
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));

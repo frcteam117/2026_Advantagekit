@@ -7,14 +7,12 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import frc.robot.RobotConstants;
 import frc.robot.RobotConstants.FieldType;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -27,30 +25,50 @@ public class RobotCommands {
   private static final Translation2d redHub = RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
       ? new Translation2d(0.0254 * (651.22 - 182.11), 0.0254 * (317.69 / 2))
       : new Translation2d(0.0254 * (650.12 - 181.56), 0.0254 * (316.64 / 2));
-  public static Command controllerRumble(CommandPS5Controller controller) {
-    
-    return Commands.run(
-        () -> {
-            double time = DriverStation.getMatchTime();
-            List<Double> matchCountdownTimes = Arrays.asList(145.0, 135.0, 110.0,
-                                                            85.0, 60.0, 35.0, 5.0);
-            Boolean condition = false;
-            for (int i = 0; i < matchCountdownTimes.size(); i++) {
-            if (time >= matchCountdownTimes.get(i) - 0.1 && time <= matchCountdownTimes.get(i) + 0.1) {
-                condition = true;
-                break;
-            }
-            }
-           if (condition) {
-             // Java - Trigger rumble (0.0 to 1.0)
-             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 1);
 
-             } else {
-             // Java - Trigger rumble (0.0 to 1.0)
-             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
-           }
-        });
+  public static Command controllerRumble(CommandPS5Controller controller) {
+
+    return Commands.run(() -> {
+      double time = DriverStation.getMatchTime();
+      List<Double> matchCountdownTimes = Arrays.asList(
+          145.0, 135.0, 110.0, 85.0, 60.0, 35.0, 5.0, 140.0, 130.0, 100.0, 80.0, 55.0, 30.0, 0.0);
+      Boolean condition = false;
+      for (int i = 0; i < matchCountdownTimes.size(); i++) {
+        if (time >= matchCountdownTimes.get(i) - 0.1 && time <= matchCountdownTimes.get(i) + 0.1) {
+          condition = true;
+          break;
+        }
+      } // should make controller rumble 5 sec before and at the time of each phase shift
+      if (condition) {
+        // Java - Trigger rumble (0.0 to 1.0)
+        controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 1);
+
+      } else {
+        // Java - Trigger rumble (0.0 to 1.0)
+        controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
+      }
+
+      //     List<Double> matchCountdownTimes2 = Arrays.asList(143.0, 133.0, 107.0,
+      //                                                     83.0, 57.0, 33.0, 3.0);
+      //     Boolean condition = false;
+      //     for (int i = 0; i < matchCountdownTimes2.size(); i++) {
+      //     if (time >= matchCountdownTimes2.get(i) - 0.1 && time <= matchCountdownTimes2.get(i) +
+      // 0.1) {
+      //         condition = true;
+      //         break;
+      //     }
+      //     }
+      //    if (condition) {
+      //      // Java - Trigger rumble (0.0 to 1.0)
+      //      controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.5);
+
+      //      } else {
+      //      // Java - Trigger rumble (0.0 to 1.0)
+      //      controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
+      //    }
+    });
   }
+
   public static Command hubAutoShoot(
       DrivetrainSubsystem drivetrain,
       ShooterSubsystem shooter,

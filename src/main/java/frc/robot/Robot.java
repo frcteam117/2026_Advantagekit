@@ -153,6 +153,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void teleopPeriodic() {
     RobotCommands.controllerRumble(RobotContainer.getController());
+    // Commands.schedule(LedCommands.updateShooterLEDs(null, defaultPeriodSecs))
   }
 
   /** This function is called once when test mode is enabled. */
