@@ -202,11 +202,11 @@ public class RobotContainer {
     // controller.circle().whileTrue(IntakeCommands.runRollerForward(intake));
     controller.circle().whileTrue(IntakeCommands.runRollerBackward(intake));
     controller
-        .button(10)
+        .povDown()
         .whileTrue(
             Commands.run(() -> intake.setPivotGoal(IntakeConstants.PIVOT_CONSTANTS.min_Pos)));
     controller
-        .button(9)
+        .povUp()
         .whileTrue(
             Commands.run(() -> intake.setPivotGoal(IntakeConstants.PIVOT_CONSTANTS.max_Pos)));
     intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
