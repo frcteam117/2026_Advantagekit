@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.util.states.premade.RadVel_State;
 
 // theres def a more efficient way to write this
 // it could be better...
@@ -34,12 +35,11 @@ public class LedCommands {
 
     double rioSpeed = shooter.getRIOFlywheelState().vel(RadiansPerSecond);
     double pdhSpeed = shooter.getPDHFlywheelState().vel(RadiansPerSecond);
-
     boolean atSpeed = Math.abs(rioSpeed - targetSpeedRadPerSec) < tolerance
         && Math.abs(pdhSpeed - targetSpeedRadPerSec) < tolerance;
 
     return Commands.run(() -> {
-      if (targetSpeedRadPerSec <= -1) { // 0
+      if (targetSpeedRadPerSec <= 0) { // 0
         // shooter off
         setAll(0, 0, 0);
       } else if (atSpeed) {

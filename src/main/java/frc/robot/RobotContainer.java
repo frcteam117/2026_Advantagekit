@@ -203,7 +203,8 @@ public class RobotContainer {
     intake.setDefaultCommand(IntakeCommands.stopCommand(intake)
         .alongWith(Commands.run(() -> intake.setPivotGoal(new RadVel_State(0)))));
     //
-    controller.square().whileTrue(LedCommands.updateShooterLEDs(shooter, 0));
+    //controller.square().whileTrue(LedCommands.updateShooterLEDs(shooter, 0.646));
+    // controller.square().whileTrue(LedCommands.updateShooterLEDs(shooter, 0));
 
     controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));

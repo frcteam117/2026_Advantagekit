@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.led.LedCommands;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.logging.TunableDouble;
 import frc.robot.util.states.premade.RadVel_State;
@@ -48,6 +49,7 @@ public class ShooterCommands {
 
       shooter.setRIOFlywheelGoal(new RadVel_State(autoTargetSpeed));
       shooter.setPDHFlywheelGoal(new RadVel_State(autoTargetSpeed));
+      LedCommands.updateShooterLEDs(shooter, autoTargetSpeed);
     });
   }
 
@@ -66,6 +68,7 @@ public class ShooterCommands {
       shooter.setHoodGoal(new RadVel_State(0));
       shooter.setRIOFlywheelGoal(new RadVel_State(0));
       shooter.setPDHFlywheelGoal(new RadVel_State(0));
+      LedCommands.updateShooterLEDs(shooter, 0);
     });
   }
 
@@ -73,6 +76,7 @@ public class ShooterCommands {
     return shooter.run(() -> {
       shooter.setRIOFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
       shooter.setPDHFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+      LedCommands.updateShooterLEDs(shooter, targetSpeed_radPs.getAsDouble());
     });
   }
 
