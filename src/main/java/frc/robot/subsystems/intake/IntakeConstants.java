@@ -62,7 +62,7 @@ public class IntakeConstants {
         .quadratureMeasurementPeriod(10)
         .quadratureAverageDepth(4);
     // Motor properties
-    PIVOT_CONSTANTS.reduction = 23.80952381;
+    PIVOT_CONSTANTS.reduction = 55.55555555555555555555555;
     PIVOT_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(PIVOT_CONSTANTS.reduction);
     PIVOT_CONSTANTS.moi_kgm2 = .3;
     // Profiling

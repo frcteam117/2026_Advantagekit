@@ -283,6 +283,8 @@ public class DrivetrainCommands {
     // });
   }
 
+  private Rotation2d targetAngle_rad = Rotation2d.kZero;
+
   /**
    * Field relative drive command using joystick for linear control and PID for angular control.
    * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
@@ -332,6 +334,55 @@ public class DrivetrainCommands {
         })
         // Reset PID controller when command starts
         .beforeStarting(() -> resetAngleController(drivetrain));
+  }
+
+  private static final double pathOverBump_VELOCITY = 2;
+  private static double pathOverBump_angleOffset_rad;
+  private static double pathOverBump_angleTarget;
+  private static boolean pathOverBump_driveForward;
+
+  public static Command pathOverBump(DrivetrainSubsystem drivetrain) {
+    return drivetrain
+        .startRun(
+            () -> {
+              boolean inverted = MathUtil.inputModulus(
+                      drivetrain.getPose().getRotation().getRadians(),
+                      -Math.PI / 2,
+                      3 * Math.PI / 2)
+                  < Math.PI / 2;
+              pathOverBump_angleOffset_rad = drivetrain.getNavXYaw().getRadians()
+                  - drivetrain.getPose().getRotation().getRadians();
+              pathOverBump_angleTarget =
+                  inverted ? Math.PI - pathOverBump_angleOffset_rad : -pathOverBump_angleOffset_rad;
+              if (drivetrain.getPose().getX() < 5) {
+                pathOverBump_driveForward = drivetrain.getPose().getX() < 3;
+              } else {
+                pathOverBump_driveForward = drivetrain.getPose().getX() < 7;
+              }
+              resetAngleController(drivetrain);
+            },
+            () -> {
+              Rotation2d robotOrientation = drivetrain
+                  .getNavXYaw()
+                  .minus(Rotation2d.fromRadians(pathOverBump_angleOffset_rad));
+              // Calculate angular speed
+              double omega = ANGLE_CONTROLLER.calculate(
+                  robotOrientation.getRadians(), pathOverBump_angleTarget);
+              omega += ANGLE_CONTROLLER.getSetpoint().velocity;
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds = new ChassisSpeeds(
+                  pathOverBump_driveForward ? pathOverBump_VELOCITY : -pathOverBump_VELOCITY,
+                  0.0,
+                  omega);
+
+              speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
+              drivetrain.setGoalVelocity(speeds);
+            })
+        .onlyIf(() -> {
+          double x = drivetrain.getPose().getX();
+          return (x > 2 && x < 4) || (x > 2 && x < 4);
+        });
   }
 
   /** Measures the robot's wheel radius by spinning in a circle. */

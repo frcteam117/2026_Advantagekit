@@ -14,8 +14,10 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
@@ -163,6 +165,7 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
+  private Rotation2d prevTarget = Rotation2d.kZero;
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -171,11 +174,27 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
-    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
+    // drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
+    //     drivetrain,
+    //     () -> -controller.getLeftY(),
+    //     () -> -controller.getLeftX(),
+    //     () -> -controller.getRightX(),
+    //     () ->
+    //         DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
+    //     () -> false));
+    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRightX(),
+        () -> {
+          if (MathUtil.applyDeadband(
+                  Math.hypot(-controller.getRightY(), -controller.getRightX()), .2)
+              != 0.0) {
+            prevTarget = Rotation2d.fromRadians(
+                Math.atan2(-controller.getRightX(), -controller.getRightY()));
+          }
+          return prevTarget;
+        },
         () ->
             DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
         () -> false));
@@ -220,7 +239,7 @@ public class RobotContainer {
         .whileTrue(RobotCommands.hubAutoShoot(
             drivetrain, shooter, indexer, () -> ShooterCommands.isAutoAimReady(shooter)));
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
-    controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
     controller
         .cross()
         .whileTrue(RobotCommands.hubAutoShoot(
@@ -229,6 +248,20 @@ public class RobotContainer {
     controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
 
     // snake mode around middle
+    // controller
+    //     .triangle()
+    //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () ->
+    //             Rotation2d.fromRadians(Math.atan2(-controller.getLeftX(),
+    // -controller.getLeftY())),
+    //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+    //             intake.getPivotState().pos()),
+    //         () -> false));
+
+    // snake mode around intake
     controller
         .triangle()
         .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
@@ -237,31 +270,21 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () ->
                 Rotation2d.fromRadians(Math.atan2(-controller.getLeftX(), -controller.getLeftY())),
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(
-                intake.getPivotState().pos()),
+            () -> new Translation2d((DrivetrainConstants.Chassis.bumperLength_m / 2), 0),
             () -> false));
 
-    // snake mode around intake
-    // controller.triangle().whileTrue(DrivetrainCommands.joystickDriveAtAngle(
-    //   drivetrain,
-    //     () -> -controller.getLeftY(),
-    //     () -> -controller.getLeftX(),
-    //     () -> Rotation2d.fromRadians(Math.atan2(-controller.getLeftX(), -controller.getLeftY())),
-    //     () ->
-    //         new Translation2d((DrivetrainConstants.Chassis.bumperLength_m / 2) +
-    // UnitUtil.inTom(2), 0),
-    //     () -> false));
-
     // angle from right joystick mode
-    // controller.triangle().whileTrue(DrivetrainCommands.joystickDriveAtAngle(
-    //   drivetrain,
-    //     () -> -controller.getLeftY(),
-    //     () -> -controller.getLeftX(),
-    //     () -> Rotation2d.fromRadians(Math.atan2(-controller.getRightX(),
-    // -controller.getRightY())),
-    //     () ->
-    //         DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
-    //     () -> false));
+    // controller
+    //     .triangle()
+    //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () -> Rotation2d.fromRadians(
+    //             Math.atan2(-controller.getRightX(), -controller.getRightY())),
+    //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+    //             intake.getPivotState().pos()),
+    //         () -> false));
 
     // controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     // controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
