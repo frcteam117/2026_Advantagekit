@@ -39,7 +39,7 @@ public class LedCommands {
         && Math.abs(pdhSpeed - targetSpeedRadPerSec) < tolerance;
 
     return Commands.run(() -> {
-      if (targetSpeedRadPerSec <= 0) {
+      if (targetSpeedRadPerSec <= -1) { // 0
         // shooter off
         setAll(0, 0, 0);
       } else if (atSpeed) {
