@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
@@ -11,6 +12,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.RobotConstants;
 import frc.robot.util.components.bases.ComponentBase;
@@ -18,10 +21,8 @@ import frc.robot.util.components.bases.ComponentSimBase;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import frc.robot.util.components.controllers.SparkMaxController;
 import frc.robot.util.components.simulators.ArmSimulator;
-import frc.robot.util.components.simulators.DCMotorSimulator;
 import frc.robot.util.control_functions.ControlFunctionBase;
 import frc.robot.util.control_functions.feedback.ArbitraryPIDSVAF;
-import frc.robot.util.control_functions.feedback.SimplePIDF;
 import frc.robot.util.control_functions.profiling.TrapezoidProfileFunction;
 import frc.robot.util.mechanisms.MechanismBase.MechanismConfig;
 import frc.robot.util.mechanisms.MechanismConstants;
@@ -226,53 +227,27 @@ public class IntakeConstants {
         ((Motor_State) componentStates[0]).radPs() / PIVOT_CONSTANTS.reduction);
   }
 
-  static {
-    // Miscellaneous
-    ROLLER_CONSTANTS.outputsLogName = LOG_NAME + "/Roller";
-    ROLLER_CONSTANTS.tuningLogName = RobotConstants.TUNING_PREFIX + ROLLER_CONSTANTS.outputsLogName;
-    ROLLER_CONSTANTS.codePeriod_s = RobotConstants.CODE_PERIOD_s;
-    // Motor
-    ROLLER_CONSTANTS.motorCanIds = new int[] {11};
-    ROLLER_CONSTANTS.revMotorType = MotorType.kBrushless;
-    ROLLER_CONSTANTS.baseSparkConfig = new SparkMaxConfig();
-    ROLLER_CONSTANTS
-        .baseSparkConfig
-        .disableVoltageCompensation()
-        .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(60)
-        .encoder
-        .quadratureMeasurementPeriod(10)
-        .quadratureAverageDepth(4);
-    // Motor properties
-    ROLLER_CONSTANTS.reduction = 5d;
-    ROLLER_CONSTANTS.gearbox = DCMotor.getNEO(1).withReduction(ROLLER_CONSTANTS.reduction);
-    ROLLER_CONSTANTS.moi_kgm2 = .03;
-    // Profiling
-    ROLLER_CONSTANTS.start_State =
-        PosVel_State.create(new StateValue(0, Radians), new StateValue(0, RadiansPerSecond));
-    ROLLER_CONSTANTS.min_Pos = new RadPos_State(-Double.MAX_VALUE);
-    ROLLER_CONSTANTS.max_Pos = new RadPos_State(Double.MAX_VALUE);
-    ROLLER_CONSTANTS.limits_State = VelAcc_State.create(
-        new StateValue(100, RadiansPerSecond), new StateValue(300, RadiansPerSecondPerSecond));
-    ROLLER_CONSTANTS.isLoop = true;
-    // Feedback
-    ROLLER_CONSTANTS.pid = RobotBase.isReal()
-        ? new PIDController(0.02, 0, 0, ROLLER_CONSTANTS.codePeriod_s)
-        : new PIDController(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s);
-    ROLLER_CONSTANTS.simpleFF = RobotBase.isReal()
-        ? new SimpleMotorFeedforward(0, 0.113, 0, ROLLER_CONSTANTS.codePeriod_s)
-        : new SimpleMotorFeedforward(0, 0, 0, ROLLER_CONSTANTS.codePeriod_s);
+  public static class Roller {
+    public static final String NT_KEY = IntakeConstants.LOG_NAME + "/Roller";
+    public static final String TUNING_NT_KEY = RobotConstants.TUNING_PREFIX + NT_KEY;
+    public static final int CAN_ID = 11;
+    public static final SparkMaxConfig SPARK_MAX_CONFIG = new SparkMaxConfig();
+    public static final double REDUCTION = 5.0;
+    public static final Distance RADIUS = Inches.of(1.0);
+    public static final MomentOfInertia MOI = KilogramSquareMeters.of(03);
+    public static final DCMotor GEARBOX = DCMotor.getNEO(1).withReduction(REDUCTION);
 
-    ROLLER_CONFIG.constants = ROLLER_CONSTANTS;
-    ROLLER_CONFIG.realComponents = new ComponentBase[0];
-    ROLLER_CONFIG.simComponents = new ComponentSimBase[0];
-    ROLLER_CONFIG.realController = new SparkMaxController(ROLLER_CONSTANTS);
-    ROLLER_CONFIG.simController = new DCMotorSimulator(ROLLER_CONSTANTS);
-    ROLLER_CONFIG.profiles =
-        new ControlFunctionBase[] {new TrapezoidProfileFunction(ROLLER_CONSTANTS)};
-    ROLLER_CONFIG.feedbacks = new ControlFunctionBase[] {new SimplePIDF(ROLLER_CONSTANTS)};
-    ROLLER_CONFIG.componentsToState = componentStates -> new RadPosVel_State(
-        ((Motor_State) componentStates[0]).rad() / ROLLER_CONSTANTS.reduction,
-        ((Motor_State) componentStates[0]).radPs() / ROLLER_CONSTANTS.reduction);
+    static {
+      SPARK_MAX_CONFIG
+          .disableVoltageCompensation()
+          .idleMode(IdleMode.kCoast)
+          .smartCurrentLimit(50)
+          .openLoopRampRate(.2)
+          .encoder
+          .quadratureMeasurementPeriod(10)
+          .quadratureAverageDepth(4);
+      // .positionConversionFactor(2 * Math.PI)
+      // .velocityConversionFactor(2 * Math.PI / 60);
+    }
   }
 }

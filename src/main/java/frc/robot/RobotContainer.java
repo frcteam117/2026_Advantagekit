@@ -14,7 +14,6 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -186,15 +185,9 @@ public class RobotContainer {
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> {
-          if (MathUtil.applyDeadband(
-                  Math.hypot(-controller.getRightY(), -controller.getRightX()), .2)
-              != 0.0) {
-            prevTarget = Rotation2d.fromRadians(
-                Math.atan2(-controller.getRightX(), -controller.getRightY()));
-          }
-          return prevTarget;
-        },
+        () -> -controller.getRightY(),
+        () -> -controller.getRightX(),
+        .2,
         () ->
             DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
         () -> false));
@@ -254,9 +247,9 @@ public class RobotContainer {
     //         drivetrain,
     //         () -> -controller.getLeftY(),
     //         () -> -controller.getLeftX(),
-    //         () ->
-    //             Rotation2d.fromRadians(Math.atan2(-controller.getLeftX(),
-    // -controller.getLeftY())),
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         .05,
     //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
     //             intake.getPivotState().pos()),
     //         () -> false));
@@ -268,8 +261,9 @@ public class RobotContainer {
             drivetrain,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () ->
-                Rotation2d.fromRadians(Math.atan2(-controller.getLeftX(), -controller.getLeftY())),
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            .05,
             () -> new Translation2d((DrivetrainConstants.Chassis.bumperLength_m / 2), 0),
             () -> false));
 

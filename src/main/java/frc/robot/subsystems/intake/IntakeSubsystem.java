@@ -1,24 +1,53 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.MutLinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.SubsystemBase2Mech;
+import frc.robot.subsystems.SubsystemBase1Mech;
+import frc.robot.subsystems.intake.IntakeConstants.*;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.mechanisms.MechanismBase;
 import frc.robot.util.states.State;
 import frc.robot.util.states.bases.PosVel_State;
+import org.littletonrobotics.junction.Logger;
 
-public class IntakeSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_State> {
+public class IntakeSubsystem extends SubsystemBase1Mech<PosVel_State> {
+  private final SparkMax rollerSpark = new SparkMax(Roller.CAN_ID, MotorType.kBrushless);
+  private final RelativeEncoder rollerEncoder = rollerSpark.getEncoder();
+  private final MutLinearVelocity rollerSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
+
   public IntakeSubsystem() {
-    super(IntakeConstants.PIVOT_CONFIG, IntakeConstants.ROLLER_CONFIG);
+    super(IntakeConstants.PIVOT_CONFIG);
+    rollerSpark.configure(
+        Roller.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   public Pose3d[] getPose3ds() {
     return getIntakePose(getPivotState().pos(Radians));
+  }
+
+  public void periodic() {
+    super.periodic();
+    rollerSurfaceVel.mut_replace(
+        rollerEncoder.getVelocity()
+            * 2
+            * Math.PI
+            * Roller.RADIUS.in(Meters)
+            / (Roller.REDUCTION * 60),
+        MetersPerSecond);
+    Logger.recordOutput(Roller.NT_KEY + "/SurfaceVel", rollerSurfaceVel);
   }
 
   // Pivot
@@ -44,25 +73,13 @@ public class IntakeSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_Sta
   }
 
   // Roller
-
-  public void setRollerGoal(State goal_State, int usedProfile, int usedFeedback) {
-    setMech1Goal(goal_State, usedProfile, usedFeedback);
+  public void setRollerSpeed(double speed) {
+    rollerSpark.set(speed);
+    Logger.recordOutput(Roller.NT_KEY + "/GoalSpeed", speed);
   }
 
-  public void setRollerGoal(State goal_State) {
-    setMech1Goal(goal_State);
-  }
-
-  public Command getRollerSysIdCommand(SysIdType type) {
-    return getMech1SysIdCommand(type);
-  }
-
-  public PosVel_State getRollerState() {
-    return getMech1State();
-  }
-
-  public MechanismBase<PosVel_State> getRoller() {
-    return getMechanism1();
+  public LinearVelocity getRollerSurfaceSpeed() {
+    return rollerSurfaceVel;
   }
 
   private Pose3d[] getIntakePose(double rad) {

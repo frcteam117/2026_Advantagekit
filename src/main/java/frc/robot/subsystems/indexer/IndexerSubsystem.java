@@ -1,16 +1,53 @@
 package frc.robot.subsystems.indexer;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.SubsystemBase2Mech;
-import frc.robot.util.SysIdUtil.SysIdType;
-import frc.robot.util.mechanisms.MechanismBase;
-import frc.robot.util.states.State;
-import frc.robot.util.states.bases.PosVel_State;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 
-public class IndexerSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_State> {
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.MutLinearVelocity;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.indexer.IndexerConstants.*;
+import org.littletonrobotics.junction.Logger;
+
+public class IndexerSubsystem extends SubsystemBase {
+  private final SparkMax hopperSpark = new SparkMax(Hopper.CAN_ID, MotorType.kBrushless);
+  private final SparkMax kickerSpark = new SparkMax(Kicker.CAN_ID, MotorType.kBrushless);
+  private final RelativeEncoder hopperEncoder = hopperSpark.getEncoder();
+  private final RelativeEncoder kickerEncoder = kickerSpark.getEncoder();
+  private final MutLinearVelocity hopperSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
+  private final MutLinearVelocity kickerSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
+
   public IndexerSubsystem() {
-    super(IndexerConstants.HOPPER_CONFIG, IndexerConstants.KICKER_CONFIG);
+    hopperSpark.configure(
+        Hopper.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    kickerSpark.configure(
+        Kicker.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  }
+
+  @Override
+  public void periodic() {
+    hopperSurfaceVel.mut_replace(
+        hopperEncoder.getVelocity()
+            * 2
+            * Math.PI
+            * Hopper.RADIUS.in(Meters)
+            / (Hopper.REDUCTION * 60),
+        MetersPerSecond);
+    Logger.recordOutput(Hopper.NT_KEY + "/SurfaceVel", hopperSurfaceVel);
+    kickerSurfaceVel.mut_replace(
+        kickerEncoder.getVelocity()
+            * 2
+            * Math.PI
+            * Kicker.RADIUS.in(Meters)
+            / (Kicker.REDUCTION * 60),
+        MetersPerSecond);
+    Logger.recordOutput(Kicker.NT_KEY + "/SurfaceVel", kickerSurfaceVel);
   }
 
   public Pose3d[] getPose3ds() {
@@ -19,45 +56,23 @@ public class IndexerSubsystem extends SubsystemBase2Mech<PosVel_State, PosVel_St
 
   // Hopper
 
-  public void setHopperGoal(State goal_State, int usedProfile, int usedFeedback) {
-    setMech0Goal(goal_State, usedProfile, usedFeedback);
+  public void setHopperSpeed(double speed) {
+    hopperSpark.set(speed);
+    Logger.recordOutput(Hopper.NT_KEY + "/GoalSpeed", speed);
   }
 
-  public void setHopperGoal(State goal_State) {
-    setMech0Goal(goal_State);
-  }
-
-  public Command getHopperSysIdCommand(SysIdType type) {
-    return getMech0SysIdCommand(type);
-  }
-
-  public PosVel_State getHopperState() {
-    return getMech0State();
-  }
-
-  public MechanismBase<PosVel_State> getHopper() {
-    return getMechanism0();
+  public LinearVelocity getHopperSurfaceSpeed() {
+    return hopperSurfaceVel;
   }
 
   // Kicker
 
-  public void setKickerGoal(State goal_State, int usedProfile, int usedFeedback) {
-    setMech1Goal(goal_State, usedProfile, usedFeedback);
+  public void setKickerSpeed(double speed) {
+    kickerSpark.set(speed);
+    Logger.recordOutput(Kicker.NT_KEY + "/GoalSpeed", speed);
   }
 
-  public void setKickerGoal(State goal_State) {
-    setMech1Goal(goal_State);
-  }
-
-  public Command getKickerSysIdCommand(SysIdType type) {
-    return getMech1SysIdCommand(type);
-  }
-
-  public PosVel_State getKickerState() {
-    return getMech1State();
-  }
-
-  public MechanismBase<PosVel_State> getKicker() {
-    return getMechanism1();
+  public LinearVelocity getKickerSurfaceSpeed() {
+    return kickerSurfaceVel;
   }
 }

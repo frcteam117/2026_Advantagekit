@@ -6,13 +6,14 @@ import static frc.robot.subsystems.intake.IntakeConstants.PIVOT_CONSTANTS;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.logging.TunableDouble;
-import frc.robot.util.states.premade.RadVel_State;
 import java.util.function.DoubleSupplier;
 
 public class IntakeCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
-  private static final DoubleSupplier targetSpeed_radPs =
-      new TunableDouble(TUNING_NT_KEY + "/_radPs", 80, () -> true);
+  private static final DoubleSupplier ROLLER_FORWARD_SPEED =
+      new TunableDouble(TUNING_NT_KEY + "/RollerForwardSpeed", 1, () -> true);
+  private static final DoubleSupplier ROLLER_REVERSE_SPEED =
+      new TunableDouble(TUNING_NT_KEY + "/RollerReverseSpeed", -0.5, () -> true);
   // private static final DoubleSupplier lowered_rad = new TunableDouble(
   //     TUNING_NT_KEY + "/lowered_rad",
   //     (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
@@ -42,7 +43,7 @@ public class IntakeCommands {
     return Commands.run(
         () -> {
           // instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
-          instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+          instance.setRollerSpeed(ROLLER_FORWARD_SPEED.getAsDouble());
           // runRollerWhenLowered(instance);
           // instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
         },
@@ -60,7 +61,7 @@ public class IntakeCommands {
   public static Command runRollerForward(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+          instance.setRollerSpeed(ROLLER_FORWARD_SPEED.getAsDouble());
         },
         instance);
   }
@@ -68,7 +69,7 @@ public class IntakeCommands {
   public static Command runRollerBackward(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setRollerGoal(new RadVel_State(-targetSpeed_radPs.getAsDouble()));
+          instance.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
         },
         instance);
   }
@@ -76,7 +77,7 @@ public class IntakeCommands {
   public static Command stopCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setRollerGoal(new RadVel_State(0));
+          instance.setRollerSpeed(0);
           // instance.setPivotGoal(new RadVel_State(0));
         },
         instance);

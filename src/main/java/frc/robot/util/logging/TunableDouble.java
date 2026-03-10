@@ -22,6 +22,10 @@ public class TunableDouble implements DoubleSupplier {
     LogUtil.getInstance().registerUpdateMethod(this::update);
   }
 
+  public TunableDouble(String key, double defaultValue) {
+    this(key, defaultValue, () -> true, (value) -> {});
+  }
+
   public TunableDouble(String key, double defaultValue, BooleanSupplier shouldPublish) {
     this(key, defaultValue, shouldPublish, (value) -> {});
   }
