@@ -50,21 +50,21 @@ public class ShooterSubsystem extends SubsystemBase {
   public ShooterSubsystem(ShooterIO io) {
     this.io = io;
 
-    hood_Constraints = new TrapezoidProfile.Constraints(0, 0);
+    hood_Constraints = new TrapezoidProfile.Constraints(1.8, 16);
     hood_Profile = new TrapezoidProfile(hood_Constraints);
     rioFlywheel_AccLimiter = new SlewRateLimiter(300);
     pdhFlywheel_AccLimiter = new SlewRateLimiter(300);
 
     if (RobotBase.isReal()) {
       // Hood
-      hood_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
-      hood_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      hood_PID = new PIDController(70, 0, 0, RobotConstants.CODE_PERIOD_s);
+      hood_FF = new SimpleMotorFeedforward(0.1, 6.7, .25, RobotConstants.CODE_PERIOD_s);
       // RIO Flywheel
-      rioFlywheel_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
-      rioFlywheel_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      rioFlywheel_PID = new PIDController(0.015, 0, 0, RobotConstants.CODE_PERIOD_s);
+      rioFlywheel_FF = new SimpleMotorFeedforward(.24, .0175, 0, RobotConstants.CODE_PERIOD_s);
       // PDH Flywheel
-      pdhFlywheel_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
-      pdhFlywheel_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pdhFlywheel_PID = new PIDController(0.015, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pdhFlywheel_FF = new SimpleMotorFeedforward(0.13, 0.01704, 0, RobotConstants.CODE_PERIOD_s);
     } else {
       // Hood
       hood_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);

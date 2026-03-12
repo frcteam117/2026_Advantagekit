@@ -41,19 +41,19 @@ public class IntakeSubsystem extends SubsystemBase {
   public IntakeSubsystem(IntakeIO io) {
     this.io = io;
 
-    pivot_Constraints = new TrapezoidProfile.Constraints(0, 0);
+    pivot_Constraints = new TrapezoidProfile.Constraints(5, 8);
     pivot_Profile = new TrapezoidProfile(pivot_Constraints);
 
     if (RobotBase.isReal()) {
-      pivot_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
-      pivot_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pivot_PID = new PIDController(20, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pivot_FF = new SimpleMotorFeedforward(0.2, 1.3, 0.05, RobotConstants.CODE_PERIOD_s);
       pivot_ArbitraryFF.put(0.1, 0.0);
       pivot_ArbitraryFF.put(-0.1, 0.0);
       pivot_ArbitraryFF.put(-0.4, 0.0);
-      pivot_ArbitraryFF.put(-0.7, 0.03);
-      pivot_ArbitraryFF.put(-1.0, 0.09);
-      pivot_ArbitraryFF.put(-1.3, 0.13);
-      pivot_ArbitraryFF.put(-1.6, 0.16);
+      pivot_ArbitraryFF.put(-0.7, 0.01);
+      pivot_ArbitraryFF.put(-1.0, 0.045);
+      pivot_ArbitraryFF.put(-1.3, 0.075);
+      pivot_ArbitraryFF.put(-1.6, 0.09);
     } else {
       pivot_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
       pivot_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
