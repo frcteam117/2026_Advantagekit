@@ -29,6 +29,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -341,6 +342,10 @@ public class DrivetrainCommands {
   }
 
   private static Rotation2d joystickDriveAtAngle_rotTarget;
+  private static double[] snapToAngleTargets_deg =
+      new double[] {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360};
+  private static double[] snapToAngletargetBorders_deg =
+      new double[] {15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345, 375};
 
   /**
    * Field relative drive command using joystick for linear control and PID for angular control.
@@ -354,23 +359,46 @@ public class DrivetrainCommands {
       DoubleSupplier rotXSupplier,
       DoubleSupplier rotYSupplier,
       double deadband,
+      BooleanSupplier snapToAngle,
       Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier driveAssistSupplier) {
 
     // Construct command
     return drivetrain
         .run(() -> {
+          boolean isFlipped = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
           if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
             joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
                 Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
+            if (snapToAngle.getAsBoolean()) {
+              double snapToAngleJoystickTarget_deg =
+                  MathUtil.inputModulus(joystickDrive_target_rad * 180 / Math.PI, 0, 360);
+              for (int i = 0; i < snapToAngletargetBorders_deg.length; i++) {
+                if (snapToAngleJoystickTarget_deg < snapToAngletargetBorders_deg[i]) {
+                  joystickDriveAtAngle_rotTarget =
+                      Rotation2d.fromDegrees(snapToAngleTargets_deg[i]);
+                  break;
+                }
+              }
+            }
+          } else {
+            if (snapToAngle.getAsBoolean()) {
+              joystickDriveAtAngle_rotTarget = MathUtil.isNear(
+                      0,
+                      drivetrain.getPose().getRotation().getRadians(),
+                      Math.PI / 2,
+                      -Math.PI,
+                      Math.PI)
+                  ? Rotation2d.kZero
+                  : Rotation2d.k180deg;
+              joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
+                  isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
+            }
           }
 
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-
-          boolean isFlipped = DriverStation.getAlliance().isPresent()
-              && DriverStation.getAlliance().get() == Alliance.Red;
 
           // Calculate angular speed
           double omega = ANGLE_CONTROLLER.calculate(
@@ -403,11 +431,13 @@ public class DrivetrainCommands {
             joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
                 Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
           } else {
-            joystickDriveAtAngle_rotTarget =
-                // DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red
-                //     ?
-                drivetrain.getPose().getRotation().plus(Rotation2d.kZero);
-            // : drivetrain.getPose().getRotation();
+            joystickDriveAtAngle_rotTarget = drivetrain
+                .getPose()
+                .getRotation()
+                .plus(
+                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                        ? Rotation2d.k180deg
+                        : Rotation2d.kZero);
           }
         });
   }
@@ -636,13 +666,13 @@ public class DrivetrainCommands {
     return Commands.runOnce(() -> drivetrain.replacePoseWithVision());
   }
 
-  public static Translation2d pivotBasedCenterOfRotation(double pivot_rad) {
+  public static Translation2d pivotBasedCenterOfRotation(Angle pivotPos) {
     return new Translation2d(UnitUtil.inTom(3.5), 0.0)
         .times(1
             - MathUtil.inverseInterpolate(
                 IntakeConstants.Pivot.MIN_POS.in(Radians),
                 IntakeConstants.Pivot.MAX_POS.in(Radians),
-                pivot_rad));
+                pivotPos.in(Radians)));
   }
 
   private static class WheelRadiusCharacterizationState {

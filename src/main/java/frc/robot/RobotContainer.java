@@ -184,23 +184,23 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
-    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
-        drivetrain,
-        () -> -controller.getLeftY(),
-        () -> -controller.getLeftX(),
-        () -> -controller.getRightX(),
-        () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos().in(Radians)),
-        () -> false));
-    // drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
+    // drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
     //     drivetrain,
     //     () -> -controller.getLeftY(),
     //     () -> -controller.getLeftX(),
-    //     () -> -controller.getRightY(),
     //     () -> -controller.getRightX(),
-    //     .2,
-    //     () ->
-    //         DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
+    //     () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos().in(Radians)),
     //     () -> false));
+    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
+        drivetrain,
+        () -> -controller.getLeftY(),
+        () -> -controller.getLeftX(),
+        () -> -controller.getRightY(),
+        () -> -controller.getRightX(),
+        .2,
+        controller.R3(),
+        () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+        () -> false));
 
     // controller
     //     .R2()
@@ -268,6 +268,7 @@ public class RobotContainer {
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             .05,
+            controller.R3(),
             () -> new Translation2d((DrivetrainConstants.Chassis.bumperLength_m / 2), 0),
             () -> false));
 
