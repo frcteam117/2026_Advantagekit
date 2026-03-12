@@ -1,7 +1,7 @@
 package frc.robot.subsystems.intake;
 
-import static frc.robot.subsystems.intake.IntakeConstants.LOG_NAME;
-import static frc.robot.subsystems.intake.IntakeConstants.PIVOT_CONSTANTS;
+import static edu.wpi.first.units.Units.Radians;
+import static frc.robot.subsystems.intake.IntakeConstants.NT_KEY;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -9,7 +9,7 @@ import frc.robot.util.logging.TunableDouble;
 import java.util.function.DoubleSupplier;
 
 public class IntakeCommands {
-  private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
+  private static final String TUNING_NT_KEY = "Tuning/" + NT_KEY + "/Commands";
   private static final DoubleSupplier ROLLER_FORWARD_SPEED =
       new TunableDouble(TUNING_NT_KEY + "/RollerForwardSpeed", 1, () -> true);
   private static final DoubleSupplier ROLLER_REVERSE_SPEED =
@@ -22,7 +22,17 @@ public class IntakeCommands {
   public static Command lowerCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setPivotGoal(PIVOT_CONSTANTS.min_Pos);
+          instance.setPivotGoalPos(Radians.of(-1.5));
+          // runRollerWhenLowered(instance);
+          // instance.setRollerGoal(new RadVel_State(0));
+        },
+        instance);
+  }
+
+  public static Command midCommand(IntakeSubsystem instance) {
+    return Commands.run(
+        () -> {
+          instance.setPivotGoalPos(Radians.of(-0.7));
           // runRollerWhenLowered(instance);
           // instance.setRollerGoal(new RadVel_State(0));
         },
@@ -32,7 +42,7 @@ public class IntakeCommands {
   public static Command raiseCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setPivotGoal(PIVOT_CONSTANTS.max_Pos);
+          instance.setPivotGoalPos(Radians.of(0));
           // runRollerWhenLowered(instance);
           // instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
         },

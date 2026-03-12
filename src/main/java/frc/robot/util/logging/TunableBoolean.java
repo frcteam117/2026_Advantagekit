@@ -25,6 +25,10 @@ public class TunableBoolean implements BooleanSupplier {
     this(key, defaultValue, shouldPublish, (value) -> {});
   }
 
+  public TunableBoolean(String key, boolean defaultValue) {
+    this(key, defaultValue, () -> true, (value) -> {});
+  }
+
   public void update() {
     if (shouldPublish.getAsBoolean()) {
       if (networkBoolean == null) {

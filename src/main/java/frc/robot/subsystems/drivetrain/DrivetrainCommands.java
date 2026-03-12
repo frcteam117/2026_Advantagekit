@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.drivetrain;
 
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -41,6 +42,7 @@ import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.UnitUtil;
 import frc.robot.util.logging.LogUtil;
 import frc.robot.util.logging.TunableBoolean;
+import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -65,8 +67,10 @@ public class DrivetrainCommands {
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
   private static final double DRIVE_MAX_ACCELERATION = 6;
-  private static final double DRIVE_MAX_VELOCITY = 3;
-  private static final double DRIVE_MAX_ANGULAR_VELOCITY = 4;
+  private static final DoubleSupplier DRIVE_MAX_VELOCITY =
+      new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_VELOCITY", 3);
+  private static final DoubleSupplier DRIVE_MAX_ANGULAR_VELOCITY =
+      new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_ANGULAR_VELOCITY", 4);
   private static final Rotation2d[] X_MODULE_HEADINGS = new Rotation2d[] {
     Chassis.moduleTranslations[0].getAngle(),
     Chassis.moduleTranslations[1].getAngle(),
@@ -205,9 +209,9 @@ public class DrivetrainCommands {
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
-              linearVelocity.getX() * DRIVE_MAX_VELOCITY,
-              linearVelocity.getY() * DRIVE_MAX_VELOCITY,
-              omega * DRIVE_MAX_ANGULAR_VELOCITY);
+              linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              omega * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble());
           boolean isFlipped = DriverStation.getAlliance().isPresent()
               && DriverStation.getAlliance().get() == Alliance.Red;
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -254,8 +258,8 @@ public class DrivetrainCommands {
 
     //   // Convert to field relative speeds & send command
     //   ChassisSpeeds speeds = new ChassisSpeeds(
-    //       linearVelocity.getX() * DRIVE_MAX_VELOCITY,
-    //       linearVelocity.getY() * DRIVE_MAX_VELOCITY,
+    //       linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+    //       linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
     //       omega * DRIVE_MAX_ANGULAR_VELOCITY);
     //   boolean isFlipped = DriverStation.getAlliance().isPresent()
     //       && DriverStation.getAlliance().get() == Alliance.Red;
@@ -318,8 +322,8 @@ public class DrivetrainCommands {
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
-              linearVelocity.getX() * DRIVE_MAX_VELOCITY,
-              linearVelocity.getY() * DRIVE_MAX_VELOCITY,
+              linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
               omega);
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
               speeds,
@@ -378,8 +382,8 @@ public class DrivetrainCommands {
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
-              linearVelocity.getX() * DRIVE_MAX_VELOCITY,
-              linearVelocity.getY() * DRIVE_MAX_VELOCITY,
+              linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
               omega);
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
               speeds,
@@ -395,12 +399,20 @@ public class DrivetrainCommands {
         // Reset PID controller when command starts
         .beforeStarting(() -> {
           resetAngleController(drivetrain);
-          joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
-              Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
+          if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
+            joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
+                Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
+          } else {
+            joystickDriveAtAngle_rotTarget =
+                // DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red
+                //     ?
+                drivetrain.getPose().getRotation().plus(Rotation2d.kZero);
+            // : drivetrain.getPose().getRotation();
+          }
         });
   }
 
-  private static final double pathOverBump_VELOCITY = 2;
+  private static final double pathOverBump_VELOCITY = 1;
   private static double pathOverBump_angleOffset_rad;
   private static double pathOverBump_angleTarget;
   private static boolean pathOverBump_driveForward;
@@ -611,7 +623,7 @@ public class DrivetrainCommands {
       //     Math.max(
       //         speeds.omegaRadiansPerSecond / DRIVE_MAX_ANGULAR_VELOCITY,
       //         Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) /
-      // DRIVE_MAX_VELOCITY));
+      // DRIVE_MAX_VELOCITY.getAsDouble()));
       // speeds.times(1 / scaleFactor);
       drivetrain.setGoalVelocity(speeds);
     }
@@ -625,11 +637,11 @@ public class DrivetrainCommands {
   }
 
   public static Translation2d pivotBasedCenterOfRotation(double pivot_rad) {
-    return new Translation2d(UnitUtil.inTom(-3.5), 0.0)
+    return new Translation2d(UnitUtil.inTom(3.5), 0.0)
         .times(1
             - MathUtil.inverseInterpolate(
-                IntakeConstants.PIVOT_CONSTANTS.min_Pos.pos(),
-                IntakeConstants.PIVOT_CONSTANTS.max_Pos.pos(),
+                IntakeConstants.Pivot.MIN_POS.in(Radians),
+                IntakeConstants.Pivot.MAX_POS.in(Radians),
                 pivot_rad));
   }
 

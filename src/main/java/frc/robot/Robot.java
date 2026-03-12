@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.util.logging.LogUtil;
+import java.util.HashMap;
+import java.util.Map;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -81,11 +83,19 @@ public class Robot extends LoggedRobot {
         break;
     }
 
-    // Initialize URCL
-    Logger.registerURCL(URCL.startExternal());
+    Map<Integer, String> sparkLogNames = new HashMap<>();
+    sparkLogNames.put(9, "Spark-9-Hopper");
+    sparkLogNames.put(10, "Spark-10-Kicker");
+    sparkLogNames.put(11, "Spark-11-Roller");
+    sparkLogNames.put(12, "Spark-12-Pivot");
+    sparkLogNames.put(13, "Spark-13-F_RIO_Flywheel");
+    sparkLogNames.put(14, "Spark-14-B_RIO_Flywheel");
+    sparkLogNames.put(15, "Spark-15-B_PDH_Flywheel");
+    sparkLogNames.put(16, "Spark-16-F_PDH_Flywheel");
+    sparkLogNames.put(17, "Spark-17-Hood");
 
-    // Start AdvantageKit logger
-    Logger.start();
+    // Initialize URCL
+    Logger.registerURCL(URCL.startExternal(sparkLogNames));
 
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.

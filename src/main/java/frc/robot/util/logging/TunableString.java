@@ -26,6 +26,10 @@ public class TunableString implements Supplier<String> {
     this(key, defaultValue, shouldPublish, (value) -> {});
   }
 
+  public TunableString(String key, String defaultValue) {
+    this(key, defaultValue, () -> true, (value) -> {});
+  }
+
   public void update() {
     if (shouldPublish.getAsBoolean()) {
       if (networkString == null) {

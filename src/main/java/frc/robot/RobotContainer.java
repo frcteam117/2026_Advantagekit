@@ -13,6 +13,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Radians;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -28,9 +30,12 @@ import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeCommands;
-import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOReal;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIO;
 // import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -77,8 +82,11 @@ public class RobotContainer {
             new ModuleIONova(2),
             new ModuleIONova(3),
             (pose) -> {});
+        intake = new IntakeSubsystem(new IntakeIOReal());
+        shooter = new ShooterSubsystem(new ShooterIOReal());
 
-        vision = new VisionSubsystem(drivetrain::accept, new VisionIOPhotonVision(1));
+        vision = new VisionSubsystem(
+            drivetrain::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
         break;
       case SIM:
         // create a maple-sim swerve drive simulation instance
@@ -95,10 +103,13 @@ public class RobotContainer {
             new ModuleIOSim(driveSimulation.getModules()[2]),
             new ModuleIOSim(driveSimulation.getModules()[3]),
             driveSimulation::setSimulationWorldPose);
+        intake = new IntakeSubsystem(new IntakeIO() {});
+        shooter = new ShooterSubsystem(new ShooterIO() {});
 
         vision = new VisionSubsystem(
             drivetrain::accept,
-            new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose));
+            new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
+            new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
         // Replayed robot, disable IO implementations
@@ -109,13 +120,13 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             (pose) -> {});
+        intake = new IntakeSubsystem(new IntakeIO() {});
+        shooter = new ShooterSubsystem(new ShooterIO() {});
         // vision = null;
-        vision = new VisionSubsystem(drivetrain::accept, new VisionIO() {});
+        vision = new VisionSubsystem(drivetrain::accept, new VisionIO() {}, new VisionIO() {});
         break;
     }
-    intake = new IntakeSubsystem();
     indexer = new IndexerSubsystem();
-    shooter = new ShooterSubsystem();
 
     SysIdUtil.registerController(controller);
 
@@ -173,24 +184,23 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
-    // drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
-    //     drivetrain,
-    //     () -> -controller.getLeftY(),
-    //     () -> -controller.getLeftX(),
-    //     () -> -controller.getRightX(),
-    //     () ->
-    //         DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
-    //     () -> false));
-    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
+    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRightY(),
         () -> -controller.getRightX(),
-        .2,
-        () ->
-            DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
+        () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos().in(Radians)),
         () -> false));
+    // drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
+    //     drivetrain,
+    //     () -> -controller.getLeftY(),
+    //     () -> -controller.getLeftX(),
+    //     () -> -controller.getRightY(),
+    //     () -> -controller.getRightX(),
+    //     .2,
+    //     () ->
+    //         DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotState().pos()),
+    //     () -> false));
 
     // controller
     //     .R2()
@@ -211,14 +221,8 @@ public class RobotContainer {
     // zzzzzzzzzzzzzzzzzzzzz
     // controller.circle().whileTrue(IntakeCommands.runRollerForward(intake));
     controller.circle().whileTrue(IntakeCommands.runRollerBackward(intake));
-    controller
-        .button(10)
-        .whileTrue(
-            Commands.run(() -> intake.setPivotGoal(IntakeConstants.PIVOT_CONSTANTS.min_Pos)));
-    controller
-        .button(9)
-        .whileTrue(
-            Commands.run(() -> intake.setPivotGoal(IntakeConstants.PIVOT_CONSTANTS.max_Pos)));
+    controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5))));
+    controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(0))));
     intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
     // controller.square().onTrue(IntakeCommands.stopCommand(intake));
 
@@ -280,8 +284,9 @@ public class RobotContainer {
     //             intake.getPivotState().pos()),
     //         () -> false));
 
-    // controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
-    // controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
+    controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
+    controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
+    controller.povLeft().whileTrue(IntakeCommands.midCommand(intake));
     // controller
     //     .povLeft()
     //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,

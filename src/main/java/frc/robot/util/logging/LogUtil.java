@@ -5,6 +5,7 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import java.util.ArrayList;
 import java.util.List;
@@ -131,5 +132,19 @@ public class LogUtil {
     new TunableDouble(key + "/7 V", ff.getKv(), shouldPublish, ff::setKv);
     new TunableDouble(key + "/8 A", ff.getKa(), shouldPublish, ff::setKa);
     new TunableDouble(key + "/9 G", ff.getKg(), shouldPublish, ff::setKg);
+  }
+
+  public static void createTunableLerpTable(
+      String key,
+      InterpolatingDoubleTreeMap lerpTable,
+      BooleanSupplier shouldPublish,
+      double... values) {
+    for (double value : values) {
+      new TunableDouble(
+          key + (value < 0 ? "/" : "/+") + Double.toString(value),
+          lerpTable.get(value),
+          shouldPublish,
+          newValue -> lerpTable.put(value, newValue));
+    }
   }
 }

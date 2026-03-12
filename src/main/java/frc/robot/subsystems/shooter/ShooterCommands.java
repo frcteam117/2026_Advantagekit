@@ -1,15 +1,13 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.logging.TunableDouble;
-import frc.robot.util.states.premade.RadVel_State;
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
@@ -46,8 +44,8 @@ public class ShooterCommands {
       Logger.recordOutput(TUNING_NT_KEY + "/targetDistance", targetDistance);
       Logger.recordOutput(TUNING_NT_KEY + "/autoTargetSpeed", autoTargetSpeed);
 
-      shooter.setRIOFlywheelGoal(new RadVel_State(autoTargetSpeed));
-      shooter.setPDHFlywheelGoal(new RadVel_State(autoTargetSpeed));
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(autoTargetSpeed));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(autoTargetSpeed));
     });
   }
 
@@ -55,59 +53,59 @@ public class ShooterCommands {
     // if (!hubAutoAim(shooter, null, null).isScheduled()) {
     //   return false;
     // }
-    return Math.abs(shooter.getRIOFlywheelState().vel(RadiansPerSecond) - autoTargetSpeed)
+    return Math.abs(shooter.getRIOFlywheelVel().in(RadiansPerSecond) - autoTargetSpeed)
             < maxAllowableErrorRadPS.getAsDouble()
-        && Math.abs(shooter.getPDHFlywheelState().vel(RadiansPerSecond) - autoTargetSpeed)
+        && Math.abs(shooter.getPDHFlywheelVel().in(RadiansPerSecond) - autoTargetSpeed)
             < maxAllowableErrorRadPS.getAsDouble();
   }
 
   public static Command stop(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setHoodGoal(new RadVel_State(0));
-      shooter.setRIOFlywheelGoal(new RadVel_State(0));
-      shooter.setPDHFlywheelGoal(new RadVel_State(0));
+      shooter.setHoodGoalVel(RadiansPerSecond.zero());
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
     });
   }
 
   public static Command runForward(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setRIOFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
-      shooter.setPDHFlywheelGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
     });
   }
 
   public static Command raiseHood(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setHoodGoal(new RadVel_State(targetHoodSpeed_radPs.getAsDouble()));
+      shooter.setHoodGoalPos(Radians.of(.5));
     });
   }
 
   public static Command lowerHood(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setHoodGoal(new RadVel_State(-targetHoodSpeed_radPs.getAsDouble()));
+      shooter.setHoodGoalPos(Radians.of(.1));
     });
   }
 
-  public static Command hoodSysId(ShooterSubsystem shooter, SysIdType type) {
-    return Commands.run(() -> {}, shooter)
-        .withTimeout(1)
-        .andThen(shooter.getHoodSysIdCommand(type))
-        .withName("HoodSysId_" + type.name());
-  }
+  // public static Command hoodSysId(ShooterSubsystem shooter, SysIdType type) {
+  //   return Commands.run(() -> {}, shooter)
+  //       .withTimeout(1)
+  //       .andThen(shooter.getHoodSysIdCommand(type))
+  //       .withName("HoodSysId_" + type.name());
+  // }
 
-  public static Command rioFlywheelSysId(ShooterSubsystem shooter, SysIdType type) {
-    return Commands.run(() -> {}, shooter)
-        .withTimeout(1)
-        .andThen(shooter.getRIOFlywheelSysIdCommand(type))
-        .withName("FlywheelSysId_" + type.name());
-  }
+  // public static Command rioFlywheelSysId(ShooterSubsystem shooter, SysIdType type) {
+  //   return Commands.run(() -> {}, shooter)
+  //       .withTimeout(1)
+  //       .andThen(shooter.getRIOFlywheelSysIdCommand(type))
+  //       .withName("FlywheelSysId_" + type.name());
+  // }
 
-  public static Command pdhFlywheelSysId(ShooterSubsystem shooter, SysIdType type) {
-    return Commands.run(() -> {}, shooter)
-        .withTimeout(1)
-        .andThen(shooter.getPDHFlywheelSysIdCommand(type))
-        .withName("FlywheelSysId_" + type.name());
-  }
+  // public static Command pdhFlywheelSysId(ShooterSubsystem shooter, SysIdType type) {
+  //   return Commands.run(() -> {}, shooter)
+  //       .withTimeout(1)
+  //       .andThen(shooter.getPDHFlywheelSysIdCommand(type))
+  //       .withName("FlywheelSysId_" + type.name());
+  // }
 
   // public static Command runFlywheelGoalVelocity(Shooter shooter, DoubleSupplier supplier_radPs) {
   //   return Commands.run(

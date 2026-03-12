@@ -40,7 +40,7 @@ public class SimplePIDF extends ControlFunctionBase {
   public Voltage_State calculate(PosVel_State next_State, PosVel_State mechanism_State) {
     Voltage_State voltage =
         new Voltage_State(ff.calculateWithVelocities(lastNext_State.vel(), next_State.vel())
-            + pid.calculate(mechanism_State.vel(), lastNext_State.vel()));
+            + pid.calculate(mechanism_State.pos(), lastNext_State.pos()));
     lastNext_State = next_State;
     return voltage;
   }

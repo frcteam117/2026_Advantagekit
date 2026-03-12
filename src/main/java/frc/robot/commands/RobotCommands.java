@@ -29,8 +29,12 @@ public class RobotCommands {
       IndexerSubsystem indexer,
       BooleanSupplier shootWhenReady) {
     Translation2d target =
-        DriverStation.getAlliance().get().equals(Alliance.Blue) ? blueHub : redHub;
-    Logger.recordOutput("Commands/alliance", DriverStation.getAlliance().get().name());
+        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? blueHub : redHub;
+    Logger.recordOutput(
+        "Commands/alliance",
+        DriverStation.getAlliance().isPresent()
+            ? DriverStation.getAlliance().get().name()
+            : "empty");
     return Commands.parallel(
         ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> target),
         DrivetrainCommands.stopAndShootToward(drivetrain, () -> target));

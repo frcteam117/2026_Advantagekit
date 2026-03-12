@@ -1,85 +1,178 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.MutLinearVelocity;
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.SubsystemBase1Mech;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotConstants;
 import frc.robot.subsystems.intake.IntakeConstants.*;
-import frc.robot.util.SysIdUtil.SysIdType;
-import frc.robot.util.mechanisms.MechanismBase;
-import frc.robot.util.states.State;
-import frc.robot.util.states.bases.PosVel_State;
+import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs;
+import frc.robot.util.logging.LogUtil;
+import frc.robot.util.logging.TunableBoolean;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
-public class IntakeSubsystem extends SubsystemBase1Mech<PosVel_State> {
-  private final SparkMax rollerSpark = new SparkMax(Roller.CAN_ID, MotorType.kBrushless);
-  private final RelativeEncoder rollerEncoder = rollerSpark.getEncoder();
-  private final MutLinearVelocity rollerSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
+public class IntakeSubsystem extends SubsystemBase {
+  private final IntakeIO io;
+  private final IntakeIOInputs inputs = new IntakeIOInputs();
 
-  public IntakeSubsystem() {
-    super(IntakeConstants.PIVOT_CONFIG);
-    rollerSpark.configure(
-        Roller.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  // Pivot
+  private final TrapezoidProfile.Constraints pivot_Constraints;
+  private final TrapezoidProfile pivot_Profile;
+  private final PIDController pivot_PID;
+  private final SimpleMotorFeedforward pivot_FF;
+  private final InterpolatingDoubleTreeMap pivot_ArbitraryFF = new InterpolatingDoubleTreeMap();
+
+  private TrapezoidProfile.State pivot_PrevNextState;
+
+  public IntakeSubsystem(IntakeIO io) {
+    this.io = io;
+
+    pivot_Constraints = new TrapezoidProfile.Constraints(0, 0);
+    pivot_Profile = new TrapezoidProfile(pivot_Constraints);
+
+    if (RobotBase.isReal()) {
+      pivot_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pivot_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pivot_ArbitraryFF.put(0.1, 0.0);
+      pivot_ArbitraryFF.put(-0.1, 0.0);
+      pivot_ArbitraryFF.put(-0.4, 0.0);
+      pivot_ArbitraryFF.put(-0.7, 0.03);
+      pivot_ArbitraryFF.put(-1.0, 0.09);
+      pivot_ArbitraryFF.put(-1.3, 0.13);
+      pivot_ArbitraryFF.put(-1.6, 0.16);
+    } else {
+      pivot_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pivot_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      pivot_ArbitraryFF.put(-1000000.0, 0.0);
+      pivot_ArbitraryFF.put(1000.0, 0.0);
+    }
+
+    final String pivot_tuningNTKey = RobotConstants.TUNING_PREFIX + Pivot.NT_KEY;
+    final BooleanSupplier pivot_Tunable =
+        new TunableBoolean(pivot_tuningNTKey + "/.tunable", false);
+    LogUtil.createTunablePID(pivot_tuningNTKey + "/PID", pivot_PID, pivot_Tunable);
+    LogUtil.createTunableFF(pivot_tuningNTKey + "/SimpleFF", pivot_FF, pivot_Tunable);
+    LogUtil.createTunableLerpTable(
+        pivot_tuningNTKey + "/ArbirtaryFF",
+        pivot_ArbitraryFF,
+        pivot_Tunable,
+        0.1,
+        -0.1,
+        -0.4,
+        -0.7,
+        -1.0,
+        -1.3,
+        -1.6);
+
+    // final String roller_tuningNTKey = RobotConstants.TUNING_PREFIX + Roller.NT_KEY;
+    // final BooleanSupplier roller_Tunable = new TunableBoolean(roller_tuningNTKey + "/.tunable",
+    // false);
+
+    periodic();
+    setPivotVoltage(Volts.of(0.0));
+    setRollerSpeed(0);
+  }
+
+  @Override
+  public void periodic() {
+    io.updateInputs(inputs);
+    Logger.processInputs(IntakeConstants.NT_KEY, inputs);
   }
 
   public Pose3d[] getPose3ds() {
-    return getIntakePose(getPivotState().pos(Radians));
+    return getIntakePose(getPivotPos().in(Radians));
   }
 
-  public void periodic() {
-    super.periodic();
-    rollerSurfaceVel.mut_replace(
-        rollerEncoder.getVelocity()
-            * 2
-            * Math.PI
-            * Roller.RADIUS.in(Meters)
-            / (Roller.REDUCTION * 60),
-        MetersPerSecond);
-    Logger.recordOutput(Roller.NT_KEY + "/SurfaceVel", rollerSurfaceVel);
+  public Angle getPivotPos() {
+    return inputs.pivot_Pos;
+  }
+
+  public AngularVelocity getPivotVel() {
+    return inputs.pivot_Vel;
+  }
+
+  public LinearVelocity getRollerSurfaceVel() {
+    return inputs.roller_SurfaceVel;
   }
 
   // Pivot
 
-  public void setPivotGoal(State goal_State, int usedProfile, int usedFeedback) {
-    setMech0Goal(goal_State, usedProfile, usedFeedback);
+  public void setPivotVoltage(Voltage voltage) {
+    io.setPivotVoltage(voltage);
+    Logger.recordOutput(Pivot.NT_KEY + "/1_GoalPos", Double.NaN, Radians);
+    Logger.recordOutput(Pivot.NT_KEY + "/1_GoalVel", Double.NaN, RadiansPerSecond);
+    Logger.recordOutput(Pivot.NT_KEY + "/2_NextPos", Double.NaN, Radians);
+    Logger.recordOutput(Pivot.NT_KEY + "/2_NextVel", Double.NaN, RadiansPerSecond);
+    Logger.recordOutput(Pivot.NT_KEY + "/3_OutputVoltage", voltage);
+    pivot_PrevNextState = new TrapezoidProfile.State(
+        inputs.pivot_Pos.in(Radians), inputs.pivot_Vel.in(RadiansPerSecond));
   }
 
-  public void setPivotGoal(State goal_State) {
-    setMech0Goal(goal_State);
+  public void setPivotGoalPos(Angle goalPos) {
+    TrapezoidProfile.State nextState = pivot_Profile.calculate(
+        RobotConstants.CODE_PERIOD_s,
+        pivot_PrevNextState,
+        new TrapezoidProfile.State(
+            Math.max(
+                Pivot.MIN_POS.in(Radians),
+                Math.min(Pivot.MAX_POS.in(Radians), goalPos.in(Radians))),
+            0));
+    Voltage voltage = Volts.of(pivot_ArbitraryFF.get(inputs.pivot_Pos.in(Radians))
+        + pivot_FF.calculateWithVelocities(pivot_PrevNextState.velocity, nextState.velocity)
+        + pivot_PID.calculate(inputs.pivot_Pos.in(Radians), pivot_PrevNextState.position));
+    io.setPivotVoltage(voltage);
+    Logger.recordOutput(Pivot.NT_KEY + "/1_GoalPos", goalPos.in(Radians), Radians);
+    Logger.recordOutput(Pivot.NT_KEY + "/1_GoalVel", Double.NaN, RadiansPerSecond);
+    Logger.recordOutput(Pivot.NT_KEY + "/2_NextPos", nextState.position, Radians);
+    Logger.recordOutput(Pivot.NT_KEY + "/2_NextVel", nextState.velocity, RadiansPerSecond);
+    Logger.recordOutput(Pivot.NT_KEY + "/3_OutputVoltage", voltage);
+    pivot_PrevNextState = nextState;
   }
 
-  public Command getPivotSysIdCommand(SysIdType type) {
-    return getMech0SysIdCommand(type);
-  }
-
-  public PosVel_State getPivotState() {
-    return getMech0State();
-  }
-
-  public MechanismBase<PosVel_State> getPivot() {
-    return getMechanism0();
+  public void setPivotGoalVel(AngularVelocity goalVel) {
+    TrapezoidProfile.State nextState = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+            Math.max(
+                Math.abs(pivot_PrevNextState.velocity)
+                    - pivot_Constraints.maxAcceleration * RobotConstants.CODE_PERIOD_s,
+                Math.min(pivot_Constraints.maxVelocity, Math.abs(goalVel.in(RadiansPerSecond)))),
+            pivot_Constraints.maxAcceleration))
+        .calculate(
+            RobotConstants.CODE_PERIOD_s,
+            pivot_PrevNextState,
+            new TrapezoidProfile.State(
+                (goalVel.magnitude() < 0) ? Pivot.MIN_POS.in(Radians) : Pivot.MAX_POS.in(Radians),
+                0));
+    Voltage voltage = Volts.of(pivot_ArbitraryFF.get(inputs.pivot_Pos.in(Radians))
+        + pivot_FF.calculateWithVelocities(pivot_PrevNextState.velocity, nextState.velocity)
+        + pivot_PID.calculate(inputs.pivot_Pos.in(Radians), pivot_PrevNextState.position));
+    io.setPivotVoltage(voltage);
+    Logger.recordOutput(Pivot.NT_KEY + "/1_GoalPos", Double.NaN, Radians);
+    Logger.recordOutput(
+        Pivot.NT_KEY + "/1_GoalVel", goalVel.in(RadiansPerSecond), RadiansPerSecond);
+    Logger.recordOutput(Pivot.NT_KEY + "/2_NextPos", nextState.position, Radians);
+    Logger.recordOutput(Pivot.NT_KEY + "/2_NextVel", nextState.velocity, RadiansPerSecond);
+    Logger.recordOutput(Pivot.NT_KEY + "/3_OutputVoltage", voltage);
+    pivot_PrevNextState = nextState;
   }
 
   // Roller
   public void setRollerSpeed(double speed) {
-    rollerSpark.set(speed);
-    Logger.recordOutput(Roller.NT_KEY + "/GoalSpeed", speed);
-  }
-
-  public LinearVelocity getRollerSurfaceSpeed() {
-    return rollerSurfaceVel;
+    io.setRollerSpeed(speed);
+    Logger.recordOutput(Roller.NT_KEY + "/3_OutputSpeed", speed);
   }
 
   private Pose3d[] getIntakePose(double rad) {

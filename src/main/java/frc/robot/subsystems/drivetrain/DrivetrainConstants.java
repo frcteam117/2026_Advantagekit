@@ -58,7 +58,7 @@ public class DrivetrainConstants {
     public static final Translation2d cmPosition = new Translation2d(0.0, 0.0);
 
     // software limits
-    public static final double odometryFrequency_Hz = 100.0;
+    public static final double odometryFrequency_Hz = 50.0;
 
     public static final RobotConfig ppConfig;
 
