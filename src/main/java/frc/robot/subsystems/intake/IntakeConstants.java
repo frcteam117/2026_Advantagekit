@@ -26,7 +26,7 @@ public class IntakeConstants {
     static {
       SPARK_MAX_CONFIG
           .disableVoltageCompensation()
-          .idleMode(IdleMode.kBrake)
+          .idleMode(IdleMode.kCoast)
           .smartCurrentLimit(80)
           .inverted(true)
           .encoder

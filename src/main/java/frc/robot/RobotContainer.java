@@ -14,11 +14,13 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
@@ -43,6 +45,9 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -175,7 +180,12 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
-  private Rotation2d prevTarget = Rotation2d.kZero;
+  // private Rotation2d prevTarget = Rotation2d.kZero;
+  private List<Pose2d> shooterTuningPoses = new ArrayList<>();
+  private List<Double> shooterTuningRIOVels = new ArrayList<>();
+  private List<Double> shooterTuningPDHVels = new ArrayList<>();
+  private List<Double> shooterTuningHoodPoses = new ArrayList<>();
+
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -212,37 +222,72 @@ public class RobotContainer {
     // controller.triangle()));
     // controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
 
+    // Intake
+    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.R1()));
+    controller.circle().whileTrue(IntakeCommands.outtakeFuel(intake, controller.R1()));
+    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.R1()));
+    controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5))));
+    controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-0.7))));
+
+    // Indexer
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
+
+    // Shooter
+    shooter.setDefaultCommand(ShooterCommands.stop(shooter));
+    controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
+    controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     // controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
     // controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
-    shooter.setDefaultCommand(ShooterCommands.stop(shooter));
     // controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
     // zzzzzzzzzzzzzzzzzzzzz
     // controller.circle().whileTrue(IntakeCommands.runRollerForward(intake));
-    controller.circle().whileTrue(IntakeCommands.runRollerBackward(intake));
-    controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5))));
-    controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(0))));
-    intake.setDefaultCommand(IntakeCommands.stopCommand(intake));
     // controller.square().onTrue(IntakeCommands.stopCommand(intake));
 
     // new button bindings:
-    controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
-    controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
-    // should this be whileTrue? vvv
     controller
-        .R2()
-        .whileTrue(RobotCommands.hubAutoShoot(
-            drivetrain, shooter, indexer, () -> ShooterCommands.isAutoAimReady(shooter)));
+        .L1()
+        .whileTrue(
+          // ShooterCommands.autoAim(shooter, drivetrain::getPose, null, null, null));
+          Commands.parallel(
+            IndexerCommands.runForwardCommand(indexer),
+            Commands.run(() -> IntakeCommands.shooting = true)
+                .finallyDo(() -> IntakeCommands.shooting = false)));
+    // controller.R1().whileTrue(IntakeCommands.);
+    // should this be whileTrue? vvv
+    controller.R2().whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, () -> true));
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
     // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
     controller
         .cross()
         .whileTrue(RobotCommands.hubAutoShoot(
             drivetrain, shooter, indexer, controller.button(13))); // make aimToPass
+
+    controller.square().whileTrue(ShooterCommands.runForward(shooter));
+    controller.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
+      shooterTuningPoses.add(drivetrain.getPose());
+      shooterTuningRIOVels.add(shooter.getRIOFlywheelVel().in(RadiansPerSecond));
+      shooterTuningPDHVels.add(shooter.getPDHFlywheelVel().in(RadiansPerSecond));
+      shooterTuningHoodPoses.add(shooter.getHoodPos().in(Radians));
+      Logger.recordOutput("ShooterTuning/Poses", shooterTuningPoses.toArray(Pose2d[]::new));
+      Logger.recordOutput(
+          "ShooterTuning/RIOVels",
+          Arrays.stream(shooterTuningRIOVels.toArray(Double[]::new))
+              .mapToDouble(value -> value)
+              .toArray());
+      Logger.recordOutput(
+          "ShooterTuning/PDHVels",
+          Arrays.stream(shooterTuningPDHVels.toArray(Double[]::new))
+              .mapToDouble(value -> value)
+              .toArray());
+      Logger.recordOutput(
+          "ShooterTuning/HoodPoses",
+          Arrays.stream(shooterTuningHoodPoses.toArray(Double[]::new))
+              .mapToDouble(value -> value)
+              .toArray());
+    }));
     // command?
-    controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
+    // controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
 
     // snake mode around middle
     // controller
@@ -269,7 +314,8 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             .05,
             controller.R3(),
-            () -> new Translation2d((DrivetrainConstants.Chassis.bumperLength_m / 2), 0),
+            () -> new Translation2d(
+                (DrivetrainConstants.Chassis.bumperLength_m / 2) + Units.inchesToMeters(2), 0),
             () -> false));
 
     // angle from right joystick mode
@@ -285,9 +331,7 @@ public class RobotContainer {
     //             intake.getPivotState().pos()),
     //         () -> false));
 
-    controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
-    controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
-    controller.povLeft().whileTrue(IntakeCommands.midCommand(intake));
+    // controller.povLeft().whileTrue(IntakeCommands.midCommand(intake));
     // controller
     //     .povLeft()
     //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
@@ -321,7 +365,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // return autoChooser.get();
+    return autoChooser.get();
     // try {
     //   return AutoBuilder.followPath(PathPlannerPath.fromPathFile("Example Path"));
     // } catch (FileVersionException | IOException | ParseException e) {
@@ -329,10 +373,10 @@ public class RobotContainer {
     //   e.printStackTrace();
     // }
     // return null;
-    return Commands.parallel(
-            Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
-            RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
-        .withTimeout(8);
+    // return Commands.parallel(
+    //         Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
+    //         RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
+    //     .withTimeout(8);
   }
 
   public void resetSimulationField() {

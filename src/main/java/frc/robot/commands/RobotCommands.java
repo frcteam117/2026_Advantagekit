@@ -9,9 +9,12 @@ import frc.robot.RobotConstants;
 import frc.robot.RobotConstants.FieldType;
 import frc.robot.subsystems.drivetrain.DrivetrainCommands;
 import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
+import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.intake.IntakeCommands;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -22,26 +25,49 @@ public class RobotCommands {
   private static final Translation2d redHub = RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
       ? new Translation2d(0.0254 * (651.22 - 182.11), 0.0254 * (317.69 / 2))
       : new Translation2d(0.0254 * (650.12 - 181.56), 0.0254 * (316.64 / 2));
+  private static final Translation2d redLPassingTarget = new Translation2d(15, 6.1);
+  private static final Translation2d redRPassingTarget = new Translation2d(15, 2);
+  private static final Translation2d blueLPassingTarget = new Translation2d(1.5, 7.35);
+  private static final Translation2d blueRPassingTarget = new Translation2d(1.5, 0.75);
 
   public static Command hubAutoShoot(
       DrivetrainSubsystem drivetrain,
       ShooterSubsystem shooter,
       IndexerSubsystem indexer,
       BooleanSupplier shootWhenReady) {
-    Translation2d target =
-        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? blueHub : redHub;
-    Logger.recordOutput(
-        "Commands/alliance",
-        DriverStation.getAlliance().isPresent()
-            ? DriverStation.getAlliance().get().name()
-            : "empty");
-    return Commands.parallel(
-        ShooterCommands.hubAutoAim(shooter, drivetrain::getPose, () -> target),
-        DrivetrainCommands.stopAndShootToward(drivetrain, () -> target));
-    // IndexerCommands.conditionalRunForward(
-    //     indexer,
-    //     () -> shootWhenReady.getAsBoolean()
-    //         && ShooterCommands.isAutoAimReady(shooter)
-    //         && DrivetrainCommands.isAutoAimReady(drivetrain)));
+    return Commands.defer(
+        () -> {
+          boolean isBlueAlliance =
+              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+          boolean isPassing = isBlueAlliance
+              ? drivetrain.getPose().getX() > 4.7
+              : drivetrain.getPose().getX() < 12;
+          Translation2d target = isPassing
+              ? (drivetrain.getPose().getY() < 4.05
+                  ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)
+                  : (isBlueAlliance ? blueLPassingTarget : redLPassingTarget))
+              : (isBlueAlliance ? blueHub : redHub);
+          Logger.recordOutput(
+              "Commands/alliance",
+              DriverStation.getAlliance().isEmpty() ? "Empty" : (isBlueAlliance ? "Blue" : "Red"));
+          Logger.recordOutput("Commands/isPassing", isPassing ? "True" : "False");
+          Logger.recordOutput("Commands/shootingTarget", target);
+          Logger.recordOutput("Commands/posex", drivetrain.getPose().getX());
+          Logger.recordOutput("Commands/posey", drivetrain.getPose().getY());
+          return Commands.parallel(
+                  ShooterCommands.autoAim(
+                      shooter, drivetrain::getPose, () -> target, () -> isPassing, () -> false),
+                  DrivetrainCommands.stopAndShootToward(drivetrain, () -> target),
+                  IndexerCommands.conditionalRunForward(
+                      indexer,
+                      () -> shootWhenReady.getAsBoolean()
+                          && ShooterCommands.isAutoAimReady(shooter)
+                          && DrivetrainCommands.isAutoAimReady(drivetrain)),
+                  Commands.run(() -> IntakeCommands.shooting = shootWhenReady.getAsBoolean()
+                      && ShooterCommands.isAutoAimReady(shooter)
+                      && DrivetrainCommands.isAutoAimReady(drivetrain)))
+              .finallyDo(() -> IntakeCommands.shooting = false);
+        },
+        Set.of(drivetrain, shooter, indexer));
   }
 }

@@ -97,6 +97,8 @@ public class Robot extends LoggedRobot {
     // Initialize URCL
     Logger.registerURCL(URCL.startExternal(sparkLogNames));
 
+    Logger.start();
+
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();

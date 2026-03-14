@@ -46,8 +46,6 @@ import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -57,7 +55,7 @@ import org.littletonrobotics.junction.Logger;
 public class DrivetrainCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + DrivetrainConstants.NAME + "/Commands";
   private static final BooleanSupplier TUNABLE =
-      new TunableBoolean(TUNING_NT_KEY + "/.Tunable", false, () -> true);
+      new TunableBoolean(TUNING_NT_KEY + "/.Tunable", true);
   private static final double JOYSTICK_DEADBAND = 0.04;
   private static final ProfiledPIDController ANGLE_CONTROLLER = new ProfiledPIDController(
       0.5, 0.0, 0.0, new Constraints(6.0, 10.0), RobotConstants.CODE_PERIOD_s);
@@ -342,10 +340,20 @@ public class DrivetrainCommands {
   }
 
   private static Rotation2d joystickDriveAtAngle_rotTarget;
-  private static double[] snapToAngleTargets_deg =
-      new double[] {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360};
-  private static double[] snapToAngletargetBorders_deg =
-      new double[] {15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345, 375};
+  private static double[] snapToAngleTargets_deg = new double[] {
+    0, // 30, 60,
+    90, // 120, 150,
+    180, // 210, 240,
+    270, // 300, 330,
+    360
+  };
+  private static double[] snapToAngletargetBorders_deg = new double[] { // 15,
+    45, // 75, 105,
+    135, // 165, 195,
+    225, // 255, 285,
+    315, // 345, 375,
+    405
+  };
 
   /**
    * Field relative drive command using joystick for linear control and PID for angular control.
@@ -372,7 +380,7 @@ public class DrivetrainCommands {
                 Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
             if (snapToAngle.getAsBoolean()) {
               double snapToAngleJoystickTarget_deg =
-                  MathUtil.inputModulus(joystickDrive_target_rad * 180 / Math.PI, 0, 360);
+                  MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
               for (int i = 0; i < snapToAngletargetBorders_deg.length; i++) {
                 if (snapToAngleJoystickTarget_deg < snapToAngletargetBorders_deg[i]) {
                   joystickDriveAtAngle_rotTarget =
@@ -440,6 +448,17 @@ public class DrivetrainCommands {
                         : Rotation2d.kZero);
           }
         });
+  }
+
+  private Translation2d shootWhileMoving_shooterVelocity = new Translation2d();
+
+  public static Command shootWhileMoving(
+      DrivetrainSubsystem drivetrain,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      BooleanSupplier driveAssistSupplier) {
+
+    return Commands.none();
   }
 
   private static final double pathOverBump_VELOCITY = 1;
@@ -629,24 +648,61 @@ public class DrivetrainCommands {
       if (driveAssist) {
         final Translation2d robotVelocity =
             new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
-        Translation2d[] cornerSpeeds = new Translation2d[4];
+        // Translation2d[] cornerSpeeds = new Translation2d[4];
         Translation2d[] fieldCenteredRobotCorners = new Translation2d[4];
         Translation2d robotSpeedsDelta = new Translation2d();
-        List<DriveAssistWall> relavantMap = new ArrayList<>();
+        // List<DriveAssistWall> relavantMap = new ArrayList<>();
 
         for (int i = 0; i < 4; i++) {
           fieldCenteredRobotCorners[i] = driveAssistRobotCorners[i]
               .rotateBy(drivetrain.getPose().getRotation())
               .plus(drivetrain.getPose().getTranslation());
-          cornerSpeeds[i] = robotVelocity
-              .plus(driveAssistRobotCorners[i]
-                  .minus(centerOfRotation)
-                  .rotateBy(Rotation2d.kCCW_90deg)
-                  .times(speeds.omegaRadiansPerSecond))
-              .rotateBy(drivetrain.getPose().getRotation());
         }
 
-        for (DriveAssistWall wall : DRIVE_ASSIST_MAP) {}
+        final double maxFreeDistance = DRIVE_MAX_VELOCITY.getAsDouble()
+            * DRIVE_MAX_VELOCITY.getAsDouble()
+            / (2 * DRIVE_MAX_ACCELERATION);
+        double xmin = Math.min(
+            Math.min(fieldCenteredRobotCorners[0].getX(), fieldCenteredRobotCorners[1].getX()),
+            Math.min(fieldCenteredRobotCorners[2].getX(), fieldCenteredRobotCorners[3].getX()));
+        if (xmin < maxFreeDistance
+            && robotVelocity.getX() < -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, xmin))) {
+          robotSpeedsDelta = new Translation2d(
+              Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, xmin)) - robotVelocity.getX(),
+              robotSpeedsDelta.getY());
+        }
+        double xmax = Math.max(
+            Math.max(fieldCenteredRobotCorners[0].getX(), fieldCenteredRobotCorners[1].getX()),
+            Math.max(fieldCenteredRobotCorners[2].getX(), fieldCenteredRobotCorners[3].getX()));
+        if (xmax > 16.5 - maxFreeDistance
+            && robotVelocity.getX()
+                > Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 16.5 - xmax))) {
+          robotSpeedsDelta = new Translation2d(
+              -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 16.5 - xmax))
+                  - robotVelocity.getX(),
+              robotSpeedsDelta.getY());
+        }
+        double ymin = Math.min(
+            Math.min(fieldCenteredRobotCorners[0].getY(), fieldCenteredRobotCorners[1].getY()),
+            Math.min(fieldCenteredRobotCorners[2].getY(), fieldCenteredRobotCorners[3].getY()));
+        if (ymin < maxFreeDistance
+            && robotVelocity.getY() < -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, ymin))) {
+          robotSpeedsDelta = new Translation2d(
+              robotSpeedsDelta.getX(),
+              Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, ymin)) - robotVelocity.getY());
+        }
+        double ymax = Math.max(
+            Math.max(fieldCenteredRobotCorners[0].getY(), fieldCenteredRobotCorners[1].getY()),
+            Math.max(fieldCenteredRobotCorners[2].getY(), fieldCenteredRobotCorners[3].getY()));
+        if (ymax > 8.1 - maxFreeDistance
+            && robotVelocity.getY()
+                > Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 8.1 - ymax))) {
+          robotSpeedsDelta = new Translation2d(
+              robotSpeedsDelta.getX(),
+              -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 8.1 - ymax))
+                  - robotVelocity.getY());
+        }
+        speeds.plus(new ChassisSpeeds(robotSpeedsDelta.getX(), robotSpeedsDelta.getY(), 0));
       }
       // double scaleFactor = Math.max(
       //     1.0,

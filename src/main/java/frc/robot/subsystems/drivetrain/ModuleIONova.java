@@ -110,7 +110,7 @@ public class ModuleIONova implements ModuleIO {
     // Update drive inputs
     inputs.driveMotor_State = new Motor_State(
         UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction),
-        2 * Math.PI * driveNova.getVelocityInternal() / Drive.reduction,
+        UnitUtil.rotTorad(driveNova.getVelocityInternal() / Drive.reduction),
         driveNova.getAppliedVoltage(),
         driveNova.getStatorCurrent(),
         driveNova.getSupplyCurrent());
@@ -125,7 +125,7 @@ public class ModuleIONova implements ModuleIO {
     inputs.azimuthMotor_State = new Motor_State(
         UnitUtil.rotTorad(
             azimuthNova.getPositionInternal() / Azimuth.reduction), // - zeroRotation_rad,
-        UnitUtil.RPMToradPs(azimuthNova.getVelocityInternal() / Azimuth.reduction),
+        UnitUtil.rotTorad(azimuthNova.getVelocityInternal() / Azimuth.reduction),
         azimuthNova.getAppliedVoltage(),
         azimuthNova.getStatorCurrent(),
         azimuthNova.getSupplyCurrent());

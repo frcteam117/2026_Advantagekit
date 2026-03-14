@@ -4,10 +4,12 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.util.logging.TunableDouble;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
@@ -31,21 +33,28 @@ public class ShooterCommands {
       meters -> 11.0169521624 * meters * meters + 277.447063272;
   private static final DoubleSupplier maxAllowableErrorRadPS =
       new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableError", 10, () -> true);
-  private static double autoTargetSpeed = 0;
+  private static final DoubleSupplier maxAllowableErrorRad =
+      new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableHoodError", 0.03, () -> true);
+  private static double hood_autoAimPos_rad = 0;
+  private static double hood_autoAimVel_radPs = 0;
+  private static double flywheel_autoAimVel_radPs = 0;
+  private static double flywheel_autoAimAcc_radPs2 = 0;
 
-  public static Command hubAutoAim(
+  public static Command autoAim(
       ShooterSubsystem shooter,
       Supplier<Pose2d> robotPoseSupplier,
-      Supplier<Translation2d> targetSupplier) {
+      Supplier<Translation2d> targetSupplier,
+      BooleanSupplier passing,
+      BooleanSupplier trenchOverride) {
     return shooter.run(() -> {
       double targetDistance =
           robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get());
-      autoTargetSpeed = distanceToSpeed.applyAsDouble(targetDistance);
+      flywheel_autoAimVel_radPs = distanceToSpeed.applyAsDouble(targetDistance);
       Logger.recordOutput(TUNING_NT_KEY + "/targetDistance", targetDistance);
-      Logger.recordOutput(TUNING_NT_KEY + "/autoTargetSpeed", autoTargetSpeed);
+      Logger.recordOutput(TUNING_NT_KEY + "/autoTargetSpeed", flywheel_autoAimVel_radPs);
 
-      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(autoTargetSpeed));
-      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(autoTargetSpeed));
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(flywheel_autoAimVel_radPs));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(flywheel_autoAimVel_radPs));
     });
   }
 
@@ -53,15 +62,23 @@ public class ShooterCommands {
     // if (!hubAutoAim(shooter, null, null).isScheduled()) {
     //   return false;
     // }
-    return Math.abs(shooter.getRIOFlywheelVel().in(RadiansPerSecond) - autoTargetSpeed)
-            < maxAllowableErrorRadPS.getAsDouble()
-        && Math.abs(shooter.getPDHFlywheelVel().in(RadiansPerSecond) - autoTargetSpeed)
-            < maxAllowableErrorRadPS.getAsDouble();
+    return MathUtil.isNear(
+            hood_autoAimPos_rad,
+            shooter.getHoodPos().in(Radians),
+            maxAllowableErrorRad.getAsDouble())
+        && MathUtil.isNear(
+            flywheel_autoAimVel_radPs,
+            shooter.getRIOFlywheelVel().in(RadiansPerSecond),
+            maxAllowableErrorRadPS.getAsDouble())
+        && MathUtil.isNear(
+            flywheel_autoAimVel_radPs,
+            shooter.getPDHFlywheelVel().in(RadiansPerSecond),
+            maxAllowableErrorRadPS.getAsDouble());
   }
 
   public static Command stop(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setHoodGoalVel(RadiansPerSecond.zero());
+      shooter.setHoodGoalPos(Radians.zero());
       shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
       shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
     });
@@ -76,13 +93,13 @@ public class ShooterCommands {
 
   public static Command raiseHood(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setHoodGoalPos(Radians.of(.5));
+      shooter.setHoodGoalVel(RadiansPerSecond.of(0.1));
     });
   }
 
   public static Command lowerHood(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setHoodGoalPos(Radians.of(.1));
+      shooter.setHoodGoalVel(RadiansPerSecond.of(-0.1));
     });
   }
 
