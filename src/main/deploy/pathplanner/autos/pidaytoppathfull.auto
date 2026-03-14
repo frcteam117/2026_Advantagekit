@@ -33,12 +33,6 @@
           "data": {
             "waitTime": 0.7
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Indexer_on"
-          }
         }
       ]
     }

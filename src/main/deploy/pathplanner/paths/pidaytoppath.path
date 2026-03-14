@@ -128,6 +128,18 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "IntakeRollerOn",
+      "waypointRelativePos": 0.8886389201349827,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "IntakeRollerOff",
+      "waypointRelativePos": 3.0033745781776586,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
       "name": "flywheel_acc_1",
       "waypointRelativePos": 3.1383577052868024,
       "endWaypointRelativePos": null,
