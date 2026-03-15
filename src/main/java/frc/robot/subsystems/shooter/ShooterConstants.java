@@ -59,11 +59,26 @@ public class ShooterConstants {
     }
   }
 
-  public static class PDH_Flywheel extends RIO_Flywheel {
+  public static class PDH_Flywheel {
     public static final String NT_KEY = ShooterConstants.LOG_NAME + "/PDH_Flywheel";
-    public static final int LEADER_CAN_ID = 16;
-    public static final int FOLLOWER_CAN_ID = 15;
-    public static final SparkMaxConfig SPARK_MAX_CONFIG =
-        new SparkMaxConfig().apply(RIO_Flywheel.SPARK_MAX_CONFIG);
+    public static final int LEADER_CAN_ID = 15;
+    public static final int FOLLOWER_CAN_ID = 16;
+    public static final SparkMaxConfig SPARK_MAX_CONFIG = new SparkMaxConfig();
+    public static final double REDUCTION = 1.0;
+    public static final Distance RADIUS = Inches.of(2.0);
+    public static final MomentOfInertia MOI = null;
+    public static final DCMotor GEARBOX = DCMotor.getNeoVortex(2).withReduction(REDUCTION);
+
+    static {
+      SPARK_MAX_CONFIG
+          .disableVoltageCompensation()
+          .idleMode(IdleMode.kCoast)
+          .smartCurrentLimit(60)
+          .encoder
+          .quadratureMeasurementPeriod(10)
+          .quadratureAverageDepth(4);
+      // .positionConversionFactor(2 * Math.PI)
+      // .velocityConversionFactor(2 * Math.PI / 60);
+    }
   }
 }

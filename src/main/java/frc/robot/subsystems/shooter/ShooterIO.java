@@ -11,12 +11,10 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface ShooterIO {
   public static class ShooterIOInputs implements LoggableInputs {
-    public final MutAngle hood_Pos = new MutAngle(0, 0, Radians);
-    public final MutAngularVelocity hood_Vel = new MutAngularVelocity(0, 0, RadiansPerSecond);
-    public final MutAngularVelocity rioFlywheel_Vel =
-        new MutAngularVelocity(0, 0, RadiansPerSecond);
-    public final MutAngularVelocity pdhFlywheel_Vel =
-        new MutAngularVelocity(0, 0, RadiansPerSecond);
+    public final MutAngle hood_Pos = Radians.mutable(0);
+    public final MutAngularVelocity hood_Vel = RadiansPerSecond.mutable(0);
+    public final MutAngularVelocity rioFlywheel_Vel = RadiansPerSecond.mutable(0);
+    public final MutAngularVelocity pdhFlywheel_Vel = RadiansPerSecond.mutable(0);
 
     @Override
     public void toLog(LogTable table) {

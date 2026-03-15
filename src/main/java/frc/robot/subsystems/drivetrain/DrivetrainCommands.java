@@ -75,16 +75,17 @@ public class DrivetrainCommands {
   private static final DoubleSupplier ANGULAR_ACC_FF =
       new TunableDouble(TUNING_NT_KEY + "/ANGULAR_ACC_FF", 0.035);
   private static final Rotation2d[] X_MODULE_HEADINGS = new Rotation2d[] {
-    Chassis.moduleTranslations[0].getAngle(),
-    Chassis.moduleTranslations[1].getAngle(),
-    Chassis.moduleTranslations[2].getAngle(),
-    Chassis.moduleTranslations[3].getAngle()
+    Chassis.moduleTranslations[0].getAngle().plus(Rotation2d.kCCW_90deg),
+    Chassis.moduleTranslations[1].getAngle().plus(Rotation2d.kCCW_90deg),
+    Chassis.moduleTranslations[2].getAngle().plus(Rotation2d.kCCW_90deg),
+    Chassis.moduleTranslations[3].getAngle().plus(Rotation2d.kCCW_90deg)
   };
   public static Rotation2d targetTagRotation2d;
   public static Rotation2d robotRotation2d[];
 
   static {
     ANGLE_CONTROLLER.enableContinuousInput(-Math.PI, Math.PI);
+    ANGLE_CONTROLLER.setTolerance(0.01, .3);
     LogUtil.createTunableProfiledPID(TUNING_NT_KEY + "/AnglePID", ANGLE_CONTROLLER, TUNABLE);
   }
 
@@ -107,8 +108,13 @@ public class DrivetrainCommands {
                       .plus(Rotation2d.k180deg)
                       .getRadians(),
                   0));
-          drivetrain.setGoalVelocity(
-              new ChassisSpeeds(0, 0, ANGLE_CONTROLLER.getSetpoint().velocity + feedback));
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(0, 0, ANGLE_CONTROLLER.getSetpoint().velocity + feedback);
+          if (isAutoAimReady(drivetrain)) {
+            drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
+          } else {
+            drivetrain.setGoalVelocity(speeds);
+          }
         });
   }
 

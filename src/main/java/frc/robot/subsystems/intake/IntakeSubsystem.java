@@ -13,7 +13,6 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -105,8 +104,8 @@ public class IntakeSubsystem extends SubsystemBase {
     return inputs.pivot_Vel;
   }
 
-  public LinearVelocity getRollerSurfaceVel() {
-    return inputs.roller_SurfaceVel;
+  public AngularVelocity getRollerVel() {
+    return inputs.roller_Vel;
   }
 
   // Pivot

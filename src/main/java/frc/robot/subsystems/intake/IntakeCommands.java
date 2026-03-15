@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.intake.IntakeConstants.NT_KEY;
 
@@ -18,6 +19,12 @@ public class IntakeCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + NT_KEY + "/Commands";
   private static final BooleanSupplier PIVOT_WORKS =
       new TunableBoolean(TUNING_NT_KEY + "/PivotWorks", true);
+  private static final BooleanSupplier PIVOT_KINDA_WORKS =
+      new TunableBoolean(TUNING_NT_KEY + "/PivotKindaWorks", true);
+  private static final DoubleSupplier PIVOT_LOWER_THRESHOLD =
+      new TunableDouble(TUNING_NT_KEY + "/PivotLowerThreshold_rad", -1.4);
+  private static final DoubleSupplier ROLLER_THRESHOLD =
+      new TunableDouble(TUNING_NT_KEY + "/RollerThreshold_radPs", 10);
   private static final double ROLLER_FORWARD_SPEED = 1.0;
   private static final DoubleSupplier ROLLER_REVERSE_SPEED =
       new TunableDouble(TUNING_NT_KEY + "/RollerReverseSpeed", -0.5);
@@ -32,13 +39,37 @@ public class IntakeCommands {
   private static final Angle DOWN_POS = Pivot.MIN_POS;
   public static boolean shooting = false;
 
+  // public static void setIndexing(boolean isIndexing) {
+  //   shooting = isIndexing;
+  // }
+
+  // public static Command setIndexingCommand(BooleanSupplier isIndexing) {
+  //   return Commands.runOnce(() -> shooting = isIndexing.getAsBoolean());
+  // }
+
+  // public static enum IntakeState {
+  //   RAISED_IDLE,
+  //   LOWERED_IDLE,
+  //   INTAKING,
+  //   OUTTAKING,
+  //   INDEXING
+  // }
+
   public static Command defaultCommand(IntakeSubsystem intake, BooleanSupplier raisePivot) {
     return Commands.run(
         () -> {
-          if (!PIVOT_WORKS.getAsBoolean()) intake.setPivotVoltage(Volts.zero());
           if (shooting) {
             intake.setRollerSpeed(ROLLER_FORWARD_SPEED);
-            if (PIVOT_WORKS.getAsBoolean()) intake.setPivotGoalPos(SHOOTING_POS.get());
+            if (PIVOT_WORKS.getAsBoolean()) {
+              intake.setPivotGoalPos(SHOOTING_POS.get());
+            } else {
+              if (PIVOT_KINDA_WORKS.getAsBoolean()
+                  && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
+                intake.setPivotGoalPos(DOWN_POS);
+              } else {
+                intake.setPivotVoltage(Volts.zero());
+              }
+            }
           } else {
             intake.setRollerSpeed(0);
             if (PIVOT_WORKS.getAsBoolean()) {
@@ -46,6 +77,13 @@ public class IntakeCommands {
                 intake.setPivotGoalPos(SHOOTING_POS.get());
               } else {
                 intake.setPivotGoalPos(DOWN_POS);
+              }
+            } else {
+              if (PIVOT_KINDA_WORKS.getAsBoolean()
+                  && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
+                intake.setPivotGoalPos(DOWN_POS);
+              } else {
+                intake.setPivotVoltage(Volts.zero());
               }
             }
           }
@@ -58,13 +96,19 @@ public class IntakeCommands {
         () -> {
           intake.setRollerSpeed(ROLLER_FORWARD_SPEED);
           if (PIVOT_WORKS.getAsBoolean()) {
-            if (raisePivot.getAsBoolean()) {
+            if (raisePivot.getAsBoolean()
+                || intake.getRollerVel().in(RadiansPerSecond) < ROLLER_THRESHOLD.getAsDouble()) {
               intake.setPivotGoalPos(SHOOTING_POS.get());
             } else {
               intake.setPivotGoalPos(DOWN_POS);
             }
           } else {
-            intake.setPivotVoltage(Volts.zero());
+            if (PIVOT_KINDA_WORKS.getAsBoolean()
+                && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
+              intake.setPivotGoalPos(DOWN_POS);
+            } else {
+              intake.setPivotVoltage(Volts.zero());
+            }
           }
         },
         intake);
@@ -81,7 +125,12 @@ public class IntakeCommands {
               intake.setPivotGoalPos(DOWN_POS);
             }
           } else {
-            intake.setPivotVoltage(Volts.zero());
+            if (PIVOT_KINDA_WORKS.getAsBoolean()
+                && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
+              intake.setPivotGoalPos(DOWN_POS);
+            } else {
+              intake.setPivotVoltage(Volts.zero());
+            }
           }
         },
         intake);

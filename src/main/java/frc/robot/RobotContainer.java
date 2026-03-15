@@ -141,10 +141,14 @@ public class RobotContainer {
         "alignAndShoot",
         Commands.parallel(
             IntakeCommands.defaultCommand(intake, () -> false),
-            RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, () -> true)));
+            RobotCommands.autoAim(drivetrain, shooter, indexer, () -> true)));
     NamedCommands.registerCommand("IntakeRollerOn", Commands.none());
     NamedCommands.registerCommand("IntakeRollerOff", Commands.none());
-    NamedCommands.registerCommand("flywheel_acc_1", Commands.none());
+    NamedCommands.registerCommand(
+        "stopFlywheel",
+        Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stop(shooter)));
+    NamedCommands.registerCommand(
+        "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -178,6 +182,7 @@ public class RobotContainer {
         "Azimuth SysId (DynamicReverse)",
         DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicReverse));
     autoChooser.addOption("Albert Auto", AutoBuilder.buildAuto("pidaytoppathfull"));
+    autoChooser.addOption("Kai Auto", AutoBuilder.buildAuto("kai auto 1"));
 
     // autoChooser.addOption(
     //     "Flywheel SysId (Quasistatic)",
@@ -236,9 +241,9 @@ public class RobotContainer {
     // controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
 
     // Intake
-    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.R1()));
-    controller.circle().whileTrue(IntakeCommands.outtakeFuel(intake, controller.R1()));
-    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.R1()));
+    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
+    controller.circle().whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1()));
+    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
     controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5))));
     controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-0.7))));
 
@@ -266,14 +271,14 @@ public class RobotContainer {
                 IndexerCommands.runForwardCommand(indexer),
                 Commands.run(() -> IntakeCommands.shooting = true)
                     .finallyDo(() -> IntakeCommands.shooting = false)));
-    // controller.R1().whileTrue(IntakeCommands.);
+    controller.R1().whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
     // should this be whileTrue? vvv
-    controller.R2().whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, () -> true));
+    controller.R2().whileTrue(RobotCommands.autoAim(drivetrain, shooter, indexer, () -> true));
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
     // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
     controller
         .cross()
-        .whileTrue(RobotCommands.hubAutoShoot(
+        .whileTrue(RobotCommands.autoAim(
             drivetrain, shooter, indexer, controller.button(13))); // make aimToPass
 
     controller.square().whileTrue(ShooterCommands.runForward(shooter));

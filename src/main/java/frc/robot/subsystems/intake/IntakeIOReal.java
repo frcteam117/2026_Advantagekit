@@ -1,7 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -33,13 +31,8 @@ public class IntakeIOReal implements IntakeIO {
         pivot_Encoder.getPosition() * 2 * Math.PI / Pivot.REDUCTION, Radians);
     inputs.pivot_Vel.mut_replace(
         pivot_Encoder.getVelocity() * 2 * Math.PI / (Pivot.REDUCTION * 60), RadiansPerSecond);
-    inputs.roller_SurfaceVel.mut_replace(
-        roller_Encoder.getVelocity()
-            * 2
-            * Math.PI
-            * Roller.RADIUS.in(Meters)
-            / (Roller.REDUCTION * 60),
-        MetersPerSecond);
+    inputs.roller_Vel.mut_replace(
+        roller_Encoder.getVelocity() * 2 * Math.PI / (Roller.REDUCTION * 60), RadiansPerSecond);
   }
 
   @Override
