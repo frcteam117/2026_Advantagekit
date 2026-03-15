@@ -58,7 +58,7 @@ public class DrivetrainCommands {
       new TunableBoolean(TUNING_NT_KEY + "/.Tunable", true);
   private static final double JOYSTICK_DEADBAND = 0.04;
   private static final ProfiledPIDController ANGLE_CONTROLLER = new ProfiledPIDController(
-      0.5, 0.0, 0.0, new Constraints(6.0, 10.0), RobotConstants.CODE_PERIOD_s);
+      4, 0.0, 0.0, new Constraints(10.0, 15.0), RobotConstants.CODE_PERIOD_s);
   // private static final double ANGLE_KP = 0.5;
   // private static final double ANGLE_KD = 0;
   // private static final double ANGLE_MAX_VELOCITY = 4.0;
@@ -70,6 +70,10 @@ public class DrivetrainCommands {
       new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_VELOCITY", 3);
   private static final DoubleSupplier DRIVE_MAX_ANGULAR_VELOCITY =
       new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_ANGULAR_VELOCITY", 4);
+  private static final DoubleSupplier ANGULAR_VEL_SCALE_FACTOR =
+      new TunableDouble(TUNING_NT_KEY + "/ANGULAR_VEL_SCALE_FACTOR", 0.78);
+  private static final DoubleSupplier ANGULAR_ACC_FF =
+      new TunableDouble(TUNING_NT_KEY + "/ANGULAR_ACC_FF", 0.035);
   private static final Rotation2d[] X_MODULE_HEADINGS = new Rotation2d[] {
     Chassis.moduleTranslations[0].getAngle(),
     Chassis.moduleTranslations[1].getAngle(),
@@ -628,6 +632,7 @@ public class DrivetrainCommands {
         new Translation2d(1, Rotation2d.kCW_90deg),
         false)
   };
+  private static double prevRobotOmega = 0;
 
   private static void setGoalVelocity(
       DrivetrainSubsystem drivetrain,
@@ -711,6 +716,13 @@ public class DrivetrainCommands {
       //         Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) /
       // DRIVE_MAX_VELOCITY.getAsDouble()));
       // speeds.times(1 / scaleFactor);
+      final double tempPrevRobotOmega = speeds.omegaRadiansPerSecond;
+      speeds.omegaRadiansPerSecond = speeds.omegaRadiansPerSecond
+              * ANGULAR_VEL_SCALE_FACTOR.getAsDouble()
+          + (speeds.omegaRadiansPerSecond - prevRobotOmega)
+              * ANGULAR_ACC_FF.getAsDouble()
+              / RobotConstants.CODE_PERIOD_s;
+      prevRobotOmega = tempPrevRobotOmega;
       drivetrain.setGoalVelocity(speeds);
     }
   }
@@ -719,7 +731,7 @@ public class DrivetrainCommands {
       Translation2d p1, Translation2d p2, Translation2d unitNormalVector, boolean checkCorners) {}
 
   public static Command replacePoseWithVision(DrivetrainSubsystem drivetrain) {
-    return Commands.runOnce(() -> drivetrain.replacePoseWithVision());
+    return Commands.runOnce(() -> drivetrain.resetPoseWithVision());
   }
 
   public static Translation2d pivotBasedCenterOfRotation(Angle pivotPos) {

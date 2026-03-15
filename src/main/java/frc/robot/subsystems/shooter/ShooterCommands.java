@@ -7,8 +7,11 @@ import static frc.robot.subsystems.shooter.ShooterConstants.*;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.logging.TunableDouble;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
@@ -32,7 +35,7 @@ public class ShooterCommands {
   private static final DoubleUnaryOperator distanceToSpeed =
       meters -> 11.0169521624 * meters * meters + 277.447063272;
   private static final DoubleSupplier maxAllowableErrorRadPS =
-      new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableError", 10, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableError", 50, () -> true);
   private static final DoubleSupplier maxAllowableErrorRad =
       new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableHoodError", 0.03, () -> true);
   private static double hood_autoAimPos_rad = 0;
@@ -77,11 +80,16 @@ public class ShooterCommands {
   }
 
   public static Command stop(ShooterSubsystem shooter) {
-    return shooter.run(() -> {
-      shooter.setHoodGoalPos(Radians.zero());
-      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
-      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
-    });
+    return Commands.defer(
+        () -> {
+          Angle hoodTarget = shooter.getHoodPos();
+          return shooter.run(() -> {
+            shooter.setHoodGoalPos(hoodTarget);
+            shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
+            shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
+          });
+        },
+        Set.of(shooter));
   }
 
   public static Command runForward(ShooterSubsystem shooter) {

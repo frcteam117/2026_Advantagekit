@@ -320,7 +320,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
     // timestep that photonvision was able to predict the robot pose
   }
 
-  public void replacePoseWithVision() {
+  public void resetPoseWithVision() {
     replacePoseWithVision = true;
   }
 

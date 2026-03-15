@@ -26,7 +26,7 @@ public class IntakeCommands {
   //     (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
   //     () -> true);
   private static final DoubleSupplier up_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/up_pos", -0.7);
+      new TunableDouble(TUNING_NT_KEY + "/up_pos", -0.67);
   private static final Supplier<Angle> SHOOTING_POS =
       () -> Radians.of(up_pos_supplier.getAsDouble());
   private static final Angle DOWN_POS = Pivot.MIN_POS;

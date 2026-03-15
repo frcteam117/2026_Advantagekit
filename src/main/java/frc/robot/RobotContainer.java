@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -135,6 +136,16 @@ public class RobotContainer {
 
     SysIdUtil.registerController(controller);
 
+    NamedCommands.registerCommand("IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false));
+    NamedCommands.registerCommand(
+        "alignAndShoot",
+        Commands.parallel(
+            IntakeCommands.defaultCommand(intake, () -> false),
+            RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, () -> true)));
+    NamedCommands.registerCommand("IntakeRollerOn", Commands.none());
+    NamedCommands.registerCommand("IntakeRollerOff", Commands.none());
+    NamedCommands.registerCommand("flywheel_acc_1", Commands.none());
+
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -166,6 +177,8 @@ public class RobotContainer {
     autoChooser.addOption(
         "Azimuth SysId (DynamicReverse)",
         DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicReverse));
+    autoChooser.addOption("Albert Auto", AutoBuilder.buildAuto("pidaytoppathfull"));
+
     // autoChooser.addOption(
     //     "Flywheel SysId (Quasistatic)",
     //     ShooterCommands.flywheelSysId(shooter, SysIdType.Quasistatic));
@@ -248,11 +261,11 @@ public class RobotContainer {
     controller
         .L1()
         .whileTrue(
-          // ShooterCommands.autoAim(shooter, drivetrain::getPose, null, null, null));
-          Commands.parallel(
-            IndexerCommands.runForwardCommand(indexer),
-            Commands.run(() -> IntakeCommands.shooting = true)
-                .finallyDo(() -> IntakeCommands.shooting = false)));
+            // ShooterCommands.autoAim(shooter, drivetrain::getPose, null, null, null));
+            Commands.parallel(
+                IndexerCommands.runForwardCommand(indexer),
+                Commands.run(() -> IntakeCommands.shooting = true)
+                    .finallyDo(() -> IntakeCommands.shooting = false)));
     // controller.R1().whileTrue(IntakeCommands.);
     // should this be whileTrue? vvv
     controller.R2().whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, () -> true));
@@ -346,7 +359,7 @@ public class RobotContainer {
             driveSimulation
                 .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
         // simulation
-        : () -> drivetrain.resetNavX(); // zero gyro
+        : () -> drivetrain.resetPoseWithVision(); // zero gyro
     controller
         .touchpad()
         .onTrue(
