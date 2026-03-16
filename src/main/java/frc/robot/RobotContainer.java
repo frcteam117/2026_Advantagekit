@@ -20,10 +20,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -227,6 +224,7 @@ public class RobotContainer {
         () -> -controller.getRightX(),
         .2,
         controller.R3(),
+        controller.R1(),
         () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
         () -> false));
 
@@ -271,7 +269,7 @@ public class RobotContainer {
                 IndexerCommands.runForwardCommand(indexer),
                 Commands.run(() -> IntakeCommands.shooting = true)
                     .finallyDo(() -> IntakeCommands.shooting = false)));
-    controller.R1().whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
+    controller.L1().whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
     // should this be whileTrue? vvv
     controller.R2().whileTrue(RobotCommands.autoAim(drivetrain, shooter, indexer, () -> true));
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
@@ -322,19 +320,20 @@ public class RobotContainer {
     //         () -> false));
 
     // snake mode around intake
-    controller
-        .triangle()
-        .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            .05,
-            controller.R3(),
-            () -> new Translation2d(
-                (DrivetrainConstants.Chassis.bumperLength_m / 2) + Units.inchesToMeters(2), 0),
-            () -> false));
+    // controller
+    //     .triangle()
+    //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         .05,
+    //         controller.R3(),
+    //         controller.R1(),
+    //         () -> new Translation2d(
+    //             (DrivetrainConstants.Chassis.bumperLength_m / 2) + Units.inchesToMeters(2), 0),
+    //         () -> false));
 
     // angle from right joystick mode
     // controller
@@ -359,18 +358,21 @@ public class RobotContainer {
     // controller.circle().whileFalse(IntakeCommands.(intake));
 
     // Reset gyro / odometry
-    final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
-        ? () -> drivetrain.resetOdometry(
-            driveSimulation
-                .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
-        // simulation
-        : () -> drivetrain.resetPoseWithVision(); // zero gyro
-    controller
-        .touchpad()
-        .onTrue(
-            RobotBase.isReal()
-                ? DrivetrainCommands.replacePoseWithVision(drivetrain)
-                : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
+    // final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
+    //     ? () -> drivetrain.resetOdometry(
+    //         driveSimulation
+    //             .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
+    //     // simulation
+    //     : () -> drivetrain.resetPoseWithVision(); // zero gyro
+    // controller
+    //     .touchpad()
+    //     .onTrue(
+    //         RobotBase.isReal()
+    //             ? DrivetrainCommands.replacePoseWithVision(drivetrain)
+    //             : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
+    controller.touchpad().onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()));
+    controller.L3().onTrue(Commands.runOnce(() -> drivetrain.resetTranslationWithVision()));
+
     // controller
     //     .button(1)
     //     .onTrue(Commands.runOnce(() -> {})

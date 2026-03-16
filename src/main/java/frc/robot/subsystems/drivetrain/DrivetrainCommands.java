@@ -298,72 +298,85 @@ public class DrivetrainCommands {
 
   private Rotation2d targetAngle_rad = Rotation2d.kZero;
 
-  /**
-   * Field relative drive command using joystick for linear control and PID for angular control.
-   * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
-   * absolute rotation with a joystick.
-   */
-  public static Command joystickDriveAtAngle(
-      DrivetrainSubsystem drivetrain,
-      DoubleSupplier xSupplier,
-      DoubleSupplier ySupplier,
-      Supplier<Rotation2d> rotationSupplier,
-      Supplier<Translation2d> centerOfRotationSupplier,
-      BooleanSupplier driveAssistSupplier) {
+  // /**
+  //  * Field relative drive command using joystick for linear control and PID for angular control.
+  //  * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
+  //  * absolute rotation with a joystick.
+  //  */
+  // public static Command joystickDriveAtAngle(
+  //     DrivetrainSubsystem drivetrain,
+  //     DoubleSupplier xSupplier,
+  //     DoubleSupplier ySupplier,
+  //     Supplier<Rotation2d> rotationSupplier,
+  //     Supplier<Translation2d> centerOfRotationSupplier,
+  //     BooleanSupplier driveAssistSupplier) {
 
-    // Construct command
-    return drivetrain
-        .run(() -> {
-          // Get linear velocity
-          Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+  //   // Construct command
+  //   return drivetrain
+  //       .run(() -> {
+  //         // Get linear velocity
+  //         Translation2d linearVelocity =
+  //             getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-          boolean isFlipped = DriverStation.getAlliance().isPresent()
-              && DriverStation.getAlliance().get() == Alliance.Red;
+  //         boolean isFlipped = DriverStation.getAlliance().isPresent()
+  //             && DriverStation.getAlliance().get() == Alliance.Red;
 
-          // Calculate angular speed
-          double omega = ANGLE_CONTROLLER.calculate(
-              drivetrain.getPose().getRotation().getRadians(),
-              isFlipped
-                  ? rotationSupplier.get().plus(Rotation2d.k180deg).getRadians()
-                  : rotationSupplier.get().getRadians());
-          omega += ANGLE_CONTROLLER.getSetpoint().velocity;
+  //         // Calculate angular speed
+  //         double omega = ANGLE_CONTROLLER.calculate(
+  //             drivetrain.getPose().getRotation().getRadians(),
+  //             isFlipped
+  //                 ? rotationSupplier.get().plus(Rotation2d.k180deg).getRadians()
+  //                 : rotationSupplier.get().getRadians());
+  //         omega += ANGLE_CONTROLLER.getSetpoint().velocity;
 
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds = new ChassisSpeeds(
-              linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
-              linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
-              omega);
-          speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-              speeds,
-              isFlipped
-                  ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
-                  : drivetrain.getPose().getRotation());
-          setGoalVelocity(
-              drivetrain,
-              speeds,
-              centerOfRotationSupplier.get(),
-              driveAssistSupplier.getAsBoolean());
-        })
-        // Reset PID controller when command starts
-        .beforeStarting(() -> resetAngleController(drivetrain));
-  }
+  //         // Convert to field relative speeds & send command
+  //         ChassisSpeeds speeds = new ChassisSpeeds(
+  //             linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+  //             linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+  //             omega);
+  //         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+  //             speeds,
+  //             isFlipped
+  //                 ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+  //                 : drivetrain.getPose().getRotation());
+  //         setGoalVelocity(
+  //             drivetrain,
+  //             speeds,
+  //             centerOfRotationSupplier.get(),
+  //             driveAssistSupplier.getAsBoolean());
+  //       })
+  //       // Reset PID controller when command starts
+  //       .beforeStarting(() -> resetAngleController(drivetrain));
+  // }
 
   private static Rotation2d joystickDriveAtAngle_rotTarget;
-  private static double[] snapToAngleTargets_deg = new double[] {
+  private static double[] snapToAngle1Targets_deg = new double[] {
     0, // 30, 60,
     90, // 120, 150,
     180, // 210, 240,
     270, // 300, 330,
     360
   };
-  private static double[] snapToAngletargetBorders_deg = new double[] { // 15,
+  private static double snapToAngle2TargetsDegFrom90 = 28;
+  private static double[] snapToAngle2Targets_deg = new double[] {
+    snapToAngle2TargetsDegFrom90,
+    90 - snapToAngle2TargetsDegFrom90,
+    90 + snapToAngle2TargetsDegFrom90,
+    180 - snapToAngle2TargetsDegFrom90,
+    180 + snapToAngle2TargetsDegFrom90,
+    270 - snapToAngle2TargetsDegFrom90,
+    270 + snapToAngle2TargetsDegFrom90,
+    360 - snapToAngle2TargetsDegFrom90
+  };
+  private static double[] snapToAngle1targetBorders_deg = new double[] { // 15,
     45, // 75, 105,
     135, // 165, 195,
     225, // 255, 285,
     315, // 345, 375,
     405
   };
+  private static double[] snapToAngle2targetBorders_deg =
+      new double[] {45, 90, 135, 180, 225, 270, 315, 360};
 
   /**
    * Field relative drive command using joystick for linear control and PID for angular control.
@@ -377,7 +390,8 @@ public class DrivetrainCommands {
       DoubleSupplier rotXSupplier,
       DoubleSupplier rotYSupplier,
       double deadband,
-      BooleanSupplier snapToAngle,
+      BooleanSupplier snapToAngle1,
+      BooleanSupplier snapToAngle2,
       Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier driveAssistSupplier) {
 
@@ -388,19 +402,29 @@ public class DrivetrainCommands {
           if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
             joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
                 Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
-            if (snapToAngle.getAsBoolean()) {
+            if (snapToAngle2.getAsBoolean()) {
               double snapToAngleJoystickTarget_deg =
                   MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
-              for (int i = 0; i < snapToAngletargetBorders_deg.length; i++) {
-                if (snapToAngleJoystickTarget_deg < snapToAngletargetBorders_deg[i]) {
+              for (int i = 0; i < snapToAngle2targetBorders_deg.length; i++) {
+                if (snapToAngleJoystickTarget_deg < snapToAngle2targetBorders_deg[i]) {
                   joystickDriveAtAngle_rotTarget =
-                      Rotation2d.fromDegrees(snapToAngleTargets_deg[i]);
+                      Rotation2d.fromDegrees(snapToAngle2Targets_deg[i]);
+                  break;
+                }
+              }
+            } else if (snapToAngle1.getAsBoolean()) {
+              double snapToAngleJoystickTarget_deg =
+                  MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
+              for (int i = 0; i < snapToAngle1targetBorders_deg.length; i++) {
+                if (snapToAngleJoystickTarget_deg < snapToAngle1targetBorders_deg[i]) {
+                  joystickDriveAtAngle_rotTarget =
+                      Rotation2d.fromDegrees(snapToAngle1Targets_deg[i]);
                   break;
                 }
               }
             }
           } else {
-            if (snapToAngle.getAsBoolean()) {
+            if (snapToAngle1.getAsBoolean()) {
               joystickDriveAtAngle_rotTarget = MathUtil.isNear(
                       0,
                       drivetrain.getPose().getRotation().getRadians(),

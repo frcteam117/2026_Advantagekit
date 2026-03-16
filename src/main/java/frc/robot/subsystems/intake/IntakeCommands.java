@@ -136,6 +136,16 @@ public class IntakeCommands {
         intake);
   }
 
+  /** Lowers the pivot without running the roller. Ends when pivot is within a set error of its down position. */
+  public static Command lowerIntake(IntakeSubsystem intake) {
+    return Commands.run(
+            () -> {
+              intake.setPivotGoalPos(DOWN_POS);
+            },
+            intake)
+        .onlyWhile(() -> intake.getPivotPos().gt(DOWN_POS.plus(Radians.of(0.04))));
+  }
+
   public static Command lowerCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {

@@ -41,6 +41,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
+import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.LocalADStarAK;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
@@ -79,7 +80,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
       new TrapezoidProfile(new TrapezoidProfile.Constraints(20, 50));
   private boolean controllingHeadings = false;
   private Rotation2d gyroOffset = Rotation2d.kZero;
-  private boolean replacePoseWithVision = true;
+  private Pose2d prevVisionPose = null;
+  private boolean resetPoseWithVision = true;
+  private boolean resetTranslationWithVision = false;
 
   public DrivetrainSubsystem(
       GyroIO gyroIO,
@@ -305,15 +308,37 @@ public class DrivetrainSubsystem extends SubsystemBase {
     return gyroInputs.angleFromHorizontal;
   }
 
+  private final double poseLinTolerance = Drive.max_mPs * 0.1;
+  private final double poseAngTolerance = Drive.max_mPs / Chassis.trackRadius_m * 0.1;
+
   /** Adds a new timestamped vision measurement. */
   public void accept(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    if (replacePoseWithVision) {
-      poseEstimator.resetPose(visionRobotPoseMeters);
-      replacePoseWithVision = false;
+    if (prevVisionPose != null) {
+      if (resetPoseWithVision
+          && visionRobotPoseMeters.getTranslation().getDistance(prevVisionPose.getTranslation())
+              < poseLinTolerance
+          && MathUtil.isNear(
+              prevVisionPose.getRotation().getRadians(),
+              visionRobotPoseMeters.getRotation().getRadians(),
+              poseAngTolerance,
+              0,
+              2 * Math.PI)) {
+        poseEstimator.resetPose(visionRobotPoseMeters);
+        resetPoseWithVision = false;
+        resetTranslationWithVision = false;
+      } else if (resetTranslationWithVision
+          && visionRobotPoseMeters.getTranslation().getDistance(prevVisionPose.getTranslation())
+              < poseLinTolerance) {
+        poseEstimator.resetPose(new Pose2d(
+            visionRobotPoseMeters.getTranslation(),
+            poseEstimator.getEstimatedPosition().getRotation()));
+        resetTranslationWithVision = false;
+      }
     }
+    prevVisionPose = visionRobotPoseMeters;
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     // TODO: when should this be run? Max's answer: DrivetrainSubsystem.accept() should be run each
@@ -321,7 +346,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
   }
 
   public void resetPoseWithVision() {
-    replacePoseWithVision = true;
+    resetPoseWithVision = true;
+  }
+
+  public void resetTranslationWithVision() {
+    resetTranslationWithVision = true;
   }
 
   /** Returns the position of each module in radians. */
