@@ -17,10 +17,10 @@ public class IntakeConstants {
     public static final String NT_KEY = IntakeConstants.NT_KEY + "/Pivot";
     public static final int CAN_ID = 12;
     public static final SparkMaxConfig SPARK_MAX_CONFIG = new SparkMaxConfig();
-    public static final double REDUCTION = 55.55555555555555555555555;
+    public static final double REDUCTION = 55.55555555555555555555555 * 5 / 3;
     public static final MomentOfInertia MOI = null;
     public static final DCMotor GEARBOX = DCMotor.getNEO(1).withReduction(REDUCTION);
-    public static final Angle MIN_POS = Radians.of(-1.495396);
+    public static final Angle MIN_POS = Radians.of(-1.41);
     public static final Angle MAX_POS = Radians.of(0.0);
 
     static {

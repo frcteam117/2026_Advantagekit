@@ -68,7 +68,7 @@ public class RobotContainer {
 
   // Controller
   private final CommandPS5Controller controller = new CommandPS5Controller(0);
-  //   private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
+  private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -134,16 +134,22 @@ public class RobotContainer {
     SysIdUtil.registerController(controller);
 
     NamedCommands.registerCommand("IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false));
+    NamedCommands.registerCommand("PivotDown", IntakeCommands.lowerIntake(intake));
     NamedCommands.registerCommand(
         "alignAndShoot",
         Commands.parallel(
             IntakeCommands.defaultCommand(intake, () -> false),
-            RobotCommands.autoAim(drivetrain, shooter, indexer, () -> true)));
+            RobotCommands.autoAim(
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true)));
     NamedCommands.registerCommand("IntakeRollerOn", Commands.none());
     NamedCommands.registerCommand("IntakeRollerOff", Commands.none());
     NamedCommands.registerCommand(
         "stopFlywheel",
-        Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stop(shooter)));
+        Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stopAndZeroHood(shooter)));
     NamedCommands.registerCommand(
         "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
 
@@ -208,14 +214,6 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    // Default command, normal field-relative drive
-    // drivetrain.setDefaultCommand(DrivetrainCommands.joystickDrive(
-    //     drivetrain,
-    //     () -> -controller.getLeftY(),
-    //     () -> -controller.getLeftX(),
-    //     () -> -controller.getRightX(),
-    //     () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos().in(Radians)),
-    //     () -> false));
     drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
         drivetrain,
         () -> -controller.getLeftY(),
@@ -228,59 +226,64 @@ public class RobotContainer {
         () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
         () -> false));
 
-    // controller
-    //     .R2()
-    //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
-    // controller.button(13)));
-    // controller2
-    //     .R1()
-    //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
-    // controller.triangle()));
-    // controller.L2().whileTrue(IntakeCommands.runRollerForward(intake));
-
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
     controller.circle().whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1()));
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
-    controller.button(10).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5))));
-    controller.button(9).whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-0.7))));
+    controller
+        .button(10)
+        .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5)), intake));
+    controller
+        .button(9)
+        .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-0.7)), intake));
 
     // Indexer
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
+    controller2.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    controller2.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     // Shooter
-    shooter.setDefaultCommand(ShooterCommands.stop(shooter));
-    controller.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
-    controller.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
-    // controller.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    // controller.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
-
-    // controller.triangle().whileTrue(ShooterCommands.runForward(shooter));
-    // zzzzzzzzzzzzzzzzzzzzz
-    // controller.circle().whileTrue(IntakeCommands.runRollerForward(intake));
-    // controller.square().onTrue(IntakeCommands.stopCommand(intake));
+    shooter.setDefaultCommand(ShooterCommands.stopAndHoldHood(shooter));
+    controller.square().whileTrue(ShooterCommands.runForward(shooter));
+    controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
+    controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
+    controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
 
     // new button bindings:
-    controller
-        .L1()
+    controller2
+        .R1()
         .whileTrue(
             // ShooterCommands.autoAim(shooter, drivetrain::getPose, null, null, null));
             Commands.parallel(
                 IndexerCommands.runForwardCommand(indexer),
                 Commands.run(() -> IntakeCommands.shooting = true)
                     .finallyDo(() -> IntakeCommands.shooting = false)));
-    controller.L1().whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
+    controller2.L1().whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
     // should this be whileTrue? vvv
-    controller.R2().whileTrue(RobotCommands.autoAim(drivetrain, shooter, indexer, () -> true));
+    controller
+        .R2()
+        .whileTrue(RobotCommands.autoAim(
+            drivetrain,
+            shooter,
+            indexer,
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+            () -> true));
+    controller2
+        .R2()
+        .whileTrue(RobotCommands.autoFaceTarget(
+            drivetrain, () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
     // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
     controller
         .cross()
-        .whileTrue(RobotCommands.autoAim(
-            drivetrain, shooter, indexer, controller.button(13))); // make aimToPass
+        .whileTrue(RobotCommands.faceHubAndDrive(
+            drivetrain,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+                intake.getPivotPos()))); // make aimToPass
 
-    controller.square().whileTrue(ShooterCommands.runForward(shooter));
-    controller.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
+    controller2.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
       shooterTuningPoses.add(drivetrain.getPose());
       shooterTuningRIOVels.add(shooter.getRIOFlywheelVel().in(RadiansPerSecond));
       shooterTuningPDHVels.add(shooter.getPDHFlywheelVel().in(RadiansPerSecond));
@@ -302,8 +305,6 @@ public class RobotContainer {
               .mapToDouble(value -> value)
               .toArray());
     }));
-    // command?
-    // controller.square().whileTrue(IntakeCommands.raiseCommand(intake));
 
     // snake mode around middle
     // controller
@@ -348,15 +349,6 @@ public class RobotContainer {
     //             intake.getPivotState().pos()),
     //         () -> false));
 
-    // controller.povLeft().whileTrue(IntakeCommands.midCommand(intake));
-    // controller
-    //     .povLeft()
-    //     .whileTrue(RobotCommands.hubAutoShoot(drivetrain, shooter, indexer,
-    // controller.triangle()));
-    //
-    // controller.R2().whileTrue(IndexerCommands.runKickerForwardForTuning)
-    // controller.circle().whileFalse(IntakeCommands.(intake));
-
     // Reset gyro / odometry
     // final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
     //     ? () -> drivetrain.resetOdometry(
@@ -372,11 +364,7 @@ public class RobotContainer {
     //             : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
     controller.touchpad().onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()));
     controller.L3().onTrue(Commands.runOnce(() -> drivetrain.resetTranslationWithVision()));
-
-    // controller
-    //     .button(1)
-    //     .onTrue(Commands.runOnce(() -> {})
-    //         .finallyDo(() -> CommandScheduler.getInstance().schedule(getAutonomousCommand())));
+    controller2.touchpad().onTrue(Commands.runOnce(() -> drivetrain.resetTranslationWithVision()));
   }
 
   /**

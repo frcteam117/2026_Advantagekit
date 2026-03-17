@@ -32,14 +32,12 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConstants;
-import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.LocalADStarAK;
@@ -74,15 +72,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   // Motion Profiling
   private final SwerveSetpointGenerator swerveSetpointGenerator =
-      new SwerveSetpointGenerator(Chassis.ppConfig, 20);
+      new SwerveSetpointGenerator(Chassis.ppConfig, 15);
   private SwerveSetpoint lastSetpoint;
-  private final TrapezoidProfile headingProfile =
-      new TrapezoidProfile(new TrapezoidProfile.Constraints(20, 50));
   private boolean controllingHeadings = false;
   private Rotation2d gyroOffset = Rotation2d.kZero;
   private Pose2d prevVisionPose = null;
   private boolean resetPoseWithVision = true;
   private boolean resetTranslationWithVision = false;
+  private final Rotation2d[] goalHeadings = new Rotation2d[4];
 
   public DrivetrainSubsystem(
       GyroIO gyroIO,
@@ -191,13 +188,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
    * @param goalSpeeds_mps Target speeds in meters/sec
    */
   public void setGoalVelocity(ChassisSpeeds goalSpeeds_mps) {
-    if (!controllingHeadings) {
-      SwerveModuleState[] goalModules = new SwerveModuleState[4];
-      Arrays.fill(goalModules, new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN)));
-      Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Modules", goalModules);
-    } else {
-      controllingHeadings = false;
-    }
     Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
     // swerve setpoint generator
     lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, goalSpeeds_mps, 0.02);
@@ -211,8 +201,25 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     // Send setpoints to modules
     for (int i = 0; i < 4; i++) {
+      if (controllingHeadings
+          && lastSetpoint.moduleStates()[i].speedMetersPerSecond < 1e-6
+          && lastSetpoint.feedforwards().accelerationsMPSSq()[i] < 1e-6) {
+        double headingError_rad = MathUtil.angleModulus(
+            goalHeadings[i].minus(lastSetpoint.moduleStates()[i].angle).getRadians());
+        lastSetpoint.moduleStates()[i].angle = lastSetpoint.moduleStates()[i].angle.plus(
+            Rotation2d.fromRadians(Math.copySign(
+                Math.min(15 * RobotConstants.CODE_PERIOD_s, Math.abs(headingError_rad)),
+                headingError_rad)));
+      }
       modules[i].setNextState(
           lastSetpoint.moduleStates()[i], lastSetpoint.feedforwards().accelerationsMPSSq()[i]);
+    }
+    if (!controllingHeadings) {
+      SwerveModuleState[] goalModules = new SwerveModuleState[4];
+      Arrays.fill(goalModules, new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN)));
+      Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Modules", goalModules);
+    } else {
+      controllingHeadings = false;
     }
   }
 
@@ -227,22 +234,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
             .map(rotation -> new SwerveModuleState(0, rotation))
             .toArray(SwerveModuleState[]::new));
     controllingHeadings = true;
-    Rotation2d[] nextHeadings = new Rotation2d[4];
     for (int i = 0; i < 4; i++) {
-      if (MathUtil.inputModulus(
-              goalHeadings[i].getRadians() - modules[i].getAngle(), -Math.PI / 2, 3 * Math.PI / 2)
-          > Math.PI / 2) {
+      if (MathUtil.isNear(
+          modules[i].getAngle(), goalHeadings[i].getRadians(), Math.PI / 2, -Math.PI, Math.PI)) {
         goalHeadings[i] = goalHeadings[i].rotateBy(Rotation2d.k180deg);
       }
-      nextHeadings[i] = Rotation2d.fromRadians(headingProfile.calculate(
-              RobotConstants.CODE_PERIOD_s,
-              new TrapezoidProfile.State(
-                  modules[i].getAngle(),
-                  modules[i].getInputs().azimuthMotor_State.radPs() / Azimuth.reduction),
-              new TrapezoidProfile.State(goalHeadings[i].getRadians(), 0))
-          .position);
+      this.goalHeadings[i] = goalHeadings[i];
     }
-    kinematics.resetHeadings(nextHeadings);
     setGoalVelocity(new ChassisSpeeds());
   }
 

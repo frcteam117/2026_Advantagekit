@@ -36,6 +36,10 @@ public class IntakeCommands {
       new TunableDouble(TUNING_NT_KEY + "/up_pos", -0.67);
   private static final Supplier<Angle> SHOOTING_POS =
       () -> Radians.of(up_pos_supplier.getAsDouble());
+  private static final DoubleSupplier dislodging_pos_supplier =
+      new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1);
+  private static final Supplier<Angle> DISLODGING_POS =
+      () -> Radians.of(dislodging_pos_supplier.getAsDouble());
   private static final Angle DOWN_POS = Pivot.MIN_POS;
   public static boolean shooting = false;
 
@@ -98,7 +102,7 @@ public class IntakeCommands {
           if (PIVOT_WORKS.getAsBoolean()) {
             if (raisePivot.getAsBoolean()
                 || intake.getRollerVel().in(RadiansPerSecond) < ROLLER_THRESHOLD.getAsDouble()) {
-              intake.setPivotGoalPos(SHOOTING_POS.get());
+              intake.setPivotGoalPos(DISLODGING_POS.get());
             } else {
               intake.setPivotGoalPos(DOWN_POS);
             }
@@ -120,7 +124,7 @@ public class IntakeCommands {
           intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
           if (PIVOT_WORKS.getAsBoolean()) {
             if (raisePivot.getAsBoolean()) {
-              intake.setPivotGoalPos(SHOOTING_POS.get());
+              intake.setPivotGoalPos(DISLODGING_POS.get());
             } else {
               intake.setPivotGoalPos(DOWN_POS);
             }

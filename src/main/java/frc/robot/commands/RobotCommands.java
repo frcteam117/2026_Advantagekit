@@ -17,7 +17,9 @@ import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class RobotCommands {
   private static final Translation2d blueHub = RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
@@ -26,15 +28,16 @@ public class RobotCommands {
   private static final Translation2d redHub = RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
       ? new Translation2d(0.0254 * (651.22 - 182.11), 0.0254 * (317.69 / 2))
       : new Translation2d(0.0254 * (650.12 - 181.56), 0.0254 * (316.64 / 2));
-  private static final Translation2d redLPassingTarget = new Translation2d(15, 6.1);
-  private static final Translation2d redRPassingTarget = new Translation2d(15, 2);
-  private static final Translation2d blueLPassingTarget = new Translation2d(.75, 6.6);
-  private static final Translation2d blueRPassingTarget = new Translation2d(.75, 1.5);
+  private static final Translation2d redLPassingTarget = new Translation2d(13.1, 6.1);
+  private static final Translation2d redRPassingTarget = new Translation2d(13.1, 2);
+  private static final Translation2d blueLPassingTarget = new Translation2d(3, 6.6);
+  private static final Translation2d blueRPassingTarget = new Translation2d(3, 1.5);
 
   public static Command autoAim(
       DrivetrainSubsystem drivetrain,
       ShooterSubsystem shooter,
       IndexerSubsystem indexer,
+      Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier shootWhenReady) {
     return Commands.defer(
         () -> {
@@ -42,24 +45,22 @@ public class RobotCommands {
               DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
           boolean isPassing = isBlueAlliance
               ? drivetrain.getPose().getX() > 4.7
-              : drivetrain.getPose().getX() < 12;
+              : drivetrain.getPose().getX() < 11.4;
           Translation2d target = isPassing
               ? (drivetrain.getPose().getY() < 4.05
                   ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)
                   : (isBlueAlliance ? blueLPassingTarget : redLPassingTarget))
               : (isBlueAlliance ? blueHub : redHub);
-          // Logger.recordOutput(
-          //     "Commands/alliance",
-          //     DriverStation.getAlliance().isEmpty() ? "Empty" : (isBlueAlliance ? "Blue" :
-          // "Red"));
-          // Logger.recordOutput("Commands/isPassing", isPassing ? "True" : "False");
-          // Logger.recordOutput("Commands/shootingTarget", target);
-          // Logger.recordOutput("Commands/posex", drivetrain.getPose().getX());
-          // Logger.recordOutput("Commands/posey", drivetrain.getPose().getY());
+          Logger.recordOutput(
+              "Commands/alliance",
+              DriverStation.getAlliance().isEmpty() ? "Empty" : (isBlueAlliance ? "Blue" : "Red"));
+          Logger.recordOutput("Commands/isPassing", isPassing ? "True" : "False");
+          Logger.recordOutput("Commands/shootingTarget", target);
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter, drivetrain::getPose, () -> target, () -> isPassing, () -> false),
-                  DrivetrainCommands.stopAndShootToward(drivetrain, () -> target),
+                  DrivetrainCommands.stopAndShootToward(
+                      drivetrain, () -> target, centerOfRotationSupplier),
                   IndexerCommands.conditionalRunForward(
                       indexer,
                       () -> shootWhenReady.getAsBoolean()
@@ -71,6 +72,62 @@ public class RobotCommands {
               .finallyDo(() -> IntakeCommands.shooting = false);
         },
         Set.of(drivetrain, shooter, indexer));
+  }
+
+  public static Command faceHubAndDrive(
+      DrivetrainSubsystem drivetrain,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      Supplier<Translation2d> centerOfRotationSupplier) {
+    return DrivetrainCommands.joystickDriveAtAngle(
+        drivetrain,
+        xSupplier,
+        ySupplier,
+        () -> {
+          boolean isBlueAlliance =
+              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+          boolean isPassing = isBlueAlliance
+              ? drivetrain.getPose().getX() > 6.7
+              : drivetrain.getPose().getX() < 9.4;
+          Translation2d target = isPassing
+              ? (drivetrain.getPose().getY() < 4.05
+                  ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)
+                  : (isBlueAlliance ? blueLPassingTarget : redLPassingTarget))
+              : (isBlueAlliance ? blueHub : redHub);
+          Logger.recordOutput(
+              "Commands/alliance",
+              DriverStation.getAlliance().isEmpty() ? "Empty" : (isBlueAlliance ? "Blue" : "Red"));
+          Logger.recordOutput("Commands/isPassing", isPassing ? "True" : "False");
+          Logger.recordOutput("Commands/shootingTarget", target);
+          return target.minus(drivetrain.getPose().getTranslation()).getAngle();
+        },
+        centerOfRotationSupplier,
+        () -> false);
+  }
+
+  public static Command autoFaceTarget(
+      DrivetrainSubsystem drivetrain, Supplier<Translation2d> centerOfRotationSupplier) {
+    return Commands.defer(
+        () -> {
+          boolean isBlueAlliance =
+              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+          boolean isPassing = isBlueAlliance
+              ? drivetrain.getPose().getX() > 4.7
+              : drivetrain.getPose().getX() < 11.4;
+          Translation2d target = isPassing
+              ? (drivetrain.getPose().getY() < 4.05
+                  ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)
+                  : (isBlueAlliance ? blueLPassingTarget : redLPassingTarget))
+              : (isBlueAlliance ? blueHub : redHub);
+          Logger.recordOutput(
+              "Commands/alliance",
+              DriverStation.getAlliance().isEmpty() ? "Empty" : (isBlueAlliance ? "Blue" : "Red"));
+          Logger.recordOutput("Commands/isPassing", isPassing ? "True" : "False");
+          Logger.recordOutput("Commands/shootingTarget", target);
+          return DrivetrainCommands.stopAndShootToward(
+              drivetrain, () -> target, centerOfRotationSupplier);
+        },
+        Set.of(drivetrain));
   }
 
   public static Command autoAimRevFlywheels(

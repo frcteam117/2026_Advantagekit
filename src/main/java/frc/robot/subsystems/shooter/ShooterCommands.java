@@ -2,15 +2,14 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
-import edu.wpi.first.units.measure.MutAngularAcceleration;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -35,40 +34,79 @@ public class ShooterCommands {
   //   distanceToSpeedLerp.put(86.8261633902, 350.0);
   // }
 
-  private static final InterpolatingDoubleTreeMap metersToFywheelRadPerSec =
+  private static final InterpolatingDoubleTreeMap hub_metersToFywheelRadPerSec =
+      new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap hub_metersToHoodRad =
+      new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap passing_metersToFywheelRadPerSec =
+      new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap passing_metersToHoodRad =
       new InterpolatingDoubleTreeMap();
 
   static {
-    metersToFywheelRadPerSec.put(1.3616482, 279.452);
-    metersToFywheelRadPerSec.put(2.2721747, 318.647);
-    metersToFywheelRadPerSec.put(3.3324945, 379.384);
-    metersToFywheelRadPerSec.put(3.9065371, 380.2815);
-    metersToFywheelRadPerSec.put(4.4512024, 392.548);
-    metersToFywheelRadPerSec.put(5.3810779, 429.6485);
-    metersToFywheelRadPerSec.put(2.4717952, 338.9915);
-  }
-  // meters -> 11.0169521624 * meters * meters + 277.447063272;
-  private static final InterpolatingDoubleTreeMap metersToHoodRad =
-      new InterpolatingDoubleTreeMap();
-
-  static {
-    metersToFywheelRadPerSec.put(1.3616482, 0.0);
-    metersToFywheelRadPerSec.put(2.2721747, 0.0);
-    metersToFywheelRadPerSec.put(3.3324945, 0.144);
-    metersToFywheelRadPerSec.put(3.9065371, 0.210);
-    metersToFywheelRadPerSec.put(4.4512024, 0.266);
-    metersToFywheelRadPerSec.put(5.3810779, 0.295);
-    metersToFywheelRadPerSec.put(2.4717952, 0.079);
+    // hub flywheel
+    hub_metersToFywheelRadPerSec.put(1.4890792, 270.0);
+    hub_metersToFywheelRadPerSec.put(1.6669853, 285.0);
+    hub_metersToFywheelRadPerSec.put(1.8409906, 300.0);
+    hub_metersToFywheelRadPerSec.put(2.0387364, 315.0);
+    hub_metersToFywheelRadPerSec.put(2.1137557, 320.0);
+    hub_metersToFywheelRadPerSec.put(2.2659598, 330.0);
+    hub_metersToFywheelRadPerSec.put(2.5085782, 328.0);
+    hub_metersToFywheelRadPerSec.put(2.7848045, 340.0);
+    hub_metersToFywheelRadPerSec.put(3.2773446, 352.0);
+    hub_metersToFywheelRadPerSec.put(4.0661689, 376.0);
+    hub_metersToFywheelRadPerSec.put(4.7832148, 403.0);
+    hub_metersToFywheelRadPerSec.put(5.403332, 430.0);
+    // hub hood
+    hub_metersToHoodRad.put(1.4890792, 0.0);
+    hub_metersToHoodRad.put(1.6669853, 0.0);
+    hub_metersToHoodRad.put(1.8409906, 0.0);
+    hub_metersToHoodRad.put(2.0387364, 0.0);
+    hub_metersToHoodRad.put(2.1137557, 0.056);
+    hub_metersToHoodRad.put(2.2659598, 0.062);
+    hub_metersToHoodRad.put(2.5085782, 0.099);
+    hub_metersToHoodRad.put(2.7848045, 0.13);
+    hub_metersToHoodRad.put(3.2773446, 0.172);
+    hub_metersToHoodRad.put(4.0661689, 0.221);
+    hub_metersToHoodRad.put(4.7832148, 0.257);
+    hub_metersToHoodRad.put(5.403332, 0.295);
+    // passing flywheel
+    passing_metersToFywheelRadPerSec.put(1.4890792, 270.0);
+    passing_metersToFywheelRadPerSec.put(1.6669853, 285.0);
+    passing_metersToFywheelRadPerSec.put(1.8409906, 300.0);
+    passing_metersToFywheelRadPerSec.put(2.0387364, 315.0);
+    passing_metersToFywheelRadPerSec.put(2.1137557, 320.0);
+    passing_metersToFywheelRadPerSec.put(2.2659598, 330.0);
+    passing_metersToFywheelRadPerSec.put(2.5085782, 328.0);
+    passing_metersToFywheelRadPerSec.put(2.7848045, 340.0);
+    passing_metersToFywheelRadPerSec.put(3.2773446, 352.0);
+    passing_metersToFywheelRadPerSec.put(4.0661689, 376.0);
+    passing_metersToFywheelRadPerSec.put(4.7832148, 403.0);
+    passing_metersToFywheelRadPerSec.put(5.403332, 430.0);
+    // passing hood
+    passing_metersToHoodRad.put(1.4890792, 0.0);
+    passing_metersToHoodRad.put(1.6669853, 0.0);
+    passing_metersToHoodRad.put(1.8409906, 0.0);
+    passing_metersToHoodRad.put(2.0387364, 0.0);
+    passing_metersToHoodRad.put(2.1137557, 0.056);
+    passing_metersToHoodRad.put(2.2659598, 0.062);
+    passing_metersToHoodRad.put(2.5085782, 0.099);
+    passing_metersToHoodRad.put(2.7848045, 0.13);
+    passing_metersToHoodRad.put(3.2773446, 0.172);
+    passing_metersToHoodRad.put(4.0661689, 0.221);
+    passing_metersToHoodRad.put(4.7832148, 0.257);
+    passing_metersToHoodRad.put(5.403332, 0.295);
   }
 
   private static final DoubleSupplier maxAllowableErrorRadPS =
       new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableFlywheelError", 30, () -> true);
   private static final DoubleSupplier maxAllowableErrorRad =
       new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableHoodError", 0.03, () -> true);
-  private static MutAngle hood_autoAimPos = Radians.mutable(0);
-  private static MutAngularVelocity hood_autoAimVel = RadiansPerSecond.mutable(0);
-  private static MutAngularVelocity flywheel_autoAimVel = RadiansPerSecond.mutable(0);
-  private static MutAngularAcceleration flywheel_autoAimAcc = RadiansPerSecondPerSecond.mutable(0);
+  private static final MutAngle hood_autoAimPos = Radians.mutable(0);
+  // private static final MutAngularVelocity hood_autoAimVel = RadiansPerSecond.mutable(0);
+  private static final MutAngularVelocity flywheel_autoAimVel = RadiansPerSecond.mutable(0);
+  // private static final MutAngularAcceleration flywheel_autoAimAcc =
+  // RadiansPerSecondPerSecond.mutable(0);
 
   public static Command autoAim(
       ShooterSubsystem shooter,
@@ -77,13 +115,18 @@ public class ShooterCommands {
       BooleanSupplier passing,
       BooleanSupplier trenchOverride) {
     return shooter.run(() -> {
-      double targetDistance =
+      final double targetDistance =
           robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get());
-      flywheel_autoAimVel.mut_setMagnitude(metersToFywheelRadPerSec.get(targetDistance));
-      hood_autoAimPos.mut_setMagnitude(metersToHoodRad.get(targetDistance));
-      Logger.recordOutput(TUNING_NT_KEY + "/targetDistance", targetDistance);
-      Logger.recordOutput(TUNING_NT_KEY + "/autoAimFlywheelVel", flywheel_autoAimVel);
-      Logger.recordOutput(TUNING_NT_KEY + "/autoAimHoodPos", hood_autoAimPos);
+      if (passing.getAsBoolean()) {
+        flywheel_autoAimVel.mut_setMagnitude(passing_metersToFywheelRadPerSec.get(targetDistance));
+        hood_autoAimPos.mut_setMagnitude(passing_metersToHoodRad.get(targetDistance));
+      } else {
+        flywheel_autoAimVel.mut_setMagnitude(hub_metersToFywheelRadPerSec.get(targetDistance));
+        hood_autoAimPos.mut_setMagnitude(hub_metersToHoodRad.get(targetDistance));
+      }
+      Logger.recordOutput("Commands/Shooter/targetDistance", targetDistance);
+      Logger.recordOutput("Commands/Shooter/autoAimFlywheelVel", flywheel_autoAimVel);
+      Logger.recordOutput("Commands/Shooter/autoAimHoodPos", hood_autoAimPos);
 
       if (trenchOverride.getAsBoolean()) {
         shooter.setHoodGoalPos(Radians.zero());
@@ -110,12 +153,20 @@ public class ShooterCommands {
             maxAllowableErrorRadPS.getAsDouble());
   }
 
-  public static Command stop(ShooterSubsystem shooter) {
+  public static Command stopAndZeroHood(ShooterSubsystem shooter) {
+    return shooter.run(() -> {
+      shooter.setHoodGoalPos(Radians.zero());
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
+    });
+  }
+
+  public static Command stopAndHoldHood(ShooterSubsystem shooter) {
     return Commands.defer(
         () -> {
-          // Angle hoodTarget = shooter.getHoodPos();
+          Angle hoodTarget = shooter.getHoodPos();
           return shooter.run(() -> {
-            shooter.setHoodGoalPos(Radians.zero());
+            shooter.setHoodGoalPos(hoodTarget);
             shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
             shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
           });
