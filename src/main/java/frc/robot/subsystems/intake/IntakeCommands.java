@@ -40,7 +40,9 @@ public class IntakeCommands {
       new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1);
   private static final Supplier<Angle> DISLODGING_POS =
       () -> Radians.of(dislodging_pos_supplier.getAsDouble());
-  private static final Angle DOWN_POS = Pivot.MIN_POS;
+  private static final DoubleSupplier down_pos_supplier =
+      new TunableDouble(TUNING_NT_KEY + "/down_pos", -1.385);
+  private static final Supplier<Angle> DOWN_POS = () -> Radians.of(down_pos_supplier.getAsDouble());
   public static boolean shooting = false;
 
   // public static void setIndexing(boolean isIndexing) {
@@ -69,7 +71,7 @@ public class IntakeCommands {
             } else {
               if (PIVOT_KINDA_WORKS.getAsBoolean()
                   && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
-                intake.setPivotGoalPos(DOWN_POS);
+                intake.setPivotGoalPos(DOWN_POS.get());
               } else {
                 intake.setPivotVoltage(Volts.zero());
               }
@@ -80,12 +82,12 @@ public class IntakeCommands {
               if (raisePivot.getAsBoolean()) {
                 intake.setPivotGoalPos(SHOOTING_POS.get());
               } else {
-                intake.setPivotGoalPos(DOWN_POS);
+                intake.setPivotGoalPos(DOWN_POS.get());
               }
             } else {
               if (PIVOT_KINDA_WORKS.getAsBoolean()
                   && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
-                intake.setPivotGoalPos(DOWN_POS);
+                intake.setPivotGoalPos(DOWN_POS.get());
               } else {
                 intake.setPivotVoltage(Volts.zero());
               }
@@ -104,12 +106,12 @@ public class IntakeCommands {
                 || intake.getRollerVel().in(RadiansPerSecond) < ROLLER_THRESHOLD.getAsDouble()) {
               intake.setPivotGoalPos(DISLODGING_POS.get());
             } else {
-              intake.setPivotGoalPos(DOWN_POS);
+              intake.setPivotGoalPos(DOWN_POS.get());
             }
           } else {
             if (PIVOT_KINDA_WORKS.getAsBoolean()
                 && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
-              intake.setPivotGoalPos(DOWN_POS);
+              intake.setPivotGoalPos(DOWN_POS.get());
             } else {
               intake.setPivotVoltage(Volts.zero());
             }
@@ -126,12 +128,12 @@ public class IntakeCommands {
             if (raisePivot.getAsBoolean()) {
               intake.setPivotGoalPos(DISLODGING_POS.get());
             } else {
-              intake.setPivotGoalPos(DOWN_POS);
+              intake.setPivotGoalPos(DOWN_POS.get());
             }
           } else {
             if (PIVOT_KINDA_WORKS.getAsBoolean()
                 && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
-              intake.setPivotGoalPos(DOWN_POS);
+              intake.setPivotGoalPos(DOWN_POS.get());
             } else {
               intake.setPivotVoltage(Volts.zero());
             }
@@ -144,10 +146,10 @@ public class IntakeCommands {
   public static Command lowerIntake(IntakeSubsystem intake) {
     return Commands.run(
             () -> {
-              intake.setPivotGoalPos(DOWN_POS);
+              intake.setPivotGoalPos(DOWN_POS.get());
             },
             intake)
-        .onlyWhile(() -> intake.getPivotPos().gt(DOWN_POS.plus(Radians.of(0.04))));
+        .onlyWhile(() -> intake.getPivotPos().gt(DOWN_POS.get().plus(Radians.of(0.04))));
   }
 
   public static Command lowerCommand(IntakeSubsystem instance) {
