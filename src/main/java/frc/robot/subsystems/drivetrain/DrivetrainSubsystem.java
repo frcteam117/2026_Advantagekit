@@ -37,7 +37,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.LocalADStarAK;
@@ -204,12 +203,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
       if (controllingHeadings
           && lastSetpoint.moduleStates()[i].speedMetersPerSecond < 1e-6
           && lastSetpoint.feedforwards().accelerationsMPSSq()[i] < 1e-6) {
-        double headingError_rad = MathUtil.angleModulus(
-            goalHeadings[i].minus(lastSetpoint.moduleStates()[i].angle).getRadians());
-        lastSetpoint.moduleStates()[i].angle = lastSetpoint.moduleStates()[i].angle.plus(
-            Rotation2d.fromRadians(Math.copySign(
-                Math.min(15 * RobotConstants.CODE_PERIOD_s, Math.abs(headingError_rad)),
-                headingError_rad)));
+        // double headingError_rad = MathUtil.angleModulus(
+        //     goalHeadings[i].minus(lastSetpoint.moduleStates()[i].angle).getRadians());
+        // lastSetpoint.moduleStates()[i].angle = lastSetpoint.moduleStates()[i].angle.plus(
+        //     Rotation2d.fromRadians(Math.copySign(
+        //         Math.min(15 * RobotConstants.CODE_PERIOD_s, Math.abs(headingError_rad)),
+        //         headingError_rad)));
+        lastSetpoint.moduleStates()[i].angle = goalHeadings[i];
       }
       modules[i].setNextState(
           lastSetpoint.moduleStates()[i], lastSetpoint.feedforwards().accelerationsMPSSq()[i]);

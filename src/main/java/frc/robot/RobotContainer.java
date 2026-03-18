@@ -243,7 +243,7 @@ public class RobotContainer {
     controller2.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     // Shooter
-    shooter.setDefaultCommand(ShooterCommands.stopAndHoldHood(shooter));
+    shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     controller.square().whileTrue(ShooterCommands.runForward(shooter));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
