@@ -55,4 +55,6 @@ public class TunableString implements Supplier<String> {
   public String get() {
     return value;
   }
+
+  public void close() {}
 }

@@ -88,11 +88,29 @@ public class VisionSubsystem extends SubsystemBase {
       List<Pose3d> robotPosesAccepted = new LinkedList<>();
       List<Pose3d> robotPosesRejected = new LinkedList<>();
 
+      boolean rejectIfTesting = false;
+
       // Add tag poses
       for (int tagId : inputs[cameraIndex].tagIds) {
         var tagPose = aprilTagLayout.getTagPose(tagId);
         if (tagPose.isPresent()) {
           tagPoses.add(tagPose.get());
+        }
+        if ( //
+        tagId != 2 //         L Side Back Red Hub
+            && tagId != 3 //  L Back Red Hub
+            && tagId != 4 //  R Back Red Hub
+            && tagId != 5 //  R Side Back Red Hub
+            && tagId != 8 //  R Side Front Red Hub
+            && tagId != 9 //  R Front Red Hub
+            && tagId != 10 // L Front Red Hub
+            && tagId != 11 // L Side Front Red Hub
+        // && tagId != 13 // L Red Outpost
+        // && tagId != 14 // R Red Outpost
+        // && tagId != 15 // L Red Tower
+        // && tagId != 16 // R Red Tower
+        ) {
+          rejectIfTesting = true;
         }
       }
 
@@ -109,6 +127,7 @@ public class VisionSubsystem extends SubsystemBase {
             || observation.pose().getX() > aprilTagLayout.getFieldLength()
             || observation.pose().getY() < 0.0
             || observation.pose().getY() > aprilTagLayout.getFieldWidth();
+        // || rejectIfTesting;
 
         // Add pose to log
         robotPoses.add(observation.pose());

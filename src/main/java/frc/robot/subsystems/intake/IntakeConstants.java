@@ -49,7 +49,7 @@ public class IntakeConstants {
       SPARK_MAX_CONFIG
           .disableVoltageCompensation()
           .idleMode(IdleMode.kCoast)
-          .smartCurrentLimit(50)
+          .smartCurrentLimit(40)
           .openLoopRampRate(.2)
           .encoder
           .quadratureMeasurementPeriod(10)

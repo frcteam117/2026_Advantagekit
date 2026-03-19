@@ -351,6 +351,62 @@ public class DrivetrainCommands {
         .beforeStarting(() -> resetAngleController(drivetrain));
   }
 
+  /**
+   * Field relative drive command using joystick for linear control and PID for angular control.
+   * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
+   * absolute rotation with a joystick.
+   */
+  public static Command joystickDriveFacingTarget(
+      DrivetrainSubsystem drivetrain,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      Supplier<Translation2d> targetSupplier,
+      Supplier<Translation2d> centerOfRotationSupplier,
+      BooleanSupplier driveAssistSupplier) {
+
+    // Construct command
+    return drivetrain
+        .run(() -> {
+          // Get linear velocity
+          Translation2d linearVelocity =
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+          boolean isFlipped = DriverStation.getAlliance().isPresent()
+              && DriverStation.getAlliance().get() == Alliance.Red;
+
+          Translation2d robotOrientedTarget =
+              targetSupplier.get().minus(drivetrain.getPose().getTranslation());
+          double omegaFF = robotOrientedTarget.cross(new Translation2d(
+                  drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                  drivetrain.getChassisSpeeds().vyMetersPerSecond))
+              / (robotOrientedTarget.getNorm() * robotOrientedTarget.getNorm());
+
+          // Calculate angular speed
+          double omega = ANGLE_CONTROLLER.calculate(
+              drivetrain.getPose().getRotation().getRadians(),
+              new TrapezoidProfile.State(robotOrientedTarget.getAngle().getRadians(), omegaFF));
+          omega += ANGLE_CONTROLLER.getSetpoint().velocity;
+
+          // Convert to field relative speeds & send command
+          ChassisSpeeds speeds = new ChassisSpeeds(
+              linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              omega);
+          speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+              speeds,
+              isFlipped
+                  ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+                  : drivetrain.getPose().getRotation());
+          setGoalVelocity(
+              drivetrain,
+              speeds,
+              centerOfRotationSupplier.get(),
+              driveAssistSupplier.getAsBoolean());
+        })
+        // Reset PID controller when command starts
+        .beforeStarting(() -> resetAngleController(drivetrain));
+  }
+
   private static Rotation2d joystickDriveAtAngle_rotTarget;
   private static double[] snapToAngle1Targets_deg = new double[] {
     0, // 30, 60,

@@ -8,12 +8,17 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -21,6 +26,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class ShooterCommands {
+  public static final boolean isTuning = false;
   private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
   private static final DoubleSupplier targetSpeed_radPs =
       new TunableDouble(TUNING_NT_KEY + "/Flywheel_radPs", 471, () -> true);
@@ -33,6 +39,40 @@ public class ShooterCommands {
   //   distanceToSpeedLerp.put(0.0, 0.0);
   //   distanceToSpeedLerp.put(86.8261633902, 350.0);
   // }
+  public static double getFlywheelGoal() {
+    return targetSpeed_radPs.getAsDouble();
+  }
+
+  public static void setAutoAimPoint(double distance_m) {
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimDistancesList.add(distance_m);
+    hub_autoAimFlywheelVelsList.add(targetSpeed_radPs.getAsDouble());
+    hub_autoAimHoodPosesList.add(hood_goalPos.in(Radians));
+    resetAutoAim();
+    final int i = hub_autoAimUsedValuesList.size() - 1;
+    new TunableBoolean(
+        TUNING_NT_KEY + "/HubShooterTuningValues/" + i + "_"
+            + distanceFormatter.format(hub_autoAimDistancesList.get(i)) + "m_"
+            + flywheelFormatter.format(hub_autoAimFlywheelVelsList.get(i)) + "f_"
+            + hoodFormatter.format(hub_autoAimHoodPosesList.get(i)) + "h",
+        hub_autoAimUsedValuesList.get(i),
+        () -> true,
+        shouldUse -> {
+          hub_autoAimUsedValuesList.set(i, shouldUse);
+          resetAutoAim();
+        });
+    // new TunableBoolean(
+    //     TUNING_NT_KEY + "/PassingShooterTuningValues/" + i + "_"
+    //         + distanceFormatter.format(passing_autoAimDistancesList.get(i)) + "m_"
+    //         + flywheelFormatter.format(passing_autoAimFlywheelVelsList.get(i)) + "f_"
+    //         + hoodFormatter.format(passing_autoAimHoodPosesList.get(i)) + "h",
+    //     passing_autoAimUsedValuesList.get(i),
+    //     () -> true,
+    //     shouldUse -> {
+    //       passing_autoAimUsedValuesList.set(i, shouldUse);
+    //       resetAutoAim();
+    //     });
+  }
 
   private static final InterpolatingDoubleTreeMap hub_metersToFywheelRadPerSec =
       new InterpolatingDoubleTreeMap();
@@ -42,67 +82,227 @@ public class ShooterCommands {
       new InterpolatingDoubleTreeMap();
   private static final InterpolatingDoubleTreeMap passing_metersToHoodRad =
       new InterpolatingDoubleTreeMap();
+  private static final List<Boolean> hub_autoAimUsedValuesList = new ArrayList<>();
+  private static final List<Double> hub_autoAimDistancesList = new ArrayList<>();
+  private static final List<Double> hub_autoAimFlywheelVelsList = new ArrayList<>();
+  private static final List<Double> hub_autoAimHoodPosesList = new ArrayList<>();
+  private static final List<Boolean> passing_autoAimUsedValuesList = new ArrayList<>();
+  private static final List<Double> passing_autoAimDistancesList = new ArrayList<>();
+  private static final List<Double> passing_autoAimFlywheelVelsList = new ArrayList<>();
+  private static final List<Double> passing_autoAimHoodPosesList = new ArrayList<>();
+  private static final NumberFormat longNumberFormatter = new DecimalFormat("###0.0########");
+  private static final NumberFormat distanceFormatter = new DecimalFormat("###0.000");
+  private static final NumberFormat flywheelFormatter = new DecimalFormat("###0.#");
+  private static final NumberFormat hoodFormatter = new DecimalFormat("#.00#");
+
+  private static void resetAutoAim() {
+    hub_metersToFywheelRadPerSec.clear();
+    hub_metersToHoodRad.clear();
+    for (int i = 0; i < hub_autoAimUsedValuesList.size(); i++) {
+      if (hub_autoAimUsedValuesList.get(i)) {
+        hub_metersToFywheelRadPerSec.put(
+            hub_autoAimDistancesList.get(i), hub_autoAimFlywheelVelsList.get(i));
+        hub_metersToHoodRad.put(hub_autoAimDistancesList.get(i), hub_autoAimHoodPosesList.get(i));
+      }
+    }
+    passing_metersToFywheelRadPerSec.clear();
+    passing_metersToHoodRad.clear();
+    for (int i = 0; i < passing_autoAimUsedValuesList.size(); i++) {
+      if (passing_autoAimUsedValuesList.get(i)) {
+        passing_metersToFywheelRadPerSec.put(
+            passing_autoAimDistancesList.get(i), passing_autoAimFlywheelVelsList.get(i));
+        passing_metersToHoodRad.put(
+            passing_autoAimDistancesList.get(i), passing_autoAimHoodPosesList.get(i));
+      }
+    }
+    if (isTuning) {
+      String codeString = "";
+      for (boolean bool : hub_autoAimUsedValuesList) {
+        codeString += "   hub_autoAimUsedValuesList.add(" + (bool ? "true" : "false") + ");\r\n";
+      }
+      for (double dbl : hub_autoAimDistancesList) {
+        codeString +=
+            "   hub_autoAimDistancesList.add(" + longNumberFormatter.format(dbl) + ");\r\n";
+      }
+      for (double dbl : hub_autoAimFlywheelVelsList) {
+        codeString +=
+            "   hub_autoAimFlywheelVelsList.add(" + longNumberFormatter.format(dbl) + ");\r\n";
+      }
+      for (double dbl : hub_autoAimHoodPosesList) {
+        codeString +=
+            "   hub_autoAimHoodPosesList.add(" + longNumberFormatter.format(dbl) + ");\r\n";
+      }
+      for (boolean bool : passing_autoAimUsedValuesList) {
+        codeString +=
+            "   passing_autoAimUsedValuesList.add(" + (bool ? "true" : "false") + ");\r\n";
+      }
+      for (double dbl : passing_autoAimDistancesList) {
+        codeString +=
+            "   passing_autoAimDistancesList.add(" + longNumberFormatter.format(dbl) + ");\r\n";
+      }
+      for (double dbl : passing_autoAimFlywheelVelsList) {
+        codeString +=
+            "   passing_autoAimFlywheelVelsList.add(" + longNumberFormatter.format(dbl) + ");\r\n";
+      }
+      for (double dbl : passing_autoAimHoodPosesList) {
+        codeString +=
+            "   passing_autoAimHoodPosesList.add(" + longNumberFormatter.format(dbl) + ");\r\n";
+      }
+      SmartDashboard.putString("ShooterTuningCodeSnippet", codeString);
+    }
+  }
 
   static {
     // hub flywheel
-    hub_metersToFywheelRadPerSec.put(1.4890792, 270.0);
-    hub_metersToFywheelRadPerSec.put(1.6669853, 285.0);
-    hub_metersToFywheelRadPerSec.put(1.8409906, 300.0);
-    hub_metersToFywheelRadPerSec.put(2.0387364, 315.0);
-    hub_metersToFywheelRadPerSec.put(2.1137557, 320.0);
-    hub_metersToFywheelRadPerSec.put(2.2659598, 330.0);
-    hub_metersToFywheelRadPerSec.put(2.5085782, 328.0);
-    hub_metersToFywheelRadPerSec.put(2.7848045, 340.0);
-    hub_metersToFywheelRadPerSec.put(3.2773446, 352.0);
-    hub_metersToFywheelRadPerSec.put(4.0661689, 376.0);
-    hub_metersToFywheelRadPerSec.put(4.7832148, 403.0);
-    hub_metersToFywheelRadPerSec.put(5.403332, 430.0);
-    // hub hood
-    hub_metersToHoodRad.put(1.4890792, 0.0);
-    hub_metersToHoodRad.put(1.6669853, 0.0);
-    hub_metersToHoodRad.put(1.8409906, 0.0);
-    hub_metersToHoodRad.put(2.0387364, 0.0);
-    hub_metersToHoodRad.put(2.1137557, 0.056);
-    hub_metersToHoodRad.put(2.2659598, 0.062);
-    hub_metersToHoodRad.put(2.5085782, 0.099);
-    hub_metersToHoodRad.put(2.7848045, 0.13);
-    hub_metersToHoodRad.put(3.2773446, 0.172);
-    hub_metersToHoodRad.put(4.0661689, 0.221);
-    hub_metersToHoodRad.put(4.7832148, 0.257);
-    hub_metersToHoodRad.put(5.403332, 0.295);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimDistancesList.add(1.4890792);
+    hub_autoAimDistancesList.add(1.6669853);
+    hub_autoAimDistancesList.add(1.8409906);
+    hub_autoAimDistancesList.add(2.0387364);
+    hub_autoAimDistancesList.add(2.1137557);
+    hub_autoAimDistancesList.add(2.2659598);
+    hub_autoAimDistancesList.add(2.5085782);
+    hub_autoAimDistancesList.add(2.7848045);
+    hub_autoAimDistancesList.add(3.2773446);
+    hub_autoAimDistancesList.add(4.0661689);
+    hub_autoAimDistancesList.add(4.7832148);
+    hub_autoAimDistancesList.add(5.403332);
+    hub_autoAimDistancesList.add(1.672013504);
+    hub_autoAimDistancesList.add(2.093156553);
+    hub_autoAimDistancesList.add(2.466170615);
+    hub_autoAimDistancesList.add(3.045431032);
+    hub_autoAimDistancesList.add(3.854439165);
+    hub_autoAimDistancesList.add(4.420507568);
+    hub_autoAimDistancesList.add(5.057336823);
+    hub_autoAimDistancesList.add(5.827356438);
+    hub_autoAimDistancesList.add(2.909206901);
+    hub_autoAimFlywheelVelsList.add(270.0);
+    hub_autoAimFlywheelVelsList.add(285.0);
+    hub_autoAimFlywheelVelsList.add(300.0);
+    hub_autoAimFlywheelVelsList.add(315.0);
+    hub_autoAimFlywheelVelsList.add(320.0);
+    hub_autoAimFlywheelVelsList.add(330.0);
+    hub_autoAimFlywheelVelsList.add(328.0);
+    hub_autoAimFlywheelVelsList.add(340.0);
+    hub_autoAimFlywheelVelsList.add(352.0);
+    hub_autoAimFlywheelVelsList.add(376.0);
+    hub_autoAimFlywheelVelsList.add(410.0);
+    hub_autoAimFlywheelVelsList.add(430.0);
+    hub_autoAimFlywheelVelsList.add(310.0);
+    hub_autoAimFlywheelVelsList.add(335.0);
+    hub_autoAimFlywheelVelsList.add(375.0);
+    hub_autoAimFlywheelVelsList.add(410.0);
+    hub_autoAimFlywheelVelsList.add(465.0);
+    hub_autoAimFlywheelVelsList.add(500.0);
+    hub_autoAimFlywheelVelsList.add(565.0);
+    hub_autoAimFlywheelVelsList.add(565.0);
+    hub_autoAimFlywheelVelsList.add(365.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.056);
+    hub_autoAimHoodPosesList.add(0.062);
+    hub_autoAimHoodPosesList.add(0.099);
+    hub_autoAimHoodPosesList.add(0.13);
+    hub_autoAimHoodPosesList.add(0.172);
+    hub_autoAimHoodPosesList.add(0.221);
+    hub_autoAimHoodPosesList.add(0.257);
+    hub_autoAimHoodPosesList.add(0.295);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.0);
+    hub_autoAimHoodPosesList.add(0.000000004);
+    hub_autoAimHoodPosesList.add(0.108973976);
+    hub_autoAimHoodPosesList.add(0.117809814);
+
+    if (isTuning) {
+      for (int i = 0; i < hub_autoAimUsedValuesList.size(); i++) {
+        final int index = i;
+        new TunableBoolean(
+            TUNING_NT_KEY + "/HubShooterTuningValues/" + i + "_"
+                + distanceFormatter.format(hub_autoAimDistancesList.get(i)) + "m_"
+                + flywheelFormatter.format(hub_autoAimFlywheelVelsList.get(i)) + "f_"
+                + hoodFormatter.format(hub_autoAimHoodPosesList.get(i)) + "h",
+            hub_autoAimUsedValuesList.get(i),
+            () -> true,
+            shouldUse -> {
+              hub_autoAimUsedValuesList.set(index, shouldUse);
+              resetAutoAim();
+            });
+      }
+      for (int i = 0; i < passing_autoAimUsedValuesList.size(); i++) {
+        final int index = i;
+        new TunableBoolean(
+            TUNING_NT_KEY + "/PassingShooterTuningValues/" + i + "_"
+                + distanceFormatter.format(passing_autoAimDistancesList.get(i)) + "m_"
+                + flywheelFormatter.format(passing_autoAimFlywheelVelsList.get(i)) + "f_"
+                + hoodFormatter.format(passing_autoAimHoodPosesList.get(i)) + "h",
+            passing_autoAimUsedValuesList.get(i),
+            () -> true,
+            shouldUse -> {
+              passing_autoAimUsedValuesList.set(index, shouldUse);
+              resetAutoAim();
+            });
+      }
+    }
+    resetAutoAim();
     // passing flywheel
-    passing_metersToFywheelRadPerSec.put(1.4890792, 270.0);
-    passing_metersToFywheelRadPerSec.put(1.6669853, 285.0);
-    passing_metersToFywheelRadPerSec.put(1.8409906, 300.0);
-    passing_metersToFywheelRadPerSec.put(2.0387364, 315.0);
-    passing_metersToFywheelRadPerSec.put(2.1137557, 320.0);
-    passing_metersToFywheelRadPerSec.put(2.2659598, 330.0);
-    passing_metersToFywheelRadPerSec.put(2.5085782, 328.0);
-    passing_metersToFywheelRadPerSec.put(2.7848045, 340.0);
-    passing_metersToFywheelRadPerSec.put(3.2773446, 352.0);
-    passing_metersToFywheelRadPerSec.put(4.0661689, 376.0);
-    passing_metersToFywheelRadPerSec.put(4.7832148, 403.0);
-    passing_metersToFywheelRadPerSec.put(5.403332, 430.0);
+    // passing_metersToFywheelRadPerSec.put(1.4890792, 270.0);
+    // passing_metersToFywheelRadPerSec.put(1.6669853, 285.0);
+    // passing_metersToFywheelRadPerSec.put(1.8409906, 300.0);
+    // passing_metersToFywheelRadPerSec.put(2.0387364, 315.0);
+    // passing_metersToFywheelRadPerSec.put(2.1137557, 320.0);
+    // passing_metersToFywheelRadPerSec.put(2.2659598, 330.0);
+    // passing_metersToFywheelRadPerSec.put(2.5085782, 328.0);
+    // passing_metersToFywheelRadPerSec.put(2.7848045, 340.0);
+    // passing_metersToFywheelRadPerSec.put(3.2773446, 352.0);
+    // passing_metersToFywheelRadPerSec.put(4.0661689, 376.0);
+    // passing_metersToFywheelRadPerSec.put(4.7832148, 403.0);
+    // passing_metersToFywheelRadPerSec.put(5.403332, 430.0);
     // passing hood
-    passing_metersToHoodRad.put(1.4890792, 0.0);
-    passing_metersToHoodRad.put(1.6669853, 0.0);
-    passing_metersToHoodRad.put(1.8409906, 0.0);
-    passing_metersToHoodRad.put(2.0387364, 0.0);
-    passing_metersToHoodRad.put(2.1137557, 0.056);
-    passing_metersToHoodRad.put(2.2659598, 0.062);
-    passing_metersToHoodRad.put(2.5085782, 0.099);
-    passing_metersToHoodRad.put(2.7848045, 0.13);
-    passing_metersToHoodRad.put(3.2773446, 0.172);
-    passing_metersToHoodRad.put(4.0661689, 0.221);
-    passing_metersToHoodRad.put(4.7832148, 0.257);
-    passing_metersToHoodRad.put(5.403332, 0.295);
+    // passing_metersToHoodRad.put(1.4890792, 0.0);
+    // passing_metersToHoodRad.put(1.6669853, 0.0);
+    // passing_metersToHoodRad.put(1.8409906, 0.0);
+    // passing_metersToHoodRad.put(2.0387364, 0.0);
+    // passing_metersToHoodRad.put(2.1137557, 0.056);
+    // passing_metersToHoodRad.put(2.2659598, 0.062);
+    // passing_metersToHoodRad.put(2.5085782, 0.099);
+    // passing_metersToHoodRad.put(2.7848045, 0.13);
+    // passing_metersToHoodRad.put(3.2773446, 0.172);
+    // passing_metersToHoodRad.put(4.0661689, 0.221);
+    // passing_metersToHoodRad.put(4.7832148, 0.257);
+    // passing_metersToHoodRad.put(5.403332, 0.295);
   }
 
   private static final DoubleSupplier maxAllowableErrorRadPS =
       new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableFlywheelError", 30, () -> true);
   private static final DoubleSupplier maxAllowableErrorRad =
       new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableHoodError", 0.03, () -> true);
-  private static final MutAngle hood_autoAimPos = Radians.mutable(0);
+  private static final MutAngle hood_goalPos = Radians.mutable(0);
   // private static final MutAngularVelocity hood_autoAimVel = RadiansPerSecond.mutable(0);
   private static final MutAngularVelocity flywheel_autoAimVel = RadiansPerSecond.mutable(0);
   // private static final MutAngularAcceleration flywheel_autoAimAcc =
@@ -117,21 +317,22 @@ public class ShooterCommands {
     return shooter.run(() -> {
       final double targetDistance =
           robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get());
-      if (passing.getAsBoolean()) {
-        flywheel_autoAimVel.mut_setMagnitude(passing_metersToFywheelRadPerSec.get(targetDistance));
-        hood_autoAimPos.mut_setMagnitude(passing_metersToHoodRad.get(targetDistance));
-      } else {
-        flywheel_autoAimVel.mut_setMagnitude(hub_metersToFywheelRadPerSec.get(targetDistance));
-        hood_autoAimPos.mut_setMagnitude(hub_metersToHoodRad.get(targetDistance));
-      }
+      // if (passing.getAsBoolean()) {
+      //
+      // flywheel_autoAimVel.mut_setMagnitude(passing_metersToFywheelRadPerSec.get(targetDistance));
+      //   hood_goalPos.mut_setMagnitude(passing_metersToHoodRad.get(targetDistance));
+      // } else {
+      flywheel_autoAimVel.mut_setMagnitude(hub_metersToFywheelRadPerSec.get(targetDistance));
+      hood_goalPos.mut_setMagnitude(hub_metersToHoodRad.get(targetDistance));
+      // }
       Logger.recordOutput("Commands/Shooter/targetDistance", targetDistance);
       Logger.recordOutput("Commands/Shooter/autoAimFlywheelVel", flywheel_autoAimVel);
-      Logger.recordOutput("Commands/Shooter/autoAimHoodPos", hood_autoAimPos);
+      Logger.recordOutput("Commands/Shooter/autoAimHoodPos", hood_goalPos);
 
       if (trenchOverride.getAsBoolean()) {
         shooter.setHoodGoalPos(Radians.zero());
       } else {
-        shooter.setHoodGoalPos(hood_autoAimPos);
+        shooter.setHoodGoalPos(hood_goalPos);
       }
       shooter.setRIOFlywheelGoalVel(flywheel_autoAimVel);
       shooter.setPDHFlywheelGoalVel(flywheel_autoAimVel);
@@ -140,7 +341,7 @@ public class ShooterCommands {
 
   public static boolean isAutoAimReady(ShooterSubsystem shooter) {
     return MathUtil.isNear(
-            hood_autoAimPos.in(Radians),
+            hood_goalPos.in(Radians),
             shooter.getHoodPos().in(Radians),
             maxAllowableErrorRad.getAsDouble())
         && MathUtil.isNear(
@@ -164,9 +365,9 @@ public class ShooterCommands {
   public static Command stopAndHoldHood(ShooterSubsystem shooter) {
     return Commands.defer(
         () -> {
-          Angle hoodTarget = shooter.getHoodPos();
+          hood_goalPos.mut_setMagnitude(shooter.getHoodPos().in(Radians));
           return shooter.run(() -> {
-            shooter.setHoodGoalPos(hoodTarget);
+            shooter.setHoodGoalPos(hood_goalPos);
             shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
             shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
           });

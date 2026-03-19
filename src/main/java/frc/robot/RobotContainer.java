@@ -202,9 +202,10 @@ public class RobotContainer {
   }
 
   // private Rotation2d prevTarget = Rotation2d.kZero;
-  private List<Pose2d> shooterTuningPoses = new ArrayList<>();
+  private List<Double> shooterTuningDistances = new ArrayList<>();
   private List<Double> shooterTuningRIOVels = new ArrayList<>();
   private List<Double> shooterTuningPDHVels = new ArrayList<>();
+  private List<Double> shooterTuningFlywheelVels = new ArrayList<>();
   private List<Double> shooterTuningHoodPoses = new ArrayList<>();
 
   /**
@@ -239,56 +240,78 @@ public class RobotContainer {
 
     // Indexer
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
-    controller2.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    controller2.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    if (ShooterCommands.isTuning) {
+      controller2
+          .R1()
+          .whileTrue(
+              // ShooterCommands.autoAim(shooter, drivetrain::getPose, null, null, null));
+              Commands.parallel(
+                  IndexerCommands.runForwardCommand(indexer),
+                  Commands.run(() -> IntakeCommands.shooting = true)
+                      .finallyDo(() -> IntakeCommands.shooting = false)));
+    }
+    // controller2.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    // controller2.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     // Shooter
-    shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
+    if (ShooterCommands.isTuning) {
+      shooter.setDefaultCommand(ShooterCommands.stopAndHoldHood(shooter));
+    } else {
+      shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
+    }
     controller.square().whileTrue(ShooterCommands.runForward(shooter));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
 
     // new button bindings:
-    controller2
-        .R1()
-        .whileTrue(
-            // ShooterCommands.autoAim(shooter, drivetrain::getPose, null, null, null));
-            Commands.parallel(
-                IndexerCommands.runForwardCommand(indexer),
-                Commands.run(() -> IntakeCommands.shooting = true)
-                    .finallyDo(() -> IntakeCommands.shooting = false)));
     controller2.L1().whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
     // should this be whileTrue? vvv
     controller
         .R2()
-        .whileTrue(RobotCommands.autoAim(
-            drivetrain,
-            shooter,
-            indexer,
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-            () -> true));
-    controller2
-        .R2()
-        .whileTrue(RobotCommands.autoFaceTarget(
-            drivetrain, () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
+        .whileTrue(RobotCommands.faceHubAndDrive(
+                drivetrain,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()))
+            .onlyWhile(controller.cross().negate())
+            .andThen(RobotCommands.autoAim(
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true)));
+    if (ShooterCommands.isTuning) {
+      controller2
+          .R2()
+          .whileTrue(RobotCommands.autoFaceTarget(
+              drivetrain, () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
+    }
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
     // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
-    controller
-        .cross()
-        .whileTrue(RobotCommands.faceHubAndDrive(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(
-                intake.getPivotPos()))); // make aimToPass
+    // controller
+    //     .cross()
+    //     .whileTrue(RobotCommands.faceHubAndDrive(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+    //             intake.getPivotPos()))); // make aimToPass
 
     controller2.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
-      shooterTuningPoses.add(drivetrain.getPose());
+      final double distance = RobotCommands.getTarget(drivetrain.getPose())
+          .getDistance(drivetrain.getPose().getTranslation());
+      ShooterCommands.setAutoAimPoint(distance);
+      shooterTuningDistances.add(distance);
       shooterTuningRIOVels.add(shooter.getRIOFlywheelVel().in(RadiansPerSecond));
       shooterTuningPDHVels.add(shooter.getPDHFlywheelVel().in(RadiansPerSecond));
+      shooterTuningFlywheelVels.add(ShooterCommands.getFlywheelGoal());
       shooterTuningHoodPoses.add(shooter.getHoodPos().in(Radians));
-      Logger.recordOutput("ShooterTuning/Poses", shooterTuningPoses.toArray(Pose2d[]::new));
+      Logger.recordOutput(
+          "ShooterTuning/Poses",
+          Arrays.stream(shooterTuningDistances.toArray(Double[]::new))
+              .mapToDouble(value -> value)
+              .toArray());
       Logger.recordOutput(
           "ShooterTuning/RIOVels",
           Arrays.stream(shooterTuningRIOVels.toArray(Double[]::new))
