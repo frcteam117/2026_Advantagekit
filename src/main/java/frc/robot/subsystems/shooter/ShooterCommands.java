@@ -168,13 +168,19 @@ public class ShooterCommands {
     hub_autoAimUsedValuesList.add(false);
     hub_autoAimUsedValuesList.add(true);
     hub_autoAimUsedValuesList.add(true);
-    hub_autoAimUsedValuesList.add(true);
-    hub_autoAimUsedValuesList.add(true);
-    hub_autoAimUsedValuesList.add(true);
-    hub_autoAimUsedValuesList.add(true);
-    hub_autoAimUsedValuesList.add(true);
-    hub_autoAimUsedValuesList.add(true);
     hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(false);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
     hub_autoAimDistancesList.add(1.4890792);
     hub_autoAimDistancesList.add(1.6669853);
     hub_autoAimDistancesList.add(1.8409906);
@@ -196,6 +202,12 @@ public class ShooterCommands {
     hub_autoAimDistancesList.add(5.057336823);
     hub_autoAimDistancesList.add(5.827356438);
     hub_autoAimDistancesList.add(2.909206901);
+    hub_autoAimDistancesList.add(2.567135366);
+    hub_autoAimDistancesList.add(2.988457754);
+    hub_autoAimDistancesList.add(3.56098185);
+    hub_autoAimDistancesList.add(4.299904199);
+    hub_autoAimDistancesList.add(5.007402818);
+    hub_autoAimDistancesList.add(5.622107501);
     hub_autoAimFlywheelVelsList.add(270.0);
     hub_autoAimFlywheelVelsList.add(285.0);
     hub_autoAimFlywheelVelsList.add(300.0);
@@ -217,6 +229,12 @@ public class ShooterCommands {
     hub_autoAimFlywheelVelsList.add(565.0);
     hub_autoAimFlywheelVelsList.add(565.0);
     hub_autoAimFlywheelVelsList.add(365.0);
+    hub_autoAimFlywheelVelsList.add(360.0);
+    hub_autoAimFlywheelVelsList.add(373.0);
+    hub_autoAimFlywheelVelsList.add(386.0);
+    hub_autoAimFlywheelVelsList.add(420.0);
+    hub_autoAimFlywheelVelsList.add(440.0);
+    hub_autoAimFlywheelVelsList.add(455.0);
     hub_autoAimHoodPosesList.add(0.0);
     hub_autoAimHoodPosesList.add(0.0);
     hub_autoAimHoodPosesList.add(0.0);
@@ -238,6 +256,12 @@ public class ShooterCommands {
     hub_autoAimHoodPosesList.add(0.000000004);
     hub_autoAimHoodPosesList.add(0.108973976);
     hub_autoAimHoodPosesList.add(0.117809814);
+    hub_autoAimHoodPosesList.add(0.07952148);
+    hub_autoAimHoodPosesList.add(0.11830512);
+    hub_autoAimHoodPosesList.add(0.176715379);
+    hub_autoAimHoodPosesList.add(0.19943611);
+    hub_autoAimHoodPosesList.add(0.23604073);
+    hub_autoAimHoodPosesList.add(0.272224552);
 
     if (isTuning) {
       for (int i = 0; i < hub_autoAimUsedValuesList.size(); i++) {

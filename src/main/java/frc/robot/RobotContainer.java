@@ -18,6 +18,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -42,7 +43,6 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 // import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
-import frc.robot.util.SysIdUtil.SysIdType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -161,31 +161,40 @@ public class RobotContainer {
         "Drive Wheel Radius Characterization",
         DrivetrainCommands.wheelRadiusCharacterization(drivetrain));
     autoChooser.addOption(
-        "Drive SysId (QuasistaticForward)",
-        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.QuasistaticForward));
-    autoChooser.addOption(
-        "Drive SysId (QuasistaticReverse)",
-        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.QuasistaticReverse));
-    autoChooser.addOption(
-        "Drive SysId (DynamicForward)",
-        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.DynamicForward));
-    autoChooser.addOption(
-        "Drive SysId (DynamicReverse)",
-        DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.DynamicReverse));
-    autoChooser.addOption(
-        "Azimuth SysId (QuasistaticForward)",
-        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.QuasistaticForward));
-    autoChooser.addOption(
-        "Azimuth SysId (QuasistaticReverse)",
-        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.QuasistaticReverse));
-    autoChooser.addOption(
-        "Azimuth SysId (DynamicForward)",
-        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicForward));
-    autoChooser.addOption(
-        "Azimuth SysId (DynamicReverse)",
-        DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicReverse));
-    autoChooser.addOption("Albert Auto", AutoBuilder.buildAuto("pidaytoppathfull"));
-    autoChooser.addOption("Kai Auto", AutoBuilder.buildAuto("kai auto 1"));
+        "Stationary Preload",
+        RobotCommands.autoAim(
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true)
+            .withTimeout(10));
+    // autoChooser.addOption(
+    //     "Drive SysId (QuasistaticForward)",
+    //     DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.QuasistaticForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (QuasistaticReverse)",
+    //     DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.QuasistaticReverse));
+    // autoChooser.addOption(
+    //     "Drive SysId (DynamicForward)",
+    //     DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.DynamicForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (DynamicReverse)",
+    //     DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.DynamicReverse));
+    // autoChooser.addOption(
+    //     "Azimuth SysId (QuasistaticForward)",
+    //     DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.QuasistaticForward));
+    // autoChooser.addOption(
+    //     "Azimuth SysId (QuasistaticReverse)",
+    //     DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.QuasistaticReverse));
+    // autoChooser.addOption(
+    //     "Azimuth SysId (DynamicForward)",
+    //     DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicForward));
+    // autoChooser.addOption(
+    //     "Azimuth SysId (DynamicReverse)",
+    //     DrivetrainCommands.getAzimuthSysId(drivetrain, SysIdType.DynamicReverse));
+    // autoChooser.addOption("Albert Auto", AutoBuilder.buildAuto("pidaytoppathfull"));
+    // autoChooser.addOption("Kai Auto", AutoBuilder.buildAuto("kai auto 1"));
 
     // autoChooser.addOption(
     //     "Flywheel SysId (Quasistatic)",
@@ -215,6 +224,12 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    PathPlannerLogging.setLogActivePathCallback(activePath ->
+        Logger.recordOutput("PathPlanner/ActivePath", activePath.stream().toArray(Pose2d[]::new)));
+    PathPlannerLogging.setLogCurrentPoseCallback(
+        currentPose -> Logger.recordOutput("PathPlanner/CurrentPose", currentPose));
+    PathPlannerLogging.setLogTargetPoseCallback(
+        targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
     drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
         drivetrain,
         () -> -controller.getLeftY(),
@@ -269,23 +284,18 @@ public class RobotContainer {
     // should this be whileTrue? vvv
     controller
         .R2()
-        .whileTrue(RobotCommands.faceHubAndDrive(
-                drivetrain,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()))
-            .onlyWhile(controller.cross().negate())
-            .andThen(RobotCommands.autoAim(
-                drivetrain,
-                shooter,
-                indexer,
-                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-                () -> true)));
+        .whileTrue(RobotCommands.autoAim(
+            drivetrain,
+            shooter,
+            indexer,
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+            () -> true));
     if (ShooterCommands.isTuning) {
       controller2
           .R2()
           .whileTrue(RobotCommands.autoFaceTarget(
-              drivetrain, () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
+              drivetrain,
+              () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
     }
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
     // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
@@ -404,10 +414,6 @@ public class RobotContainer {
     //   e.printStackTrace();
     // }
     // return null;
-    // return Commands.parallel(
-    //         Commands.waitSeconds(3).andThen(IndexerCommands.runForwardCommand(indexer)),
-    //         RobotCommands.hubAutoShoot(drivetrain, shooter, indexer, controller.triangle()))
-    //     .withTimeout(8);
   }
 
   public void resetSimulationField() {

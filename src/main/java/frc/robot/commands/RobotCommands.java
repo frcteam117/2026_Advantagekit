@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class RobotCommands {
+  private static boolean isAutoShooting = false;
   private static final Translation2d blueHub = RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
       ? new Translation2d(0.0254 * (182.11), 0.0254 * (317.69 / 2))
       : new Translation2d(0.0254 * (181.56), 0.0254 * (316.64 / 2));
@@ -63,7 +64,11 @@ public class RobotCommands {
                   Commands.run(() -> IntakeCommands.shooting = shootWhenReady.getAsBoolean()
                       && ShooterCommands.isAutoAimReady(shooter)
                       && DrivetrainCommands.isAutoAimReady(drivetrain)))
-              .finallyDo(() -> IntakeCommands.shooting = false);
+              .beforeStarting(() -> isAutoShooting = true)
+              .finallyDo(() -> {
+                isAutoShooting = false;
+                IntakeCommands.shooting = false;
+              });
         },
         Set.of(drivetrain, shooter, indexer));
   }
@@ -98,29 +103,15 @@ public class RobotCommands {
 
   public static Command autoAimRevFlywheels(
       Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter) {
-    return Commands.defer(
-        () -> {
-          boolean isBlueAlliance =
-              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
-          boolean isPassing = isBlueAlliance
-              ? robotPoseSupplier.get().getX() > 4.7
-              : robotPoseSupplier.get().getX() < 12;
-          // Logger.recordOutput(
-          //     "Commands/alliance",
-          //     DriverStation.getAlliance().isEmpty() ? "Empty" : (isBlueAlliance ? "Blue" :
-          // "Red"));
-          // Logger.recordOutput("Commands/isPassing", isPassing ? "True" : "False");
-          // Logger.recordOutput("Commands/shootingTarget", target);
-          // Logger.recordOutput("Commands/posex", robotPoseSupplier.get().getX());
-          // Logger.recordOutput("Commands/posey", robotPoseSupplier.get().getY());
-          return ShooterCommands.autoAim(
-              shooter,
-              robotPoseSupplier,
-              () -> getTarget(robotPoseSupplier.get()),
-              () -> isPassing,
-              () -> true);
-        },
-        Set.of(shooter));
+    return ShooterCommands.autoAim(
+            shooter,
+            robotPoseSupplier,
+            () -> getTarget(robotPoseSupplier.get()),
+            () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                ? robotPoseSupplier.get().getX() > 4.7
+                : robotPoseSupplier.get().getX() < 12,
+            () -> true)
+        .onlyIf(() -> !isAutoShooting);
   }
 
   public static Translation2d getTarget(Pose2d robotPose) {

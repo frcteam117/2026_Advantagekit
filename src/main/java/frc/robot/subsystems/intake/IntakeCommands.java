@@ -41,7 +41,7 @@ public class IntakeCommands {
   private static final Supplier<Angle> DISLODGING_POS =
       () -> Radians.of(dislodging_pos_supplier.getAsDouble());
   private static final DoubleSupplier down_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/down_pos", -1.385);
+      new TunableDouble(TUNING_NT_KEY + "/down_pos", -1.398);
   private static final Supplier<Angle> DOWN_POS = () -> Radians.of(down_pos_supplier.getAsDouble());
   public static boolean shooting = false;
 
