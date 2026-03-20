@@ -126,8 +126,8 @@ public class VisionSubsystem extends SubsystemBase {
             || observation.pose().getX() < 0.0
             || observation.pose().getX() > aprilTagLayout.getFieldLength()
             || observation.pose().getY() < 0.0
-            || observation.pose().getY() > aprilTagLayout.getFieldWidth();
-        // || rejectIfTesting;
+            || observation.pose().getY() > aprilTagLayout.getFieldWidth()
+            || rejectIfTesting;
 
         // Add pose to log
         robotPoses.add(observation.pose());

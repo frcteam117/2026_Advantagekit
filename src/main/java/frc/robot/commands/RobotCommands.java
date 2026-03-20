@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -71,6 +72,20 @@ public class RobotCommands {
               });
         },
         Set.of(drivetrain, shooter, indexer));
+  }
+
+  public static Command setPointRevThenShoot(ShooterSubsystem shooter, IndexerSubsystem indexer) {
+    Pose2d pose = new Pose2d(1.578, 4.008, Rotation2d.fromDegrees(180));
+    return Commands.parallel(
+            ShooterCommands.autoAim(shooter, () -> pose, () -> blueHub, () -> false, () -> false),
+            IndexerCommands.conditionalRunForward(
+                indexer, () -> ShooterCommands.isAutoAimReady(shooter)),
+            Commands.run(() -> IntakeCommands.shooting = ShooterCommands.isAutoAimReady(shooter)))
+        .beforeStarting(() -> isAutoShooting = true)
+        .finallyDo(() -> {
+          isAutoShooting = false;
+          IntakeCommands.shooting = false;
+        });
   }
 
   public static Command faceHubAndDrive(

@@ -47,8 +47,9 @@ public class GyroIONavX implements GyroIO {
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
-    // inputs.connected = true;
     inputs.yawPosition = Rotation2d.fromDegrees(navX.getYaw().in(Degrees));
+    // inputs.yawPosition = Rotation2d.fromDegrees(360);
+    inputs.connected = inputs.yawPosition.getRadians() < 4.5;
     // inputs.yawVelocityRadPerSec = navX.getAngularVel()[2].in(RadiansPerSecond);
     inputs.angleFromHorizontal = Rotation2d.fromRadians(
         Math.acos(zHat.rotateBy(new Rotation3d(navX.getQuat6D())).dot(zHat)));

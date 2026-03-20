@@ -25,7 +25,7 @@ public class IndexerConstants {
           .disableVoltageCompensation()
           .idleMode(IdleMode.kBrake)
           .smartCurrentLimit(40)
-          .openLoopRampRate(.2)
+          .openLoopRampRate(.05)
           .encoder
           .quadratureMeasurementPeriod(10)
           .quadratureAverageDepth(4);

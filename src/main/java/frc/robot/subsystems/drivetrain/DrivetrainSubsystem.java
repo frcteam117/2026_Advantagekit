@@ -23,9 +23,11 @@ import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -165,14 +167,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
       }
 
       // Update gyro angle
-      // if (gyroInputs.connected) {
-      //   // Use the real gyro angle
-      rawGyroRotation = gyroInputs.odometryYawPositions[i];
-      // } else {
-      //   // Use the angle delta from the kinematics and module deltas
-      //   Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-      //   rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(twist.dtheta));
-      // }
+      if (gyroInputs.connected) {
+        // Use the real gyro angle
+        rawGyroRotation = gyroInputs.odometryYawPositions[i];
+      } else {
+        // Use the angle delta from the kinematics and module deltas
+        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+        rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(twist.dtheta));
+      }
 
       // Apply update
       poseEstimator.updateWithTime(
@@ -338,7 +340,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
     }
     prevVisionPose = visionRobotPoseMeters;
     poseEstimator.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+        visionRobotPoseMeters,
+        timestampSeconds,
+        gyroInputs.connected
+            ? visionMeasurementStdDevs
+            : VecBuilder.fill(
+                visionMeasurementStdDevs.get(0, 0) / 3,
+                visionMeasurementStdDevs.get(1, 0) / 3,
+                visionMeasurementStdDevs.get(2, 0) / 8));
     // TODO: when should this be run? Max's answer: DrivetrainSubsystem.accept() should be run each
     // timestep that photonvision was able to predict the robot pose
   }

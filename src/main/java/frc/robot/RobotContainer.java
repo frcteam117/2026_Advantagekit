@@ -24,6 +24,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.RobotCommands;
@@ -265,8 +266,8 @@ public class RobotContainer {
                   Commands.run(() -> IntakeCommands.shooting = true)
                       .finallyDo(() -> IntakeCommands.shooting = false)));
     }
-    // controller2.L1().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    // controller2.R1().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    controller2.square().whileTrue(IndexerCommands.runForwardCommand(indexer));
+    controller2.circle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
     // Shooter
     if (ShooterCommands.isTuning) {
@@ -274,7 +275,7 @@ public class RobotContainer {
     } else {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
-    controller.square().whileTrue(ShooterCommands.runForward(shooter));
+    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
@@ -285,11 +286,12 @@ public class RobotContainer {
     controller
         .R2()
         .whileTrue(RobotCommands.autoAim(
-            drivetrain,
-            shooter,
-            indexer,
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-            () -> true));
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true)
+            .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
     if (ShooterCommands.isTuning) {
       controller2
           .R2()
@@ -395,9 +397,15 @@ public class RobotContainer {
     //         RobotBase.isReal()
     //             ? DrivetrainCommands.replacePoseWithVision(drivetrain)
     //             : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
-    controller.touchpad().onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()));
-    controller.L3().onTrue(Commands.runOnce(() -> drivetrain.resetTranslationWithVision()));
-    controller2.touchpad().onTrue(Commands.runOnce(() -> drivetrain.resetTranslationWithVision()));
+    controller
+        .touchpad()
+        .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+    controller
+        .L3()
+        .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+    controller2
+        .touchpad()
+        .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
   }
 
   /**
