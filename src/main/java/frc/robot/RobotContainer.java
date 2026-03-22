@@ -266,6 +266,11 @@ public class RobotContainer {
                   Commands.run(() -> IntakeCommands.shooting = true)
                       .finallyDo(() -> IntakeCommands.shooting = false)));
     }
+    controller
+        .cross()
+        .whileTrue(Commands.startEnd(
+            () -> IndexerCommands.runningBackwards = true,
+            () -> IndexerCommands.runningBackwards = false));
     controller2.square().whileTrue(IndexerCommands.runForwardCommand(indexer));
     controller2.circle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
