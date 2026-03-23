@@ -4,9 +4,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import java.util.function.BooleanSupplier;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.util.states.premade.RadVel_State;
 
 // theres def a more efficient way to write this
 // it could be better...
@@ -32,8 +30,8 @@ public class LedCommands {
 
   public static Command updateShooterLEDs(ShooterSubsystem shooter, double targetSpeedRadPerSec) {
 
-    double rioSpeed = shooter.getRIOFlywheelVel().vel(RadiansPerSecond);
-    double pdhSpeed = shooter.getPDHFlywheelVel().vel(RadiansPerSecond);
+    double rioSpeed = shooter.getRIOFlywheelVel().magnitude();
+    double pdhSpeed = shooter.getPDHFlywheelVel().magnitude();
     boolean atSpeed = Math.abs(rioSpeed - targetSpeedRadPerSec) < tolerance
         && Math.abs(pdhSpeed - targetSpeedRadPerSec) < tolerance;
 

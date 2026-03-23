@@ -13,9 +13,8 @@ import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.util.logging.TunableBoolean;
 import frc.robot.subsystems.led.LedCommands;
-import frc.robot.util.SysIdUtil.SysIdType;
+import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -398,6 +397,7 @@ public class ShooterCommands {
             shooter.setHoodGoalPos(hood_goalPos);
             shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
             shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
+            LedCommands.updateShooterLEDs(shooter, 0);
           });
         },
         Set.of(shooter));
