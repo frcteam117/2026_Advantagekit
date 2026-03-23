@@ -362,7 +362,7 @@ public class ShooterCommands {
       }
       shooter.setRIOFlywheelGoalVel(flywheel_autoAimVel);
       shooter.setPDHFlywheelGoalVel(flywheel_autoAimVel);
-      LedCommands.updateShooterLEDs(shooter, autoTargetSpeed);
+      LedCommands.updateShooterLEDs(shooter, hub_metersToFywheelRadPerSec.get(targetDistance));
     });
   }
 

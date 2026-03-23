@@ -1,5 +1,7 @@
 package frc.robot.subsystems.led;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import java.util.function.BooleanSupplier;
@@ -10,15 +12,28 @@ import frc.robot.util.states.premade.RadVel_State;
 // it could be better...
 
 public class LedCommands {
-  public static Command ledCommand(BooleanSupplier rio_FlywheelSpeed) {
 
-    return Commands.none();
+  private static AddressableLED led;
+  private static AddressableLEDBuffer buffer;
+  // private final ShooterSubsystem shooter;
+
+  private static final double tolerance = 10; // allowable error, should i change this?
+
+  public LedCommands(int pwmPort, int length) { // ShooterSubsystem shooter) {
+    // this.shooter = shooter;
+
+    led = new AddressableLED(pwmPort);
+    buffer = new AddressableLEDBuffer(length);
+
+    led.setLength(buffer.getLength());
+    led.setData(buffer);
+    led.start();
   }
 
   public static Command updateShooterLEDs(ShooterSubsystem shooter, double targetSpeedRadPerSec) {
 
-    double rioSpeed = shooter.getRIOFlywheelState().vel(RadiansPerSecond);
-    double pdhSpeed = shooter.getPDHFlywheelState().vel(RadiansPerSecond);
+    double rioSpeed = shooter.getRIOFlywheelVel().vel(RadiansPerSecond);
+    double pdhSpeed = shooter.getPDHFlywheelVel().vel(RadiansPerSecond);
     boolean atSpeed = Math.abs(rioSpeed - targetSpeedRadPerSec) < tolerance
         && Math.abs(pdhSpeed - targetSpeedRadPerSec) < tolerance;
 
