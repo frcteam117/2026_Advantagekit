@@ -25,7 +25,7 @@ public class IndexerSubsystem extends SubsystemBase {
 
   public IndexerSubsystem() {
     hopperSpark.configure(
-        Hopper.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        Hopper.SPARK_FLEX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     kickerSpark.configure(
         Kicker.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
