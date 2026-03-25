@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -146,4 +147,49 @@ public class RobotCommands {
     return target;
   }
   ;
+
+    public static Command autoOverBumpLR(DrivetrainSubsystem drivetrain) {
+        return Commands.defer(
+            () -> {
+                final Debouncer debouncer = new Debouncer(0.5);
+                    return DrivetrainCommands.joystickDrive(
+                        drivetrain,
+                        () -> 0,
+                        () -> {
+                            if (DriverStation.getAlliance().isPresent()
+                                && DriverStation.getAlliance().get() == Alliance.Red) {
+                            return 0.65;
+                            }
+                            return -0.65;
+                        },
+                        () -> 0,
+                        () -> new Translation2d(0, 0),
+                        () -> false).until(
+                            () -> debouncer.calculate(
+                                drivetrain.getNavXAngleFromHorizontal().getDegrees() < 4));
+            },
+            Set.of(drivetrain));
+    }
+    public static Command autoOverBumpRL(DrivetrainSubsystem drivetrain) {
+        return Commands.defer(
+            () -> {
+                final Debouncer debouncer = new Debouncer(0.5);
+                    return DrivetrainCommands.joystickDrive(
+                        drivetrain,
+                        () -> 0,
+                        () -> {
+                            if (DriverStation.getAlliance().isPresent()
+                                && DriverStation.getAlliance().get() == Alliance.Red) {
+                            return 0.65;
+                            }
+                            return -0.65;
+                        },
+                        () -> 0,
+                        () -> new Translation2d(0, 0),
+                        () -> false).until(
+                            () -> debouncer.calculate(
+                                drivetrain.getNavXAngleFromHorizontal().getDegrees() < 4));
+            },
+            Set.of(drivetrain));
+    }
 }
