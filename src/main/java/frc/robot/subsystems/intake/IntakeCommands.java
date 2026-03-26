@@ -22,7 +22,7 @@ public class IntakeCommands {
   private static final BooleanSupplier PIVOT_KINDA_WORKS =
       new TunableBoolean(TUNING_NT_KEY + "/PivotKindaWorks", true);
   private static final DoubleSupplier PIVOT_LOWER_THRESHOLD =
-      new TunableDouble(TUNING_NT_KEY + "/PivotLowerThreshold_rad", -1.4);
+      new TunableDouble(TUNING_NT_KEY + "/PivotLowerThreshold_rad", 0.01);
   private static final DoubleSupplier ROLLER_THRESHOLD =
       new TunableDouble(TUNING_NT_KEY + "/RollerThreshold_radPs", 10);
   private static final double ROLLER_FORWARD_SPEED = 1.0;
@@ -33,15 +33,15 @@ public class IntakeCommands {
   //     (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
   //     () -> true);
   private static final DoubleSupplier up_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/up_pos", -0.67); // -0.635
+      new TunableDouble(TUNING_NT_KEY + "/up_pos", -0.67 + 1.41); // -0.635
   private static final Supplier<Angle> SHOOTING_POS =
       () -> Radians.of(up_pos_supplier.getAsDouble());
   private static final DoubleSupplier dislodging_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1);
+      new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1 + 1.41);
   private static final Supplier<Angle> DISLODGING_POS =
       () -> Radians.of(dislodging_pos_supplier.getAsDouble());
   private static final DoubleSupplier down_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/down_pos", -1.398);
+      new TunableDouble(TUNING_NT_KEY + "/down_pos", -1.398 + 1.41);
   private static final Supplier<Angle> DOWN_POS = () -> Radians.of(down_pos_supplier.getAsDouble());
   public static boolean shooting = false;
 

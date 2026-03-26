@@ -1,11 +1,13 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotConstants;
@@ -148,48 +150,59 @@ public class RobotCommands {
   }
   ;
 
-    public static Command autoOverBumpLR(DrivetrainSubsystem drivetrain) {
-        return Commands.defer(
-            () -> {
-                final Debouncer debouncer = new Debouncer(0.5);
-                    return DrivetrainCommands.joystickDrive(
-                        drivetrain,
-                        () -> 0,
-                        () -> {
-                            if (DriverStation.getAlliance().isPresent()
-                                && DriverStation.getAlliance().get() == Alliance.Red) {
-                            return 0.65;
-                            }
-                            return -0.65;
-                        },
-                        () -> 0,
-                        () -> new Translation2d(0, 0),
-                        () -> false).until(
-                            () -> debouncer.calculate(
-                                drivetrain.getNavXAngleFromHorizontal().getDegrees() < 4));
-            },
-            Set.of(drivetrain));
-    }
-    public static Command autoOverBumpRL(DrivetrainSubsystem drivetrain) {
-        return Commands.defer(
-            () -> {
-                final Debouncer debouncer = new Debouncer(0.5);
-                    return DrivetrainCommands.joystickDrive(
-                        drivetrain,
-                        () -> 0,
-                        () -> {
-                            if (DriverStation.getAlliance().isPresent()
-                                && DriverStation.getAlliance().get() == Alliance.Red) {
-                            return 0.65;
-                            }
-                            return -0.65;
-                        },
-                        () -> 0,
-                        () -> new Translation2d(0, 0),
-                        () -> false).until(
-                            () -> debouncer.calculate(
-                                drivetrain.getNavXAngleFromHorizontal().getDegrees() < 4));
-            },
-            Set.of(drivetrain));
-    }
+  public static Command autoOverBumpToNZ(DrivetrainSubsystem drivetrain) {
+    return Commands.defer(
+        () -> {
+          Timer timer = new Timer();
+          timer.start();
+          final Debouncer debouncer = new Debouncer(0.5, DebounceType.kRising);
+          debouncer.calculate(false);
+          return DrivetrainCommands.joystickDriveAtAngle(
+                  drivetrain,
+                  () -> {
+                    if (DriverStation.getAlliance().isPresent()
+                        && DriverStation.getAlliance().get() == Alliance.Red) {
+                      return 0.8;
+                    }
+                    return -0.8;
+                  },
+                  () -> 0,
+                  () -> Rotation2d.fromDegrees(180),
+                  () -> new Translation2d(0, 0),
+                  () -> false)
+              .until(() ->
+                  debouncer.calculate(drivetrain.getNavXAngleFromHorizontal().getDegrees() < 5)
+                      && timer.hasElapsed(0.7))
+              .finallyDo(() -> drivetrain.resetTranslationWithVision());
+        },
+        Set.of(drivetrain));
+  }
+
+  public static Command autoOverBumpFromNZ(DrivetrainSubsystem drivetrain) {
+    return Commands.defer(
+        () -> {
+          final Debouncer debouncer = new Debouncer(0.5, DebounceType.kRising);
+          Timer timer = new Timer();
+          timer.start();
+          debouncer.calculate(false);
+          return DrivetrainCommands.joystickDriveAtAngle(
+                  drivetrain,
+                  () -> {
+                    if (DriverStation.getAlliance().isPresent()
+                        && DriverStation.getAlliance().get() == Alliance.Red) {
+                      return 0.8;
+                    }
+                    return -0.8;
+                  },
+                  () -> 0,
+                  () -> Rotation2d.fromDegrees(25),
+                  () -> new Translation2d(0, 0),
+                  () -> false)
+              .until(() ->
+                  debouncer.calculate(drivetrain.getNavXAngleFromHorizontal().getDegrees() < 5)
+                      && timer.hasElapsed(0.7))
+              .finallyDo(() -> drivetrain.resetTranslationWithVision());
+        },
+        Set.of(drivetrain));
+  }
 }

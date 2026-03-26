@@ -1,0 +1,68 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OBATest1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpLR"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OBATest2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OBATest3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpRL"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "OBATest4"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "alignAndShoot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 6.0
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

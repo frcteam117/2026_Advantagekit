@@ -46,13 +46,13 @@ public class IntakeSubsystem extends SubsystemBase {
     if (RobotBase.isReal()) {
       pivot_PID = new PIDController(20, 0, 0, RobotConstants.CODE_PERIOD_s);
       pivot_FF = new SimpleMotorFeedforward(0.2, 1.3, 0.05, RobotConstants.CODE_PERIOD_s);
-      pivot_ArbitraryFF.put(0.1, 0.0);
-      pivot_ArbitraryFF.put(-0.1, 0.0);
-      pivot_ArbitraryFF.put(-0.4, 0.0);
-      pivot_ArbitraryFF.put(-0.7, 0.01);
-      pivot_ArbitraryFF.put(-1.0, 0.045);
-      pivot_ArbitraryFF.put(-1.3, 0.075);
-      pivot_ArbitraryFF.put(-1.6, 0.09);
+      pivot_ArbitraryFF.put(0.1 + 1.41, 0.0);
+      pivot_ArbitraryFF.put(-0.1 + 1.41, 0.0);
+      pivot_ArbitraryFF.put(-0.4 + 1.41, 0.0);
+      pivot_ArbitraryFF.put(-0.7 + 1.41, 0.01);
+      pivot_ArbitraryFF.put(-1.0 + 1.41, 0.045);
+      pivot_ArbitraryFF.put(-1.3 + 1.41, 0.075);
+      pivot_ArbitraryFF.put(-1.6 + 1.41, 0.09);
     } else {
       pivot_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
       pivot_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
@@ -69,13 +69,13 @@ public class IntakeSubsystem extends SubsystemBase {
         pivot_tuningNTKey + "/ArbirtaryFF",
         pivot_ArbitraryFF,
         pivot_Tunable,
-        0.1,
-        -0.1,
-        -0.4,
-        -0.7,
-        -1.0,
-        -1.3,
-        -1.6);
+        0.1 + 1.41,
+        -0.1 + 1.41,
+        -0.4 + 1.41,
+        -0.7 + 1.41,
+        -1.0 + 1.41,
+        -1.3 + 1.41,
+        -1.6 + 1.41);
 
     // final String roller_tuningNTKey = RobotConstants.TUNING_PREFIX + Roller.NT_KEY;
     // final BooleanSupplier roller_Tunable = new TunableBoolean(roller_tuningNTKey + "/.tunable",

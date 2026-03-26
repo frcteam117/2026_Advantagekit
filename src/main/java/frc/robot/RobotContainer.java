@@ -147,8 +147,9 @@ public class RobotContainer {
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
                 () -> true)));
     NamedCommands.registerCommand("IntakeRollerOn", Commands.none());
-    NamedCommands.registerCommand("AutoOverBumpLR", RobotCommands.autoOverBumpLR(drivetrain));
-    NamedCommands.registerCommand("AutoOverBumpRL", RobotCommands.autoOverBumpRL(drivetrain));
+    NamedCommands.registerCommand("AutoOverBumpLR", RobotCommands.autoOverBumpToNZ(drivetrain));
+    NamedCommands.registerCommand("AutoOverBumpRL", RobotCommands.autoOverBumpFromNZ(drivetrain));
+    NamedCommands.registerCommand("AutoOverBump", DrivetrainCommands.pathOverBump(drivetrain));
     NamedCommands.registerCommand("IntakeRollerOff", Commands.none());
     NamedCommands.registerCommand(
         "stopFlywheel",
