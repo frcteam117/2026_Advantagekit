@@ -23,7 +23,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "BeakTopLunge"
+                  "pathName": "BeakBotLunge"
                 }
               }
             ]
@@ -38,7 +38,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "BeakTopShoot(ignore)"
+            "pathName": "BeakBotShoot"
           }
         },
         {
@@ -54,7 +54,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 7.0
+                  "waitTime": 6.0
                 }
               }
             ]
@@ -73,22 +73,16 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "BeakTopSweep(ignore)"
+                  "pathName": "BeakBotSweep"
                 }
               }
             ]
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBump"
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "BeakTopShootAgain(ignore)"
+            "pathName": "BeakBotShoot"
           }
         },
         {
@@ -104,7 +98,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 7.0
+                  "waitTime": 6.0
                 }
               }
             ]
