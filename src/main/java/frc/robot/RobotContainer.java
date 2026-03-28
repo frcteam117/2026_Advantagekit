@@ -242,6 +242,7 @@ public class RobotContainer {
         controller.R1(),
         () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
         () -> false));
+    controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));

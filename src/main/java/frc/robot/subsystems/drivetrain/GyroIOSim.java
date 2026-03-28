@@ -1,6 +1,6 @@
 package frc.robot.subsystems.drivetrain;
 
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import frc.robot.util.SparkUtil;
 import org.ironmaple.simulation.drivesims.GyroSimulation;
 
@@ -14,17 +14,11 @@ public class GyroIOSim implements GyroIO {
   @Override
   public void updateInputs(GyroIOInputs inputs) {
     inputs.connected = true;
-    inputs.yawPosition = gyroSimulation.getGyroReading();
+    inputs.orientation = new Rotation3d(0, 0, gyroSimulation.getGyroReading().getRadians());
     // inputs.yawVelocityRadPerSec =
     //     Units.degreesToRadians(gyroSimulation.getMeasuredAngularVelocity().in(RadiansPerSecond));
-    inputs.angleFromHorizontal = Rotation2d.kZero;
 
     inputs.odometryYawTimestamps = SparkUtil.getSimulationOdometryTimeStamps();
     inputs.odometryYawPositions = gyroSimulation.getCachedGyroReadings();
-  }
-
-  @Override
-  public void resetNavX() {
-    gyroSimulation.setRotation(Rotation2d.kZero);
   }
 }

@@ -11,22 +11,35 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface IntakeIO {
   public static class IntakeIOInputs implements LoggableInputs {
-    public final MutAngle pivot_Pos = Radians.mutable(0);
-    public final MutAngularVelocity pivot_Vel = RadiansPerSecond.mutable(0);
-    public final MutAngularVelocity roller_Vel = RadiansPerSecond.mutable(0);
+    public final IntakeIOInputs.Roller roller = new IntakeIOInputs.Roller();
+    public final IntakeIOInputs.Pivot pivot = new IntakeIOInputs.Pivot();
+
+    public class Roller {
+      public final MutAngularVelocity velocity = RadiansPerSecond.mutable(0);
+    }
+
+    public class Pivot {
+      public final MutAngle position = Radians.mutable(0);
+      public final MutAngularVelocity velocity = RadiansPerSecond.mutable(0);
+    }
+    // public final MutAngle pivot_Pos = Radians.mutable(0);
+    // public final MutAngularVelocity pivot_Vel = RadiansPerSecond.mutable(0);
+    // public final MutAngularVelocity roller_Vel = RadiansPerSecond.mutable(0);
 
     @Override
     public void toLog(LogTable table) {
-      table.put("Pivot_Pos", pivot_Pos.magnitude(), pivot_Pos.unit().name());
-      table.put("Pivot_Vel", pivot_Vel.magnitude(), pivot_Vel.unit().name());
-      table.put("Roller_Vel", roller_Vel.magnitude(), roller_Vel.unit().name());
+      table.put("Pivot_Pos", pivot.position.in(Radians), Radians.name());
+      table.put("Pivot_Vel", pivot.velocity.in(RadiansPerSecond), RadiansPerSecond.name());
+      table.put("Roller_Vel", roller.velocity.in(RadiansPerSecond), RadiansPerSecond.name());
     }
 
     @Override
     public void fromLog(LogTable table) {
-      pivot_Pos.mut_setMagnitude(table.get("Pivot_Pos", pivot_Pos.magnitude()));
-      pivot_Vel.mut_setMagnitude(table.get("Pivot_Vel", pivot_Vel.magnitude()));
-      roller_Vel.mut_setMagnitude(table.get("Roller_Vel", roller_Vel.magnitude()));
+      pivot.position.mut_replace(table.get("Pivot_Pos", pivot.position.in(Radians)), Radians);
+      pivot.velocity.mut_replace(
+          table.get("Pivot_Vel", pivot.velocity.in(RadiansPerSecond)), RadiansPerSecond);
+      roller.velocity.mut_replace(
+          table.get("Roller_Vel", roller.velocity.in(RadiansPerSecond)), RadiansPerSecond);
     }
   }
 

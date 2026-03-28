@@ -27,6 +27,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -34,13 +35,15 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
+import frc.robot.subsystems.drivetrain.GyroIO.GyroIOInputs;
 import frc.robot.util.LocalADStarAK;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
@@ -52,14 +55,13 @@ import org.littletonrobotics.junction.Logger;
 public class DrivetrainSubsystem extends SubsystemBase {
   public static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
-  private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
+  private final GyroIOInputs gyroInputs = new GyroIOInputs();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
-  private final Alert gyroDisconnectedAlert =
-      new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
-  // Kinematics
+
+  // Pose estimation
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Chassis.moduleTranslations);
-  private Rotation2d rawGyroRotation = Rotation2d.kZero;
+  private Rotation2d rawGyroYaw = Rotation2d.kZero;
   private final SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -68,19 +70,24 @@ public class DrivetrainSubsystem extends SubsystemBase {
         new SwerveModulePosition()
       };
   private final SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
+      new SwerveDrivePoseEstimator(kinematics, rawGyroYaw, lastModulePositions, new Pose2d());
   private final Consumer<Pose2d> resetSimulationPoseCallBack;
 
   // Motion Profiling
   private final SwerveSetpointGenerator swerveSetpointGenerator =
       new SwerveSetpointGenerator(Chassis.ppConfig, 15);
   private SwerveSetpoint lastSetpoint;
+
+  // Module heading control
   private boolean controllingHeadings = false;
-  private Rotation2d gyroOffset = Rotation2d.kZero;
+  private final Rotation2d[] goalHeadings = new Rotation2d[4];
+
+  // Pose resetting
   private Pose2d prevVisionPose = null;
   private boolean resetPoseWithVision = true;
   private boolean resetTranslationWithVision = false;
-  private final Rotation2d[] goalHeadings = new Rotation2d[4];
+  private final double poseLinTolerance = Drive.max_mPs * 0.1;
+  private final double poseAngTolerance = Drive.max_mPs / Chassis.trackRadius_m * 0.1;
 
   public DrivetrainSubsystem(
       GyroIO gyroIO,
@@ -169,16 +176,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
       // Update gyro angle
       if (gyroInputs.connected) {
         // Use the real gyro angle
-        rawGyroRotation = gyroInputs.odometryYawPositions[i];
+        rawGyroYaw = gyroInputs.odometryYawPositions[i];
       } else {
         // Use the angle delta from the kinematics and module deltas
         Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-        rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(twist.dtheta));
+        rawGyroYaw = rawGyroYaw.plus(Rotation2d.fromRadians(twist.dtheta));
       }
 
       // Apply update
-      poseEstimator.updateWithTime(
-          sampleTimestamps[i], rawGyroRotation.plus(gyroOffset), modulePositions);
+      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroYaw, modulePositions);
     }
   }
 
@@ -223,6 +229,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
     } else {
       controllingHeadings = false;
     }
+
+    // DrivetrainCommands.resetAngleProfileFromSetpointGenerator(lastSetpoint);
   }
 
   /**
@@ -237,7 +245,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
             .toArray(SwerveModuleState[]::new));
     controllingHeadings = true;
     for (int i = 0; i < 4; i++) {
-      if (MathUtil.isNear(
+      if (!MathUtil.isNear(
           modules[i].getAngle(), goalHeadings[i].getRadians(), Math.PI / 2, -Math.PI, Math.PI)) {
         goalHeadings[i] = goalHeadings[i].rotateBy(Rotation2d.k180deg);
       }
@@ -289,27 +297,33 @@ public class DrivetrainSubsystem extends SubsystemBase {
       modulePositions[i] = modules[i].getPosition();
     }
     resetSimulationPoseCallBack.accept(pose);
-    poseEstimator.resetPosition(rawGyroRotation.plus(gyroOffset), modulePositions, pose);
+    poseEstimator.resetPosition(rawGyroYaw, modulePositions, pose);
   }
 
-  /** Resets the NavX yaw angle to zero. */
-  public void resetNavX() {
-    gyroOffset = gyroOffset.plus(gyroInputs.yawPosition);
-    gyroIO.resetNavX();
+  /** Returns the robot's orientation according to the NavX. */
+  public Rotation3d getNavXOrientation() {
+    return gyroInputs.orientation;
+  }
+
+  /** Returns the robot's angular velocity according to the NavX. */
+  public AngularVelocity[] getNavXAngularVel() {
+    return gyroInputs.angularVel;
+  }
+
+  /** Returns the robot's linear acceleration according to the NavX. */
+  public LinearAcceleration[] getNavXLinearAcc() {
+    return gyroInputs.linearAcc;
   }
 
   /** Returns the NavX yaw angle. */
   public Rotation2d getNavXYaw() {
-    return gyroInputs.yawPosition;
+    return gyroInputs.orientation.toRotation2d();
   }
 
   /** Returns the robot's angle from horizontal according to the NavX. */
-  public Rotation2d getNavXAngleFromHorizontal() {
+  public Angle getNavXAngleFromHorizontal() {
     return gyroInputs.angleFromHorizontal;
   }
-
-  private final double poseLinTolerance = Drive.max_mPs * 0.1;
-  private final double poseAngTolerance = Drive.max_mPs / Chassis.trackRadius_m * 0.1;
 
   /** Adds a new timestamped vision measurement. */
   public void accept(

@@ -13,12 +13,15 @@
 
 package frc.robot.subsystems.drivetrain;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.studica.frc.Navx;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearAcceleration;
 import java.util.Queue;
 
 /** IO implementation for NavX. */
@@ -32,12 +35,12 @@ public class GyroIONavX implements GyroIO {
     navX.enableOptionalMessages(
         true, //           comment to make formatter spread this line out
         true, //         comment to make formatter spread this line out
-        true, //       comment to make formatter spread this line out
+        true, //        comment to make formatter spread this line out
         false, //       comment to make formatter spread this line out
         false, //   comment to make formatter spread this line out
         true, //     comment to make formatter spread this line out
-        false, //   comment to make formatter spread this line out
-        true, //  comment to make formatter spread this line out
+        true, //    comment to make formatter spread this line out
+        true, //   comment to make formatter spread this line out
         false, //      comment to make formatter spread this line out
         false); // comment to make formatter spread this line out
     yawTimestampQueue = NovaOdometryThread.getInstance().makeTimestampQueue();
@@ -46,13 +49,26 @@ public class GyroIONavX implements GyroIO {
   }
 
   @Override
-  public void updateInputs(GyroIOInputs inputs) {
-    inputs.yawPosition = Rotation2d.fromDegrees(navX.getYaw().in(Degrees));
+  public void updateInputs(final GyroIOInputs inputs) {
+    // inputs.yaw = Rotation2d.fromDegrees(navX.getYaw().in(Degrees));
     // inputs.yawPosition = Rotation2d.fromDegrees(360);
-    inputs.connected = inputs.yawPosition.getRadians() < 4.5;
+    inputs.connected = navX.getYaw().in(Radians) < 4.5;
     // inputs.yawVelocityRadPerSec = navX.getAngularVel()[2].in(RadiansPerSecond);
-    inputs.angleFromHorizontal = Rotation2d.fromRadians(
-        Math.acos(zHat.rotateBy(new Rotation3d(navX.getQuat6D())).dot(zHat)));
+    inputs.orientation = navX.getRotation3d();
+
+    final AngularVelocity[] angVel = navX.getAngularVel();
+    // Trust me: their units are wrong in NavX3 version 5.0.5
+    inputs.angularVel[0].mut_replace(angVel[0].in(DegreesPerSecond), RadiansPerSecond);
+    inputs.angularVel[1].mut_replace(angVel[1].in(DegreesPerSecond), RadiansPerSecond);
+    inputs.angularVel[2].mut_replace(angVel[2].in(DegreesPerSecond), RadiansPerSecond);
+
+    final LinearAcceleration[] linAcc = navX.getLinearAccel();
+    inputs.linearAcc[0].mut_replace(linAcc[0]);
+    inputs.linearAcc[1].mut_replace(linAcc[1]);
+    inputs.linearAcc[2].mut_replace(linAcc[2]);
+
+    inputs.angleFromHorizontal.mut_replace(
+        Math.acos(zHat.rotateBy(inputs.orientation).dot(zHat)), Radians);
 
     inputs.odometryYawTimestamps =
         yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
@@ -61,9 +77,5 @@ public class GyroIONavX implements GyroIO {
         .toArray(Rotation2d[]::new);
     yawTimestampQueue.clear();
     yawPositionQueue.clear();
-  }
-
-  public void resetNavX() {
-    navX.resetYaw();
   }
 }

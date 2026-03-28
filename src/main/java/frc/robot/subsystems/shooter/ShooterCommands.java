@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
@@ -323,9 +325,10 @@ public class ShooterCommands {
   }
 
   private static final DoubleSupplier maxAllowableErrorRadPS =
-      new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableFlywheelError", 30, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableFlywheelError", 40, () -> true);
   private static final DoubleSupplier maxAllowableErrorRad =
       new TunableDouble(TUNING_NT_KEY + "/AutoAimAllowableHoodError", 0.03, () -> true);
+  private static final Debouncer isReadyDebouncer = new Debouncer(.2, DebounceType.kFalling);
   private static final MutAngle hood_goalPos = Radians.mutable(0);
   // private static final MutAngularVelocity hood_autoAimVel = RadiansPerSecond.mutable(0);
   private static final MutAngularVelocity flywheel_autoAimVel = RadiansPerSecond.mutable(0);
@@ -364,7 +367,7 @@ public class ShooterCommands {
   }
 
   public static boolean isAutoAimReady(ShooterSubsystem shooter) {
-    return MathUtil.isNear(
+    return isReadyDebouncer.calculate(MathUtil.isNear(
             hood_goalPos.in(Radians),
             shooter.getHoodPos().in(Radians),
             maxAllowableErrorRad.getAsDouble())
@@ -375,7 +378,7 @@ public class ShooterCommands {
         && MathUtil.isNear(
             flywheel_autoAimVel.in(RadiansPerSecond),
             shooter.getPDHFlywheelVel().in(RadiansPerSecond),
-            maxAllowableErrorRadPS.getAsDouble());
+            maxAllowableErrorRadPS.getAsDouble()));
   }
 
   public static Command stopAndZeroHood(ShooterSubsystem shooter) {

@@ -18,8 +18,11 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,7 +30,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -57,23 +59,22 @@ public class DrivetrainCommands {
   private static final BooleanSupplier TUNABLE =
       new TunableBoolean(TUNING_NT_KEY + "/.Tunable", true);
   private static final double JOYSTICK_DEADBAND = 0.04;
-  private static final ProfiledPIDController ANGLE_CONTROLLER = new ProfiledPIDController(
-      4, 0.0, 0.0, new Constraints(10.0, 15.0), RobotConstants.CODE_PERIOD_s);
+  private static final PIDController anglePID =
+      new PIDController(6, 0, 0.55, RobotConstants.CODE_PERIOD_s);
   // private static final double ANGLE_KP = 0.5;
   // private static final double ANGLE_KD = 0;
   // private static final double ANGLE_MAX_VELOCITY = 4.0;
   // private static final double ANGLE_MAX_ACCELERATION = 12.0;
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
-  private static final double DRIVE_MAX_ACCELERATION = 6;
+  // private static final double DRIVE_MAX_ACCELERATION = 6;
+
+  // private static final DoubleSupplier errorOffset =
+  //     new TunableDouble(TUNING_NT_KEY + "/errorOffset", 0.15);
   private static final DoubleSupplier DRIVE_MAX_VELOCITY =
-      new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_VELOCITY", 3);
+      new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_VELOCITY", 4);
   private static final DoubleSupplier DRIVE_MAX_ANGULAR_VELOCITY =
-      new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_ANGULAR_VELOCITY", 4);
-  private static final DoubleSupplier ANGULAR_VEL_SCALE_FACTOR =
-      new TunableDouble(TUNING_NT_KEY + "/ANGULAR_VEL_SCALE_FACTOR", 0.78);
-  private static final DoubleSupplier ANGULAR_ACC_FF =
-      new TunableDouble(TUNING_NT_KEY + "/ANGULAR_ACC_FF", 0.035);
+      new TunableDouble(TUNING_NT_KEY + "/DRIVE_MAX_ANGULAR_VELOCITY", 15);
   private static final Rotation2d[] X_MODULE_HEADINGS = new Rotation2d[] {
     Chassis.moduleTranslations[0].getAngle(),
     Chassis.moduleTranslations[1].getAngle(),
@@ -84,9 +85,12 @@ public class DrivetrainCommands {
   public static Rotation2d robotRotation2d[];
 
   static {
-    ANGLE_CONTROLLER.enableContinuousInput(-Math.PI, Math.PI);
-    ANGLE_CONTROLLER.setTolerance(0.025, .3);
-    LogUtil.createTunableProfiledPID(TUNING_NT_KEY + "/AnglePID", ANGLE_CONTROLLER, TUNABLE);
+    anglePID.enableContinuousInput(-Math.PI, Math.PI);
+    anglePID.setTolerance(0.025, .3);
+    LogUtil.createTunablePID(TUNING_NT_KEY + "/AnglePID", anglePID, TUNABLE);
+    // angleController.enableContinuousInput(-Math.PI, Math.PI);
+    // angleController.setTolerance(0.025, .3);
+    // LogUtil.createTunableProfiledPID(TUNING_NT_KEY + "/AnglePID", angleController, TUNABLE);
   }
 
   private DrivetrainCommands() {} // Stops DrivetrainCommands from being instantiated
@@ -100,18 +104,16 @@ public class DrivetrainCommands {
           resetAngleController(drivetrain);
         },
         () -> {
-          double feedback = ANGLE_CONTROLLER.calculate(
-              drivetrain.getPose().getRotation().getRadians(),
-              new TrapezoidProfile.State(
+          ChassisSpeeds speeds = new ChassisSpeeds(
+              0,
+              0,
+              angularVelFromAngleProfile(
+                  drivetrain.getPose().getRotation(),
                   targetSupplier
                       .get()
                       .minus(drivetrain.getPose().getTranslation())
                       .getAngle()
-                      .plus(Rotation2d.k180deg)
-                      .getRadians(),
-                  0));
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(0, 0, ANGLE_CONTROLLER.getSetpoint().velocity + feedback);
+                      .plus(Rotation2d.k180deg)));
           if (isAutoAimReady(drivetrain)) {
             drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
           } else {
@@ -126,7 +128,9 @@ public class DrivetrainCommands {
     //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
     //   return false;
     // }
-    return ANGLE_CONTROLLER.atGoal();
+    return anglePID.atSetpoint();
+    // return MathUtil.isNear(
+    // goalOrientation, drivetrain.getPose().getRotation().getRadians(), 0.02, -Math.PI, Math.PI);
   }
 
   private static final double[] linearDriveModuleHeadings_rad = new double[] {0.0, 0.0, 0.0, 0.0};
@@ -240,10 +244,9 @@ public class DrivetrainCommands {
                 centerOfRotationSupplier.get(),
                 driveAssistSupplier.getAsBoolean());
           } else {
-            double feedback = ANGLE_CONTROLLER.calculate(
-                drivetrain.getPose().getRotation().getRadians(),
-                new TrapezoidProfile.State(joystickDrive_target_rad, 0));
-            speeds.omegaRadiansPerSecond = ANGLE_CONTROLLER.getSetpoint().velocity + feedback;
+            speeds.omegaRadiansPerSecond = angularVelFromAngleProfile(
+                drivetrain.getPose().getRotation(),
+                Rotation2d.fromRadians(joystickDrive_target_rad));
             setGoalVelocity(
                 drivetrain,
                 speeds,
@@ -298,8 +301,6 @@ public class DrivetrainCommands {
     // });
   }
 
-  private Rotation2d targetAngle_rad = Rotation2d.kZero;
-
   /**
    * Field relative drive command using joystick for linear control and PID for angular control.
    * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
@@ -323,19 +324,15 @@ public class DrivetrainCommands {
           boolean isFlipped = DriverStation.getAlliance().isPresent()
               && DriverStation.getAlliance().get() == Alliance.Red;
 
-          // Calculate angular speed
-          double omega = ANGLE_CONTROLLER.calculate(
-              drivetrain.getPose().getRotation().getRadians(),
-              isFlipped
-                  ? rotationSupplier.get().plus(Rotation2d.k180deg).getRadians()
-                  : rotationSupplier.get().getRadians());
-          omega += ANGLE_CONTROLLER.getSetpoint().velocity;
-
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
               linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
               linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
-              omega);
+              angularVelFromAngleProfile(
+                  drivetrain.getPose().getRotation(),
+                  isFlipped
+                      ? rotationSupplier.get().plus(Rotation2d.k180deg)
+                      : rotationSupplier.get()));
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
               speeds,
               isFlipped
@@ -360,7 +357,8 @@ public class DrivetrainCommands {
       DrivetrainSubsystem drivetrain,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      Supplier<Translation2d> targetSupplier,
+      Supplier<Translation2d> targetPosSupplier,
+      Supplier<Translation2d> targetVelSupplier,
       Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier driveAssistSupplier) {
 
@@ -374,24 +372,23 @@ public class DrivetrainCommands {
           boolean isFlipped = DriverStation.getAlliance().isPresent()
               && DriverStation.getAlliance().get() == Alliance.Red;
 
-          Translation2d robotOrientedTarget =
-              targetSupplier.get().minus(drivetrain.getPose().getTranslation());
-          double omegaFF = robotOrientedTarget.cross(new Translation2d(
-                  drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                  drivetrain.getChassisSpeeds().vyMetersPerSecond))
-              / (robotOrientedTarget.getNorm() * robotOrientedTarget.getNorm());
-
-          // Calculate angular speed
-          double omega = ANGLE_CONTROLLER.calculate(
-              drivetrain.getPose().getRotation().getRadians(),
-              new TrapezoidProfile.State(robotOrientedTarget.getAngle().getRadians(), omegaFF));
-          omega += ANGLE_CONTROLLER.getSetpoint().velocity;
+          Translation2d robotCenteredTarget =
+              targetPosSupplier.get().minus(drivetrain.getPose().getTranslation());
+          double omegaFF = robotCenteredTarget.cross(targetVelSupplier
+                  .get()
+                  .minus(new Translation2d(
+                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                      drivetrain.getChassisSpeeds().vyMetersPerSecond)))
+              / (robotCenteredTarget.getNorm() * robotCenteredTarget.getNorm());
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
               linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
               linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
-              omega);
+              angularVelFromAngleProfile(
+                  drivetrain.getPose().getRotation().plus(Rotation2d.k180deg),
+                  new TrapezoidProfile.State(
+                      robotCenteredTarget.getAngle().getRadians(), omegaFF)));
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
               speeds,
               isFlipped
@@ -500,19 +497,15 @@ public class DrivetrainCommands {
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-          // Calculate angular speed
-          double omega = ANGLE_CONTROLLER.calculate(
-              drivetrain.getPose().getRotation().getRadians(),
-              isFlipped
-                  ? joystickDriveAtAngle_rotTarget.plus(Rotation2d.k180deg).getRadians()
-                  : joystickDriveAtAngle_rotTarget.getRadians());
-          omega += ANGLE_CONTROLLER.getSetpoint().velocity;
-
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
               linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
               linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
-              omega);
+              angularVelFromAngleProfile(
+                  drivetrain.getPose().getRotation(),
+                  isFlipped
+                      ? joystickDriveAtAngle_rotTarget.plus(Rotation2d.k180deg)
+                      : joystickDriveAtAngle_rotTarget));
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
               speeds,
               isFlipped
@@ -553,53 +546,72 @@ public class DrivetrainCommands {
     return Commands.none();
   }
 
-  private static final double pathOverBump_VELOCITY = 1;
-  private static double pathOverBump_angleOffset_rad;
-  private static double pathOverBump_angleTarget;
+  private static final DoubleSupplier pathOverBump_VELOCITY =
+      new TunableDouble(TUNING_NT_KEY + "pathOverBump_VELOCITY", 2);
+  private static final DoubleSupplier pathOverBump_DEGREES_FROM_ALIGNED =
+      new TunableDouble(TUNING_NT_KEY + "pathOverBump_DEGREES_FROM_ALIGNED", 20);
+  private static Rotation2d pathOverBump_angleOffset_rad;
+  private static Rotation2d pathOverBump_angleTarget;
   private static boolean pathOverBump_driveForward;
+  private static boolean pathOverBump_onBump = false;
+  private static boolean pathOverBump_overBump = false;
+  private static final Debouncer pathOverBump_debouncer = new Debouncer(.1, DebounceType.kRising);
+  ;
 
   public static Command pathOverBump(DrivetrainSubsystem drivetrain) {
     return drivetrain
         .startRun(
             () -> {
-              boolean inverted = MathUtil.inputModulus(
-                      drivetrain.getPose().getRotation().getRadians(),
-                      -Math.PI / 2,
-                      3 * Math.PI / 2)
-                  < Math.PI / 2;
-              pathOverBump_angleOffset_rad = drivetrain.getNavXYaw().getRadians()
-                  - drivetrain.getPose().getRotation().getRadians();
-              pathOverBump_angleTarget =
-                  inverted ? Math.PI - pathOverBump_angleOffset_rad : -pathOverBump_angleOffset_rad;
-              if (drivetrain.getPose().getX() < 5) {
-                pathOverBump_driveForward = drivetrain.getPose().getX() < 3;
+              pathOverBump_onBump = false;
+              pathOverBump_overBump = false;
+              double yawMod = MathUtil.inputModulus(
+                  drivetrain.getPose().getRotation().getRadians(), 0, 2 * Math.PI);
+              pathOverBump_angleOffset_rad =
+                  drivetrain.getPose().getRotation().minus(drivetrain.getNavXYaw());
+              pathOverBump_angleTarget = Rotation2d.fromDegrees(
+                  yawMod < Math.PI
+                      ? (yawMod < Math.PI / 2
+                          ? pathOverBump_DEGREES_FROM_ALIGNED.getAsDouble()
+                          : 180 - pathOverBump_DEGREES_FROM_ALIGNED.getAsDouble())
+                      : (yawMod < 3 * Math.PI / 2
+                          ? 180 + pathOverBump_DEGREES_FROM_ALIGNED.getAsDouble()
+                          : 360 - pathOverBump_DEGREES_FROM_ALIGNED.getAsDouble()));
+              if (drivetrain.getPose().getX() < 8.05) {
+                pathOverBump_driveForward = drivetrain.getPose().getX() < 4.7;
               } else {
-                pathOverBump_driveForward = drivetrain.getPose().getX() < 7;
+                pathOverBump_driveForward = drivetrain.getPose().getX() < 11.4;
               }
               resetAngleController(drivetrain);
             },
             () -> {
-              Rotation2d robotOrientation = drivetrain
-                  .getNavXYaw()
-                  .minus(Rotation2d.fromRadians(pathOverBump_angleOffset_rad));
-              // Calculate angular speed
-              double omega = ANGLE_CONTROLLER.calculate(
-                  robotOrientation.getRadians(), pathOverBump_angleTarget);
-              omega += ANGLE_CONTROLLER.getSetpoint().velocity;
+              boolean isLevel =
+                  drivetrain.getNavXAngleFromHorizontal().isNear(Radians.zero(), Radians.of(0.07));
+              if (!isLevel) {
+                pathOverBump_onBump = true;
+              }
+              if (pathOverBump_onBump && pathOverBump_debouncer.calculate(isLevel)) {
+                pathOverBump_overBump = true;
+              }
+              Rotation2d robotOrientation =
+                  drivetrain.getNavXYaw().plus(pathOverBump_angleOffset_rad);
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds = new ChassisSpeeds(
-                  pathOverBump_driveForward ? pathOverBump_VELOCITY : -pathOverBump_VELOCITY,
+                  pathOverBump_driveForward
+                      ? pathOverBump_VELOCITY.getAsDouble()
+                      : -pathOverBump_VELOCITY.getAsDouble(),
                   0.0,
-                  omega);
+                  angularVelFromAngleProfile(robotOrientation, pathOverBump_angleTarget));
 
               speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
               drivetrain.setGoalVelocity(speeds);
             })
         .onlyIf(() -> {
           double x = drivetrain.getPose().getX();
-          return (x > 2 && x < 4) || (x > 2 && x < 4);
-        });
+          return (x > 1.7 && x < 7.7) || (x > 8.4 && x < 14.4);
+        })
+        .finallyDo(() -> drivetrain.resetTranslationWithVision())
+        .until(() -> pathOverBump_overBump);
   }
 
   /** Measures the robot's wheel radius by spinning in a circle. */
@@ -679,47 +691,45 @@ public class DrivetrainCommands {
   }
 
   private static void resetAngleController(DrivetrainSubsystem drivetrain) {
-    ANGLE_CONTROLLER.reset(
-        drivetrain.getPose().getRotation().getRadians(),
-        drivetrain.getChassisSpeeds().omegaRadiansPerSecond);
+    anglePID.reset();
   }
 
-  private static final Translation2d[] driveAssistRobotCorners = new Translation2d[] {
-    new Translation2d(
-        (DrivetrainConstants.Chassis.bumperLength_m / 2) + UnitUtil.inTom(4),
-        DrivetrainConstants.Chassis.bumperWidth_m / 2),
-    new Translation2d(
-        (DrivetrainConstants.Chassis.bumperLength_m / 2) + UnitUtil.inTom(4),
-        -DrivetrainConstants.Chassis.bumperWidth_m / 2),
-    new Translation2d(
-        -(DrivetrainConstants.Chassis.bumperLength_m / 2),
-        DrivetrainConstants.Chassis.bumperWidth_m / 2),
-    new Translation2d(
-        -(DrivetrainConstants.Chassis.bumperLength_m / 2),
-        -DrivetrainConstants.Chassis.bumperWidth_m / 2),
-  };
-  private static final DriveAssistWall[] DRIVE_ASSIST_MAP = new DriveAssistWall[] {
-    new DriveAssistWall(
-        new Translation2d(0, 0),
-        new Translation2d(8, 0),
-        new Translation2d(1, Rotation2d.kCCW_90deg),
-        false),
-    new DriveAssistWall(
-        new Translation2d(0, 0),
-        new Translation2d(0, 5),
-        new Translation2d(1, Rotation2d.kZero),
-        false),
-    new DriveAssistWall(
-        new Translation2d(8, 0),
-        new Translation2d(8, 5),
-        new Translation2d(1, Rotation2d.k180deg),
-        false),
-    new DriveAssistWall(
-        new Translation2d(0, 5),
-        new Translation2d(8, 5),
-        new Translation2d(1, Rotation2d.kCW_90deg),
-        false)
-  };
+  // private static final Translation2d[] driveAssistRobotCorners = new Translation2d[] {
+  //   new Translation2d(
+  //       (DrivetrainConstants.Chassis.bumperLength_m / 2) + UnitUtil.inTom(4),
+  //       DrivetrainConstants.Chassis.bumperWidth_m / 2),
+  //   new Translation2d(
+  //       (DrivetrainConstants.Chassis.bumperLength_m / 2) + UnitUtil.inTom(4),
+  //       -DrivetrainConstants.Chassis.bumperWidth_m / 2),
+  //   new Translation2d(
+  //       -(DrivetrainConstants.Chassis.bumperLength_m / 2),
+  //       DrivetrainConstants.Chassis.bumperWidth_m / 2),
+  //   new Translation2d(
+  //       -(DrivetrainConstants.Chassis.bumperLength_m / 2),
+  //       -DrivetrainConstants.Chassis.bumperWidth_m / 2),
+  // };
+  // private static final DriveAssistWall[] DRIVE_ASSIST_MAP = new DriveAssistWall[] {
+  //   new DriveAssistWall(
+  //       new Translation2d(0, 0),
+  //       new Translation2d(8, 0),
+  //       new Translation2d(1, Rotation2d.kCCW_90deg),
+  //       false),
+  //   new DriveAssistWall(
+  //       new Translation2d(0, 0),
+  //       new Translation2d(0, 5),
+  //       new Translation2d(1, Rotation2d.kZero),
+  //       false),
+  //   new DriveAssistWall(
+  //       new Translation2d(8, 0),
+  //       new Translation2d(8, 5),
+  //       new Translation2d(1, Rotation2d.k180deg),
+  //       false),
+  //   new DriveAssistWall(
+  //       new Translation2d(0, 5),
+  //       new Translation2d(8, 5),
+  //       new Translation2d(1, Rotation2d.kCW_90deg),
+  //       false)
+  // };
   private static double prevRobotOmega = 0;
 
   private static void setGoalVelocity(
@@ -738,65 +748,67 @@ public class DrivetrainCommands {
           .times(speeds.omegaRadiansPerSecond);
       speeds.vxMetersPerSecond += linearVelFromRotation.getX();
       speeds.vyMetersPerSecond += linearVelFromRotation.getY();
-      if (driveAssist) {
-        final Translation2d robotVelocity =
-            new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
-        // Translation2d[] cornerSpeeds = new Translation2d[4];
-        Translation2d[] fieldCenteredRobotCorners = new Translation2d[4];
-        Translation2d robotSpeedsDelta = new Translation2d();
-        // List<DriveAssistWall> relavantMap = new ArrayList<>();
+      // if (driveAssist) {
+      //   final Translation2d robotVelocity =
+      //       new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+      //   // Translation2d[] cornerSpeeds = new Translation2d[4];
+      //   Translation2d[] fieldCenteredRobotCorners = new Translation2d[4];
+      //   Translation2d robotSpeedsDelta = new Translation2d();
+      //   // List<DriveAssistWall> relavantMap = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++) {
-          fieldCenteredRobotCorners[i] = driveAssistRobotCorners[i]
-              .rotateBy(drivetrain.getPose().getRotation())
-              .plus(drivetrain.getPose().getTranslation());
-        }
+      //   for (int i = 0; i < 4; i++) {
+      //     fieldCenteredRobotCorners[i] = driveAssistRobotCorners[i]
+      //         .rotateBy(drivetrain.getPose().getRotation())
+      //         .plus(drivetrain.getPose().getTranslation());
+      //   }
 
-        final double maxFreeDistance = DRIVE_MAX_VELOCITY.getAsDouble()
-            * DRIVE_MAX_VELOCITY.getAsDouble()
-            / (2 * DRIVE_MAX_ACCELERATION);
-        double xmin = Math.min(
-            Math.min(fieldCenteredRobotCorners[0].getX(), fieldCenteredRobotCorners[1].getX()),
-            Math.min(fieldCenteredRobotCorners[2].getX(), fieldCenteredRobotCorners[3].getX()));
-        if (xmin < maxFreeDistance
-            && robotVelocity.getX() < -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, xmin))) {
-          robotSpeedsDelta = new Translation2d(
-              Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, xmin)) - robotVelocity.getX(),
-              robotSpeedsDelta.getY());
-        }
-        double xmax = Math.max(
-            Math.max(fieldCenteredRobotCorners[0].getX(), fieldCenteredRobotCorners[1].getX()),
-            Math.max(fieldCenteredRobotCorners[2].getX(), fieldCenteredRobotCorners[3].getX()));
-        if (xmax > 16.5 - maxFreeDistance
-            && robotVelocity.getX()
-                > Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 16.5 - xmax))) {
-          robotSpeedsDelta = new Translation2d(
-              -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 16.5 - xmax))
-                  - robotVelocity.getX(),
-              robotSpeedsDelta.getY());
-        }
-        double ymin = Math.min(
-            Math.min(fieldCenteredRobotCorners[0].getY(), fieldCenteredRobotCorners[1].getY()),
-            Math.min(fieldCenteredRobotCorners[2].getY(), fieldCenteredRobotCorners[3].getY()));
-        if (ymin < maxFreeDistance
-            && robotVelocity.getY() < -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, ymin))) {
-          robotSpeedsDelta = new Translation2d(
-              robotSpeedsDelta.getX(),
-              Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, ymin)) - robotVelocity.getY());
-        }
-        double ymax = Math.max(
-            Math.max(fieldCenteredRobotCorners[0].getY(), fieldCenteredRobotCorners[1].getY()),
-            Math.max(fieldCenteredRobotCorners[2].getY(), fieldCenteredRobotCorners[3].getY()));
-        if (ymax > 8.1 - maxFreeDistance
-            && robotVelocity.getY()
-                > Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 8.1 - ymax))) {
-          robotSpeedsDelta = new Translation2d(
-              robotSpeedsDelta.getX(),
-              -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 8.1 - ymax))
-                  - robotVelocity.getY());
-        }
-        speeds.plus(new ChassisSpeeds(robotSpeedsDelta.getX(), robotSpeedsDelta.getY(), 0));
-      }
+      //   final double maxFreeDistance = DRIVE_MAX_VELOCITY.getAsDouble()
+      //       * DRIVE_MAX_VELOCITY.getAsDouble()
+      //       / (2 * DRIVE_MAX_ACCELERATION);
+      //   double xmin = Math.min(
+      //       Math.min(fieldCenteredRobotCorners[0].getX(), fieldCenteredRobotCorners[1].getX()),
+      //       Math.min(fieldCenteredRobotCorners[2].getX(), fieldCenteredRobotCorners[3].getX()));
+      //   if (xmin < maxFreeDistance
+      //       && robotVelocity.getX() < -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, xmin)))
+      // {
+      //     robotSpeedsDelta = new Translation2d(
+      //         Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, xmin)) - robotVelocity.getX(),
+      //         robotSpeedsDelta.getY());
+      //   }
+      //   double xmax = Math.max(
+      //       Math.max(fieldCenteredRobotCorners[0].getX(), fieldCenteredRobotCorners[1].getX()),
+      //       Math.max(fieldCenteredRobotCorners[2].getX(), fieldCenteredRobotCorners[3].getX()));
+      //   if (xmax > 16.5 - maxFreeDistance
+      //       && robotVelocity.getX()
+      //           > Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 16.5 - xmax))) {
+      //     robotSpeedsDelta = new Translation2d(
+      //         -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 16.5 - xmax))
+      //             - robotVelocity.getX(),
+      //         robotSpeedsDelta.getY());
+      //   }
+      //   double ymin = Math.min(
+      //       Math.min(fieldCenteredRobotCorners[0].getY(), fieldCenteredRobotCorners[1].getY()),
+      //       Math.min(fieldCenteredRobotCorners[2].getY(), fieldCenteredRobotCorners[3].getY()));
+      //   if (ymin < maxFreeDistance
+      //       && robotVelocity.getY() < -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, ymin)))
+      // {
+      //     robotSpeedsDelta = new Translation2d(
+      //         robotSpeedsDelta.getX(),
+      //         Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, ymin)) - robotVelocity.getY());
+      //   }
+      //   double ymax = Math.max(
+      //       Math.max(fieldCenteredRobotCorners[0].getY(), fieldCenteredRobotCorners[1].getY()),
+      //       Math.max(fieldCenteredRobotCorners[2].getY(), fieldCenteredRobotCorners[3].getY()));
+      //   if (ymax > 8.1 - maxFreeDistance
+      //       && robotVelocity.getY()
+      //           > Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 8.1 - ymax))) {
+      //     robotSpeedsDelta = new Translation2d(
+      //         robotSpeedsDelta.getX(),
+      //         -Math.sqrt(2 * DRIVE_MAX_ACCELERATION * Math.max(0, 8.1 - ymax))
+      //             - robotVelocity.getY());
+      //   }
+      //   speeds.plus(new ChassisSpeeds(robotSpeedsDelta.getX(), robotSpeedsDelta.getY(), 0));
+      // }
       // double scaleFactor = Math.max(
       //     1.0,
       //     Math.max(
@@ -805,22 +817,14 @@ public class DrivetrainCommands {
       // DRIVE_MAX_VELOCITY.getAsDouble()));
       // speeds.times(1 / scaleFactor);
       final double tempPrevRobotOmega = speeds.omegaRadiansPerSecond;
-      speeds.omegaRadiansPerSecond = speeds.omegaRadiansPerSecond
-              * ANGULAR_VEL_SCALE_FACTOR.getAsDouble()
-          + (speeds.omegaRadiansPerSecond - prevRobotOmega)
-              * ANGULAR_ACC_FF.getAsDouble()
-              / RobotConstants.CODE_PERIOD_s;
       prevRobotOmega = tempPrevRobotOmega;
       drivetrain.setGoalVelocity(speeds);
     }
   }
 
-  public static record DriveAssistWall(
-      Translation2d p1, Translation2d p2, Translation2d unitNormalVector, boolean checkCorners) {}
-
-  public static Command replacePoseWithVision(DrivetrainSubsystem drivetrain) {
-    return Commands.runOnce(() -> drivetrain.resetPoseWithVision());
-  }
+  // public static record DriveAssistWall(
+  //     Translation2d p1, Translation2d p2, Translation2d unitNormalVector, boolean checkCorners)
+  // {}
 
   public static Translation2d pivotBasedCenterOfRotation(Angle pivotPos) {
     return new Translation2d(UnitUtil.inTom(3.5), 0.0)
@@ -835,5 +839,89 @@ public class DrivetrainCommands {
     double[] positions = new double[4];
     Rotation2d lastAngle = new Rotation2d();
     double gyroDelta = 0.0;
+  }
+
+  private static final double[] prevAngleSetpoints = new double[3];
+  private static TrapezoidProfile.State angleSetpoint = new TrapezoidProfile.State();
+
+  private static double angularVelFromAngleProfile(
+      Rotation2d robotOrientation, Rotation2d goalOrientation) {
+    return angularVelFromAngleProfile(
+        robotOrientation, new TrapezoidProfile.State(goalOrientation.getRadians(), 0));
+  }
+
+  private static double goalOrientation = 0;
+
+  private static double angularVelFromAngleProfile(
+      Rotation2d robotOrientation, TrapezoidProfile.State goalState) {
+    // Math from ProfiledPIDController
+    // Get error which is the smallest distance between goal and measurement
+    // double errorBound = Math.PI;
+    // double goalMinDistance = MathUtil.inputModulus(
+    //     goalState.position - robotOrientation.getRadians(), -errorBound, errorBound);
+    // double setpointMinDistance = MathUtil.inputModulus(
+    //     angleSetpoint.position - robotOrientation.getRadians(), -errorBound, errorBound);
+
+    // // Recompute the profile goal with the smallest error, thus giving the shortest path. The
+    // goal
+    // // may be outside the input range after this operation, but that's OK because the controller
+    // // will still go there and report an error of zero. In other words, the setpoint only needs
+    // to
+    // // be offset from the measurement by the input range modulus; they don't need to be equal.
+    // goalState.position = goalMinDistance + robotOrientation.getRadians();
+    // angleSetpoint.position = setpointMinDistance + robotOrientation.getRadians();
+
+    // angleSetpoint = angleProfile.calculate(RobotConstants.CODE_PERIOD_s, angleSetpoint,
+    // goalState);
+    // Logger.recordOutput(DrivetrainConstants.NAME + "/AngleProfile", angleSetpoint);
+    goalOrientation = goalState.position;
+    // double error = MathUtil.inputModulus(
+    //     goalState.position - robotOrientation.getRadians(), -Math.PI, Math.PI);
+    // double output = MathUtil.clamp(
+    //         Math.copySign(
+    //             Math.sqrt(2
+    //                 * (Math.abs(error) < errorOffset.getAsDouble()
+    //                     ? Math.max(0, (Math.abs(error) - 0.005))
+    //                         * DRIVE_MAX_ANGULAR_ACC2.getAsDouble()
+    //                     : Math.max(
+    //                         0,
+    //                         (Math.abs(error) - errorOffset.getAsDouble())
+    //                             * DRIVE_MAX_ANGULAR_ACC.getAsDouble()))),
+    //             error),
+    //         -DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble(),
+    //         DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble())
+    //     + goalState.velocity;
+    double output = MathUtil.clamp(
+            anglePID.calculate(robotOrientation.getRadians(), goalState.position),
+            -DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble(),
+            DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble())
+        + goalState.velocity;
+    Logger.recordOutput(DrivetrainConstants.NAME + "/AngleProfile/Error", anglePID.getError());
+    prevAngleSetpoints[0] = prevAngleSetpoints[1];
+    prevAngleSetpoints[1] = prevAngleSetpoints[2];
+    prevAngleSetpoints[2] = angleSetpoint.position;
+    return output;
+  }
+
+  private static TrapezoidProfile.State prevAngleState = new TrapezoidProfile.State();
+
+  public static void resetAngleProfileFromSetpointGenerator(SwerveSetpoint setpoint) {
+    // angleController.getSetpoint().position = prevAngleState.position
+    //     + (prevAngleState.velocity + setpoint.robotRelativeSpeeds().omegaRadiansPerSecond)
+    //         * RobotConstants.CODE_PERIOD_s
+    //         / 2;
+    // angleController.getSetpoint().velocity =
+    // setpoint.robotRelativeSpeeds().omegaRadiansPerSecond;
+    prevAngleState = new TrapezoidProfile.State(
+        prevAngleState.position
+            + (prevAngleState.velocity + setpoint.robotRelativeSpeeds().omegaRadiansPerSecond)
+                * RobotConstants.CODE_PERIOD_s
+                / 2,
+        setpoint.robotRelativeSpeeds().omegaRadiansPerSecond);
+    anglePID.reset();
+    Logger.recordOutput(DrivetrainConstants.NAME + "/SetpointGeneratorSetpoint", prevAngleState);
+    if (Math.abs(prevAngleState.velocity) < 1e-6) {
+      angleSetpoint.velocity = 0;
+    }
   }
 }

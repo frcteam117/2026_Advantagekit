@@ -46,13 +46,13 @@ public class IntakeSubsystem extends SubsystemBase {
     if (RobotBase.isReal()) {
       pivot_PID = new PIDController(20, 0, 0, RobotConstants.CODE_PERIOD_s);
       pivot_FF = new SimpleMotorFeedforward(0.2, 1.3, 0.05, RobotConstants.CODE_PERIOD_s);
-      pivot_ArbitraryFF.put(0.1, 0.0);
-      pivot_ArbitraryFF.put(-0.1, 0.0);
-      pivot_ArbitraryFF.put(-0.4, 0.0);
-      pivot_ArbitraryFF.put(-0.7, 0.01);
-      pivot_ArbitraryFF.put(-1.0, 0.045);
-      pivot_ArbitraryFF.put(-1.3, 0.075);
-      pivot_ArbitraryFF.put(-1.6, 0.09);
+      pivot_ArbitraryFF.put(0.1 + 1.41, 0.0);
+      pivot_ArbitraryFF.put(-0.1 + 1.41, 0.0);
+      pivot_ArbitraryFF.put(-0.4 + 1.41, 0.0);
+      pivot_ArbitraryFF.put(-0.7 + 1.41, 0.01);
+      pivot_ArbitraryFF.put(-1.0 + 1.41, 0.045);
+      pivot_ArbitraryFF.put(-1.3 + 1.41, 0.075);
+      pivot_ArbitraryFF.put(-1.6 + 1.41, 0.09);
     } else {
       pivot_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
       pivot_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
@@ -69,13 +69,13 @@ public class IntakeSubsystem extends SubsystemBase {
         pivot_tuningNTKey + "/ArbirtaryFF",
         pivot_ArbitraryFF,
         pivot_Tunable,
-        0.1,
-        -0.1,
-        -0.4,
-        -0.7,
-        -1.0,
-        -1.3,
-        -1.6);
+        0.1 + 1.41,
+        -0.1 + 1.41,
+        -0.4 + 1.41,
+        -0.7 + 1.41,
+        -1.0 + 1.41,
+        -1.3 + 1.41,
+        -1.6 + 1.41);
 
     // final String roller_tuningNTKey = RobotConstants.TUNING_PREFIX + Roller.NT_KEY;
     // final BooleanSupplier roller_Tunable = new TunableBoolean(roller_tuningNTKey + "/.tunable",
@@ -97,15 +97,15 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Angle getPivotPos() {
-    return inputs.pivot_Pos;
+    return inputs.pivot.position;
   }
 
   public AngularVelocity getPivotVel() {
-    return inputs.pivot_Vel;
+    return inputs.pivot.velocity;
   }
 
   public AngularVelocity getRollerVel() {
-    return inputs.roller_Vel;
+    return inputs.roller.velocity;
   }
 
   // Pivot
@@ -118,7 +118,7 @@ public class IntakeSubsystem extends SubsystemBase {
     Logger.recordOutput(Pivot.NT_KEY + "/2_NextVel", Double.NaN, RadiansPerSecond);
     Logger.recordOutput(Pivot.NT_KEY + "/3_OutputVoltage", voltage);
     pivot_PrevNextState = new TrapezoidProfile.State(
-        inputs.pivot_Pos.in(Radians), inputs.pivot_Vel.in(RadiansPerSecond));
+        inputs.pivot.position.in(Radians), inputs.pivot.velocity.in(RadiansPerSecond));
   }
 
   public void setPivotGoalPos(Angle goalPos) {
@@ -130,9 +130,9 @@ public class IntakeSubsystem extends SubsystemBase {
                 Pivot.MIN_POS.in(Radians),
                 Math.min(Pivot.MAX_POS.in(Radians), goalPos.in(Radians))),
             0));
-    Voltage voltage = Volts.of(pivot_ArbitraryFF.get(inputs.pivot_Pos.in(Radians))
+    Voltage voltage = Volts.of(pivot_ArbitraryFF.get(inputs.pivot.position.in(Radians))
         + pivot_FF.calculateWithVelocities(pivot_PrevNextState.velocity, nextState.velocity)
-        + pivot_PID.calculate(inputs.pivot_Pos.in(Radians), pivot_PrevNextState.position));
+        + pivot_PID.calculate(inputs.pivot.position.in(Radians), pivot_PrevNextState.position));
     io.setPivotVoltage(voltage);
     Logger.recordOutput(Pivot.NT_KEY + "/1_GoalPos", goalPos.in(Radians), Radians);
     Logger.recordOutput(Pivot.NT_KEY + "/1_GoalVel", Double.NaN, RadiansPerSecond);
@@ -155,9 +155,9 @@ public class IntakeSubsystem extends SubsystemBase {
             new TrapezoidProfile.State(
                 (goalVel.magnitude() < 0) ? Pivot.MIN_POS.in(Radians) : Pivot.MAX_POS.in(Radians),
                 0));
-    Voltage voltage = Volts.of(pivot_ArbitraryFF.get(inputs.pivot_Pos.in(Radians))
+    Voltage voltage = Volts.of(pivot_ArbitraryFF.get(inputs.pivot.position.in(Radians))
         + pivot_FF.calculateWithVelocities(pivot_PrevNextState.velocity, nextState.velocity)
-        + pivot_PID.calculate(inputs.pivot_Pos.in(Radians), pivot_PrevNextState.position));
+        + pivot_PID.calculate(inputs.pivot.position.in(Radians), pivot_PrevNextState.position));
     io.setPivotVoltage(voltage);
     Logger.recordOutput(Pivot.NT_KEY + "/1_GoalPos", Double.NaN, Radians);
     Logger.recordOutput(

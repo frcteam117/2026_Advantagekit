@@ -27,11 +27,11 @@ public class IntakeIOReal implements IntakeIO {
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
-    inputs.pivot_Pos.mut_replace(
+    inputs.pivot.position.mut_replace(
         pivot_Encoder.getPosition() * 2 * Math.PI / Pivot.REDUCTION, Radians);
-    inputs.pivot_Vel.mut_replace(
+    inputs.pivot.velocity.mut_replace(
         pivot_Encoder.getVelocity() * 2 * Math.PI / (Pivot.REDUCTION * 60), RadiansPerSecond);
-    inputs.roller_Vel.mut_replace(
+    inputs.roller.velocity.mut_replace(
         roller_Encoder.getVelocity() * 2 * Math.PI / (Roller.REDUCTION * 60), RadiansPerSecond);
   }
 
