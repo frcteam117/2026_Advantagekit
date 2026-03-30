@@ -556,7 +556,6 @@ public class DrivetrainCommands {
   private static boolean pathOverBump_onBump = false;
   private static boolean pathOverBump_overBump = false;
   private static final Debouncer pathOverBump_debouncer = new Debouncer(.1, DebounceType.kRising);
-  ;
 
   public static Command pathOverBump(DrivetrainSubsystem drivetrain) {
     return drivetrain

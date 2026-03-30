@@ -243,6 +243,13 @@ public class RobotContainer {
         () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
         () -> false));
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
+    controller
+        .cross()
+        .whileTrue(RobotCommands.faceHubAndDrive(
+            drivetrain,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
@@ -268,7 +275,7 @@ public class RobotContainer {
                       .finallyDo(() -> IntakeCommands.shooting = false)));
     }
     controller
-        .cross()
+        .square()
         .whileTrue(Commands.startEnd(
             () -> IndexerCommands.runningBackwards = true,
             () -> IndexerCommands.runningBackwards = false));
@@ -406,9 +413,9 @@ public class RobotContainer {
     controller
         .touchpad()
         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-    controller
-        .L3()
-        .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+    // controller
+    //     .L3()
+    //     .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
     controller2
         .touchpad()
         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));

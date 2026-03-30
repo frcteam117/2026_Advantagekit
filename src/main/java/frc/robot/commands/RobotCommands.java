@@ -93,15 +93,12 @@ public class RobotCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       Supplier<Translation2d> centerOfRotationSupplier) {
-    return DrivetrainCommands.joystickDriveAtAngle(
+    return DrivetrainCommands.joystickDriveFacingTarget(
         drivetrain,
         xSupplier,
         ySupplier,
-        () -> {
-          return getTarget(drivetrain.getPose())
-              .minus(drivetrain.getPose().getTranslation())
-              .getAngle();
-        },
+        () -> getTarget(drivetrain.getPose()),
+        () -> new Translation2d(),
         centerOfRotationSupplier,
         () -> false);
   }

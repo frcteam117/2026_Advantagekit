@@ -39,8 +39,9 @@ public class VisionConstants {
 
   // Robot to camera transforms
   public static final Transform3d[] robotToCameras = new Transform3d[] {
-    new Transform3d(-0.273, 0.311, 0.4, new Rotation3d(0.0, 0, -.30429726 + Math.PI)),
-    new Transform3d(-0.273, -0.311, 0.4, new Rotation3d(0.0, 0, .30429726 + Math.PI)) // .30429726
+    new Transform3d(-.29, .306, .444, new Rotation3d(0.0, Math.PI / 6, -.30429726 + Math.PI)),
+    new Transform3d(
+        -0.294, -0.306, 0.437, new Rotation3d(0.0, Math.PI / 6, .30429726 + Math.PI)) // .30429726
   };
 
   // Basic filtering thresholds
