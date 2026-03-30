@@ -23,10 +23,22 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "shoot44shootoptLUNGE"
+                  "pathName": "BeakBotLunge"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "BeakBotShoot"
           }
         },
         {
@@ -42,7 +54,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 5.0
+                  "waitTime": 6.0
                 }
               }
             ]
@@ -52,12 +64,6 @@
           "type": "race",
           "data": {
             "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "stopFlywheel"
-                }
-              },
               {
                 "type": "named",
                 "data": {
@@ -67,10 +73,16 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "shoot44shootSWEEP"
+                  "pathName": "BeakBotSweep"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "BeakBotShoot"
           }
         },
         {
@@ -86,7 +98,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 5.0
+                  "waitTime": 6.0
                 }
               }
             ]

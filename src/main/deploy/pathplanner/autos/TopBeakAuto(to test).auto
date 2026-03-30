@@ -23,10 +23,22 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "shoot44shootoptLUNGE"
+                  "pathName": "TopLungeBeak"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "TopBeakShoot"
           }
         },
         {
@@ -55,22 +67,22 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "stopFlywheel"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
                   "name": "IntakeDeploy"
                 }
               },
               {
                 "type": "path",
                 "data": {
-                  "pathName": "shoot44shootSWEEP"
+                  "pathName": "SweepTopBeak"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "TopBeakShoot"
           }
         },
         {
