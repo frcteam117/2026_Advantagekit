@@ -137,6 +137,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false));
     NamedCommands.registerCommand("PivotDown", IntakeCommands.lowerIntake(intake));
     NamedCommands.registerCommand("AutoOverBump", DrivetrainCommands.pathOverBump(drivetrain));
+    // NamedCommands.registerCommand("ResetPose", DrivetrainSubsystem.resetPoseWithVision());
     NamedCommands.registerCommand(
         "alignAndShoot",
         Commands.parallel(
