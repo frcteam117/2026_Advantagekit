@@ -115,7 +115,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
         this::getChassisSpeeds,
         this::setGoalVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+            new PIDConstants(5.0, 0.0, 0.4), new PIDConstants(6, 0, 0.55)),
         Chassis.ppConfig,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         // () -> {

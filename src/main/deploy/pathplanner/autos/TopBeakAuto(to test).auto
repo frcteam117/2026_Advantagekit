@@ -67,6 +67,12 @@
               {
                 "type": "named",
                 "data": {
+                  "name": "stopFlywheel"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
                   "name": "IntakeDeploy"
                 }
               },
