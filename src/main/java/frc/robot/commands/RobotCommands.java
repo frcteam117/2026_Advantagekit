@@ -74,6 +74,70 @@ public class RobotCommands {
         Set.of(drivetrain, shooter, indexer));
   }
 
+  private static Translation2d shootOnTheMovePrevTarget = new Translation2d();
+
+  public static Command shootOnTheMove(
+      DrivetrainSubsystem drivetrain,
+      ShooterSubsystem shooter,
+      IndexerSubsystem indexer,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      BooleanSupplier shootWhenReady) {
+    return Commands.defer(
+        () -> {
+          boolean isBlueAlliance =
+              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+          boolean isPassing = isBlueAlliance
+              ? drivetrain.getPose().getX() > 4.7
+              : drivetrain.getPose().getX() < 11.4;
+          return Commands.parallel(
+                  ShooterCommands.autoAim(
+                      shooter,
+                      drivetrain::getPose,
+                      () -> getTarget(drivetrain.getPose())
+                          .minus(new Translation2d(
+                                  drivetrain.getChassisSpeeds().vxMetersPerSecond
+                                  // + -0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond
+                                  ,
+                                  drivetrain.getChassisSpeeds().vyMetersPerSecond)
+                              .rotateBy(drivetrain.getPose().getRotation())
+                              .times(1.25)),
+                      () -> isPassing,
+                      () -> false),
+                  DrivetrainCommands.joystickDriveFacingTarget(
+                      drivetrain,
+                      xSupplier,
+                      ySupplier,
+                      () -> getTarget(drivetrain.getPose())
+                          .minus(new Translation2d(
+                                  drivetrain.getChassisSpeeds().vxMetersPerSecond
+                                  // + -0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond
+                                  ,
+                                  drivetrain.getChassisSpeeds().vyMetersPerSecond)
+                              .rotateBy(drivetrain.getPose().getRotation())
+                              .times(1.25)),
+                      () -> new Translation2d(),
+                      () -> new Translation2d(-0, 0),
+                      () -> false),
+                  IndexerCommands.conditionalRunForward(
+                      indexer,
+                      () -> shootWhenReady.getAsBoolean() && ShooterCommands.isAutoAimReady(shooter)
+                      // && DrivetrainCommands.isAutoAimReady(drivetrain)
+                      ),
+                  Commands.run(
+                      () -> IntakeCommands.shooting =
+                          shootWhenReady.getAsBoolean() && ShooterCommands.isAutoAimReady(shooter)
+                      // && DrivetrainCommands.isAutoAimReady(drivetrain)
+                      ))
+              .beforeStarting(() -> isAutoShooting = true)
+              .finallyDo(() -> {
+                isAutoShooting = false;
+                IntakeCommands.shooting = false;
+              });
+        },
+        Set.of(drivetrain, shooter, indexer));
+  }
+
   public static Command setPointRevThenShoot(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     Pose2d pose = new Pose2d(1.578, 4.008, Rotation2d.fromDegrees(180));
     return Commands.parallel(

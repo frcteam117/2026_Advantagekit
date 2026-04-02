@@ -254,7 +254,10 @@ public class RobotContainer {
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
-    controller.circle().whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1()));
+    controller
+        .circle()
+        .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
     controller
         .button(10)
@@ -299,13 +302,14 @@ public class RobotContainer {
     // should this be whileTrue? vvv
     controller
         .R2()
-        .whileTrue(RobotCommands.autoAim(
-                drivetrain,
-                shooter,
-                indexer,
-                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-                () -> true)
-            .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
+            .andThen(RobotCommands.autoAim(
+                    drivetrain,
+                    shooter,
+                    indexer,
+                    () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                    () -> true)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)));
     if (ShooterCommands.isTuning) {
       controller2
           .R2()

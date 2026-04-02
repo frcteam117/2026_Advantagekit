@@ -377,8 +377,9 @@ public class DrivetrainCommands {
           double omegaFF = robotCenteredTarget.cross(targetVelSupplier
                   .get()
                   .minus(new Translation2d(
-                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                      drivetrain.getChassisSpeeds().vyMetersPerSecond)))
+                          drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                          drivetrain.getChassisSpeeds().vyMetersPerSecond)
+                      .rotateBy(drivetrain.getPose().getRotation())))
               / (robotCenteredTarget.getNorm() * robotCenteredTarget.getNorm());
 
           // Convert to field relative speeds & send command
