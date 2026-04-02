@@ -67,13 +67,19 @@
               {
                 "type": "named",
                 "data": {
+                  "name": "stopFlywheel"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
                   "name": "IntakeDeploy"
                 }
               },
               {
                 "type": "path",
                 "data": {
-                  "pathName": "SweepTopBeak"
+                  "pathName": "Depot to flex"
                 }
               }
             ]
@@ -82,7 +88,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "TopBeakShoot"
+            "pathName": "Leave Depot"
           }
         },
         {
