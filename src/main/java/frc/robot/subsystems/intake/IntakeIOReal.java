@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.units.measure.Voltage;
@@ -15,14 +16,14 @@ public class IntakeIOReal implements IntakeIO {
   private final SparkMax pivot_Spark = new SparkMax(Pivot.CAN_ID, MotorType.kBrushless);
   private final RelativeEncoder pivot_Encoder = pivot_Spark.getEncoder();
 
-  private final SparkMax roller_Spark = new SparkMax(Roller.CAN_ID, MotorType.kBrushless);
+  private final SparkFlex roller_Spark = new SparkFlex(Roller.CAN_ID, MotorType.kBrushless);
   private final RelativeEncoder roller_Encoder = roller_Spark.getEncoder();
 
   public IntakeIOReal() {
     pivot_Spark.configure(
         Pivot.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     roller_Spark.configure(
-        Roller.SPARK_MAX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        Roller.SPARK_FLEX_CONFIG, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   @Override

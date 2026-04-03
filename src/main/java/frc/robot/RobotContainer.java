@@ -134,7 +134,8 @@ public class RobotContainer {
 
     SysIdUtil.registerController(controller);
 
-    NamedCommands.registerCommand("IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false));
+    NamedCommands.registerCommand(
+        "IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false, () -> true));
     NamedCommands.registerCommand("PivotDown", IntakeCommands.lowerIntake(intake));
     NamedCommands.registerCommand("AutoOverBump", DrivetrainCommands.pathOverBump(drivetrain));
     // NamedCommands.registerCommand("ResetPose", DrivetrainSubsystem.resetPoseWithVision());
@@ -259,7 +260,7 @@ public class RobotContainer {
         .circle()
         .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
             .alongWith(IndexerCommands.runBackwardCommand(indexer)));
-    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
+    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
     controller
         .button(10)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5)), intake));

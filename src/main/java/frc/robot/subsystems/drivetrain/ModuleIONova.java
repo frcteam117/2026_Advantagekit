@@ -112,6 +112,7 @@ public class ModuleIONova implements ModuleIO {
         UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction),
         UnitUtil.rotTorad(driveNova.getVelocityInternal() / Drive.reduction),
         driveNova.getAppliedVoltage(),
+        driveNova.getVoltage(),
         driveNova.getStatorCurrent(),
         driveNova.getSupplyCurrent());
     // inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
@@ -127,6 +128,7 @@ public class ModuleIONova implements ModuleIO {
             azimuthNova.getPositionInternal() / Azimuth.reduction), // - zeroRotation_rad,
         UnitUtil.rotTorad(azimuthNova.getVelocityInternal() / Azimuth.reduction),
         azimuthNova.getAppliedVoltage(),
+        driveNova.getVoltage(),
         azimuthNova.getStatorCurrent(),
         azimuthNova.getSupplyCurrent());
     // inputs.azimuthConnected = azimuthConnectedDebounce.calculate(!sparkStickyFault);

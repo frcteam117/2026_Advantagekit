@@ -67,6 +67,7 @@ public class ModuleIOSim implements ModuleIO {
         moduleSimulation.getDriveWheelFinalPosition().in(Radians),
         moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond),
         driveAppliedVolts,
+        12,
         Math.abs(moduleSimulation.getDriveMotorStatorCurrent().in(Amps)),
         Math.abs(moduleSimulation.getDriveMotorSupplyCurrent().in(Amps)));
 
@@ -75,6 +76,7 @@ public class ModuleIOSim implements ModuleIO {
         moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction,
         moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond),
         azimuthAppliedVolts,
+        12,
         Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps)),
         Math.abs(moduleSimulation.getSteerMotorSupplyCurrent().in(Amps)));
     inputs.azimuthAbsolutePosition_State =

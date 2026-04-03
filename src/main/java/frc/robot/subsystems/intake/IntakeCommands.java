@@ -97,13 +97,16 @@ public class IntakeCommands {
         intake);
   }
 
-  public static Command intakeFuel(IntakeSubsystem intake, BooleanSupplier raisePivot) {
+  public static Command intakeFuel(
+      IntakeSubsystem intake, BooleanSupplier raisePivot, BooleanSupplier trenchOverride) {
     return Commands.run(
         () -> {
           intake.setRollerSpeed(ROLLER_FORWARD_SPEED);
           if (PIVOT_WORKS.getAsBoolean()) {
-            if (raisePivot.getAsBoolean()
-                || intake.getRollerVel().in(RadiansPerSecond) < ROLLER_THRESHOLD.getAsDouble()) {
+            if (!trenchOverride.getAsBoolean()
+                && (raisePivot.getAsBoolean()
+                    || intake.getRollerVel().in(RadiansPerSecond)
+                        < ROLLER_THRESHOLD.getAsDouble())) {
               intake.setPivotGoalPos(DISLODGING_POS.get());
             } else {
               intake.setPivotGoalPos(DOWN_POS.get());

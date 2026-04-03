@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Radians;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
@@ -39,18 +40,18 @@ public class IntakeConstants {
   public static class Roller {
     public static final String NT_KEY = IntakeConstants.NT_KEY + "/Roller";
     public static final int CAN_ID = 11;
-    public static final SparkMaxConfig SPARK_MAX_CONFIG = new SparkMaxConfig();
+    public static final SparkFlexConfig SPARK_FLEX_CONFIG = new SparkFlexConfig();
     public static final double REDUCTION = 24 / 15;
     public static final Distance RADIUS = Inches.of(1.0);
     public static final MomentOfInertia MOI = null;
     public static final DCMotor GEARBOX = DCMotor.getNEO(1).withReduction(REDUCTION);
 
     static {
-      SPARK_MAX_CONFIG
+      SPARK_FLEX_CONFIG
           .disableVoltageCompensation()
           .idleMode(IdleMode.kCoast)
           .smartCurrentLimit(40)
-          .openLoopRampRate(.2)
+          .openLoopRampRate(.1)
           .encoder
           .quadratureMeasurementPeriod(10)
           .quadratureAverageDepth(4);

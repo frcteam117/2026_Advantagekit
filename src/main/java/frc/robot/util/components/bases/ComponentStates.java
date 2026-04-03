@@ -46,14 +46,23 @@ public class ComponentStates {
     private final double[] values;
     private final String[] logNames;
 
-    public Motor_State(double rad, double radPs, double motor_V, double motor_A, double supply_A) {
-      this(rad, radPs, motor_V, motor_A, supply_A, "Motor", "Motor", "Motor", "Motor", "Supply");
+    public Motor_State(
+        double rad,
+        double radPs,
+        double motor_V,
+        double supply_V,
+        double motor_A,
+        double supply_A) {
+      this(
+          rad, radPs, motor_V, supply_V, motor_A, supply_A, "Motor", "Motor", "Motor", "Supply",
+          "Motor", "Supply");
     }
 
     public Motor_State(
         double rad,
         double radPs,
         double motor_V,
+        double supply_V,
         double motor_A,
         double supply_A,
         String... logNames) {
@@ -98,13 +107,15 @@ public class ComponentStates {
           StateUtil.getValueAsDouble(values[0], Radians),
           StateUtil.getValueAsDouble(values[1], RadiansPerSecond),
           StateUtil.getValueAsDouble(values[2], Volts),
-          StateUtil.getValueAsDouble(values[3], Amps),
+          StateUtil.getValueAsDouble(values[3], Volts),
           StateUtil.getValueAsDouble(values[4], Amps),
+          StateUtil.getValueAsDouble(values[5], Amps),
           values[0].getName(),
           values[1].getName(),
           values[2].getName(),
           values[3].getName(),
-          values[4].getName());
+          values[4].getName(),
+          values[5].getName());
     }
   }
 
