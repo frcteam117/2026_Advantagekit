@@ -28,6 +28,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -61,6 +62,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
   // Pose estimation
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Chassis.moduleTranslations);
+
+  private final SwerveDriveKinematics threeWheeledKinematics =
+      new SwerveDriveKinematics(new Translation2d[] {
+        Chassis.moduleTranslations[0], Chassis.moduleTranslations[1], Chassis.moduleTranslations[3]
+      });
   private Rotation2d rawGyroYaw = Rotation2d.kZero;
   private final SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
@@ -69,8 +75,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
         new SwerveModulePosition(),
         new SwerveModulePosition()
       };
-  private final SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, rawGyroYaw, lastModulePositions, new Pose2d());
+  private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+      threeWheeledKinematics,
+      rawGyroYaw,
+      new SwerveModulePosition[] {
+        lastModulePositions[0], lastModulePositions[1], lastModulePositions[3]
+      },
+      new Pose2d());
   private final Consumer<Pose2d> resetSimulationPoseCallBack;
 
   // Motion Profiling
@@ -184,7 +195,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
       }
 
       // Apply update
-      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroYaw, modulePositions);
+      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroYaw, new SwerveModulePosition[] {
+        modulePositions[0], modulePositions[1], modulePositions[3]
+      });
     }
   }
 
@@ -281,7 +294,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = DrivetrainConstants.NAME + "/0_Measured/Chassis")
   public ChassisSpeeds getChassisSpeeds() {
-    return kinematics.toChassisSpeeds(getModuleStates());
+    return threeWheeledKinematics.toChassisSpeeds(
+        new SwerveModuleState[] {modules[0].getState(), modules[1].getState(), modules[3].getState()
+        });
   }
 
   /** Returns the current odometry pose. */
@@ -297,7 +312,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
       modulePositions[i] = modules[i].getPosition();
     }
     resetSimulationPoseCallBack.accept(pose);
-    poseEstimator.resetPosition(rawGyroYaw, modulePositions, pose);
+    poseEstimator.resetPosition(
+        rawGyroYaw,
+        new SwerveModulePosition[] {modulePositions[0], modulePositions[1], modulePositions[3]},
+        pose);
   }
 
   /** Returns the robot's orientation according to the NavX. */

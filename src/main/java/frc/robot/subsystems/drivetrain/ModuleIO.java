@@ -120,24 +120,38 @@ public interface ModuleIO {
     public void fromLog(LogTable table) {
       // Drive
       drive.position.mut_replace(table.get("Drive/Position", drive.position.in(Radians)), Radians);
-      drive.velocity.mut_replace(table.get("Drive/Velocity", drive.velocity.in(RadiansPerSecond)), RadiansPerSecond);
-      drive.inputVoltage.mut_replace(table.get("Drive/InputVoltage", drive.inputVoltage.in(Volts)), Volts);
-      drive.outputVoltage.mut_replace(table.get("Drive/OutputVoltage", drive.outputVoltage.in(Volts)), Volts);
-      drive.inputCurrent.mut_replace(table.get("Drive/InputCurrent", drive.inputCurrent.in(Amps)), Amps);
-      drive.outputCurrent.mut_replace(table.get("Drive/OutputCurrent", drive.outputCurrent.in(Amps)), Amps);
+      drive.velocity.mut_replace(
+          table.get("Drive/Velocity", drive.velocity.in(RadiansPerSecond)), RadiansPerSecond);
+      drive.inputVoltage.mut_replace(
+          table.get("Drive/InputVoltage", drive.inputVoltage.in(Volts)), Volts);
+      drive.outputVoltage.mut_replace(
+          table.get("Drive/OutputVoltage", drive.outputVoltage.in(Volts)), Volts);
+      drive.inputCurrent.mut_replace(
+          table.get("Drive/InputCurrent", drive.inputCurrent.in(Amps)), Amps);
+      drive.outputCurrent.mut_replace(
+          table.get("Drive/OutputCurrent", drive.outputCurrent.in(Amps)), Amps);
       // Absolute Encoder
-      absoluteEncoder.heading = Rotation2d.fromRadians(table.get("Azimuth/Heading", absoluteEncoder.heading.getRadians()));
+      absoluteEncoder.heading = Rotation2d.fromRadians(
+          table.get("Azimuth/Heading", absoluteEncoder.heading.getRadians()));
       // Azimuth
-      azimuth.position.mut_replace(table.get("Azimuth/Position", azimuth.position.in(Radians)), Radians);
-      azimuth.velocity.mut_replace(table.get("Azimuth/Velocity", azimuth.velocity.in(RadiansPerSecond)), RadiansPerSecond);
-      azimuth.inputVoltage.mut_replace(table.get("Azimuth/InputVoltage", azimuth.inputVoltage.in(Volts)), Volts);
-      azimuth.outputVoltage.mut_replace(table.get("Azimuth/OutputVoltage", azimuth.outputVoltage.in(Volts)), Volts);
-      azimuth.inputCurrent.mut_replace(table.get("Azimuth/InputCurrent", azimuth.inputCurrent.in(Amps)), Amps);
-      azimuth.outputCurrent.mut_replace(table.get("Azimuth/OutputCurrent", azimuth.outputCurrent.in(Amps)), Amps);
+      azimuth.position.mut_replace(
+          table.get("Azimuth/Position", azimuth.position.in(Radians)), Radians);
+      azimuth.velocity.mut_replace(
+          table.get("Azimuth/Velocity", azimuth.velocity.in(RadiansPerSecond)), RadiansPerSecond);
+      azimuth.inputVoltage.mut_replace(
+          table.get("Azimuth/InputVoltage", azimuth.inputVoltage.in(Volts)), Volts);
+      azimuth.outputVoltage.mut_replace(
+          table.get("Azimuth/OutputVoltage", azimuth.outputVoltage.in(Volts)), Volts);
+      azimuth.inputCurrent.mut_replace(
+          table.get("Azimuth/InputCurrent", azimuth.inputCurrent.in(Amps)), Amps);
+      azimuth.outputCurrent.mut_replace(
+          table.get("Azimuth/OutputCurrent", azimuth.outputCurrent.in(Amps)), Amps);
       // Odometry
       odometry.odometryTimestamps = table.get("Odometry/Timestamps", odometry.odometryTimestamps);
-      odometry.odometryDrivePositions_rad = table.get("Odometry/DrivePositions", odometry.odometryDrivePositions_rad);
-      odometry.odometryAzimuthPositions_rad = table.get("Odometry/AzimuthPositions", odometry.odometryAzimuthPositions_rad);
+      odometry.odometryDrivePositions_rad =
+          table.get("Odometry/DrivePositions", odometry.odometryDrivePositions_rad);
+      odometry.odometryAzimuthPositions_rad =
+          table.get("Odometry/AzimuthPositions", odometry.odometryAzimuthPositions_rad);
     }
   }
 

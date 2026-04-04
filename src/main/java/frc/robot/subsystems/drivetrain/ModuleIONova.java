@@ -14,6 +14,7 @@
 package frc.robot.subsystems.drivetrain;
 
 import com.thethriftybot.devices.ThriftyNova;
+import com.thethriftybot.devices.ThriftyNova.Error;
 import com.thethriftybot.devices.ThriftyNova.MotorType;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.AbsEncoder;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
@@ -22,6 +23,7 @@ import frc.robot.util.UnitUtil;
 import frc.robot.util.components.bases.ComponentStates.AbsoluteEncoder_State;
 import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import java.util.Queue;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Module IO implementation for Thrifty Nova drive motor controller, Thrifty Nova azimuth motor
@@ -31,6 +33,7 @@ public class ModuleIONova implements ModuleIO {
   // Hardware objects
   private final ThriftyNova driveNova;
   private final ThriftyNova azimuthNova;
+  private final int moduleIndex;
 
   // Queue inputs from odometry thread
   private final Queue<Double> timestampQueue;
@@ -42,6 +45,7 @@ public class ModuleIONova implements ModuleIO {
   private double currentAzimuthPosition_rad = 0.0;
 
   public ModuleIONova(int module) {
+    moduleIndex = module;
     driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
 
@@ -115,6 +119,16 @@ public class ModuleIONova implements ModuleIO {
         driveNova.getVoltage(),
         driveNova.getStatorCurrent(),
         driveNova.getSupplyCurrent());
+    Logger.recordOutput(
+        "1_Drivetrain/Modules/" + moduleIndex + "/DriveVoltage", driveNova.getVoltage());
+    Logger.recordOutput(
+        "1_Drivetrain/Modules/" + moduleIndex + "/DriveErrors",
+        driveNova.getErrors().toArray(Error[]::new));
+    Logger.recordOutput(
+        "1_Drivetrain/Modules/" + moduleIndex + "/AzimuthVoltage", azimuthNova.getVoltage());
+    Logger.recordOutput(
+        "1_Drivetrain/Modules/" + moduleIndex + "/AzimuthErrors",
+        azimuthNova.getErrors().toArray(Error[]::new));
     // inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
 
     // Update azimuth inputs

@@ -50,8 +50,8 @@ public class IntakeConstants {
       SPARK_FLEX_CONFIG
           .disableVoltageCompensation()
           .idleMode(IdleMode.kCoast)
-          .smartCurrentLimit(40)
-          .openLoopRampRate(.1)
+          .smartCurrentLimit(60)
+          .openLoopRampRate(.3)
           .encoder
           .quadratureMeasurementPeriod(10)
           .quadratureAverageDepth(4);

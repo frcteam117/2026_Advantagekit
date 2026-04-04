@@ -25,9 +25,9 @@ public class IntakeCommands {
       new TunableDouble(TUNING_NT_KEY + "/PivotLowerThreshold_rad", 0.01);
   private static final DoubleSupplier ROLLER_THRESHOLD =
       new TunableDouble(TUNING_NT_KEY + "/RollerThreshold_radPs", 10);
-  private static final double ROLLER_FORWARD_SPEED = 1.0;
+  private static final double ROLLER_FORWARD_SPEED = 0.9;
   private static final DoubleSupplier ROLLER_REVERSE_SPEED =
-      new TunableDouble(TUNING_NT_KEY + "/RollerReverseSpeed", -0.5);
+      new TunableDouble(TUNING_NT_KEY + "/RollerReverseSpeed", -0.9);
   // private static final DoubleSupplier lowered_rad = new TunableDouble(
   //     TUNING_NT_KEY + "/lowered_rad",
   //     (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
