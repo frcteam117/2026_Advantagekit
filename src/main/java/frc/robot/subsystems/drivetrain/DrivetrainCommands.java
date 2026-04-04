@@ -20,6 +20,7 @@ import static edu.wpi.first.units.Units.Volts;
 
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -28,7 +29,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -40,6 +44,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.subsystems.shooter.ShooterCommands;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.UnitUtil;
@@ -67,6 +73,9 @@ public class DrivetrainCommands {
   // private static final double ANGLE_MAX_ACCELERATION = 12.0;
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+  //
+  private static Pose2d curRobotPose;
+  private static Pose2d lastRobotPose;
   // private static final double DRIVE_MAX_ACCELERATION = 6;
 
   // private static final DoubleSupplier errorOffset =
@@ -377,9 +386,8 @@ public class DrivetrainCommands {
           double omegaFF = robotCenteredTarget.cross(targetVelSupplier
                   .get()
                   .minus(new Translation2d(
-                          drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                          drivetrain.getChassisSpeeds().vyMetersPerSecond)
-                      .rotateBy(drivetrain.getPose().getRotation())))
+                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                      drivetrain.getChassisSpeeds().vyMetersPerSecond)))
               / (robotCenteredTarget.getNorm() * robotCenteredTarget.getNorm());
 
           // Convert to field relative speeds & send command
@@ -537,14 +545,100 @@ public class DrivetrainCommands {
   }
 
   private Translation2d shootWhileMoving_shooterVelocity = new Translation2d();
-
-  public static Command shootWhileMoving(
+  
+  public static void updatePoses(Pose2d estPose2d) {
+    lastRobotPose = curRobotPose;
+    curRobotPose = estPose2d;
+  }
+    
+    // Rotation2d targetTagRotation2d);
+  public static Command shootWhileMoving( // TODO: HEY SO WE ALSO NEED TO COMPENSATE FOR SHOOTER VELOCITY (like if getting farther away overshoot)
       DrivetrainSubsystem drivetrain,
+      ShooterSubsystem shooter,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       BooleanSupplier driveAssistSupplier) {
+    //
+    //return Commands.none();
+    return drivetrain
+        .startRun(
+            () -> {
+                //
+              resetAngleController(drivetrain);
+            },
+            () -> {
+              Alliance alliance;
+              Translation2d hubPose = new Translation2d();
+              //return Commands.none();
+              if (DriverStation.getAlliance().isPresent()) {
+                alliance = DriverStation.getAlliance().get();
+                if (alliance == Alliance.Red) {
+                  hubPose = new Translation2d(); // edit for coords!!!
+                }
+                else {
+                  hubPose = new Translation2d();
+                }
+              }
+              //
+               Pose2d robotPose = drivetrain.getPose();
+               //double robotYaw = drivetrain.getPose().getRotation().getDegrees() * (Math.PI/180); // converted to radians
+               double targetYaw = Math.atan2(
+                robotPose.getY()-hubPose.getY(),
+                robotPose.getX()-hubPose.getX()); // does the subtract order matter?
+              
+              Rotation2d robotOrientation =
+                  drivetrain.getNavXYaw();
+              //compensate for shooting delay:
+              InterpolatingDoubleTreeMap archTimes = DrivetrainConstants.ballArchTime;
+              Translation2d robotTranslation = new Translation2d(robotPose.getX(),robotPose.getY());
+              double toHub = robotTranslation.getDistance(hubPose);
+              double shotDelay = archTimes.get(toHub);
+              // next need to figure out which direction the robot is moving?? vvv
+              // bro atan2 is my bestie fr fr
+              double movementDirection = Math.atan2(
+                curRobotPose.getY()-lastRobotPose.getY(),
+                curRobotPose.getX()-lastRobotPose.getX());
+              // next adjust needed yaw 
+              double lastTargetYaw = Math.atan2(
+                lastRobotPose.getY()-hubPose.getY(),
+                lastRobotPose.getX()-hubPose.getX());
+              double yawDif = targetYaw - lastTargetYaw;
+              double sign = (movementDirection > 0)
+                ? -1.0
+                :  1.0;
+              double yawMod = sign * yawDif * ( // the overall speed using mr pythags theorem w chassis x and y meters/sec
+                Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) 
+                + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)))
+                * 0.1; // adjust 0.1!!! idk how large this number needs to be
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds = new ChassisSpeeds(
+                  drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                  drivetrain.getChassisSpeeds().vyMetersPerSecond,
+                  angularVelFromAngleProfile(
+                    robotOrientation, new Rotation2d(robotOrientation.getRadians()+yawMod)));
 
-    return Commands.none();
+              speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
+              drivetrain.setGoalVelocity(speeds);
+              // next adjust shooter velocity based on changing distance from hub
+              double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
+              double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
+              // change 0.1!!! i pulled that out of my ass idk what it should actually be
+              // idk if velocity should be involved here, idk if the above distance dif calcs cover ts??? IDFK
+              double adjustedDist = (new Translation2d((lastDistDifX * 0.1),(lastDistDifY * 0.1)))
+              .getDistance(robotTranslation);
+              
+              ShooterCommands.shootWhileMoving(shooter,adjustedDist).schedule();
+              // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how to run
+              // the shooter command from in here, there's prolly some command keyword that could fix it but idk
+              // and theoretically it all works perfectly first try with no need to account for physics or
+              // scale modifiers ^^
+            });
+        /*.onlyIf(() -> {
+          double x = drivetrain.getPose().getX();
+          return (x > 1.7 && x < 7.7) || (x > 8.4 && x < 14.4);
+        })
+        .finallyDo(() -> drivetrain.resetTranslationWithVision())
+        .until(() -> pathOverBump_overBump);*/
   }
 
   private static final DoubleSupplier pathOverBump_VELOCITY =
@@ -557,6 +651,7 @@ public class DrivetrainCommands {
   private static boolean pathOverBump_onBump = false;
   private static boolean pathOverBump_overBump = false;
   private static final Debouncer pathOverBump_debouncer = new Debouncer(.1, DebounceType.kRising);
+  ;
 
   public static Command pathOverBump(DrivetrainSubsystem drivetrain) {
     return drivetrain

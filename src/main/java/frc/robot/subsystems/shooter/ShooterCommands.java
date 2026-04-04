@@ -334,7 +334,13 @@ public class ShooterCommands {
   private static final MutAngularVelocity flywheel_autoAimVel = RadiansPerSecond.mutable(0);
   // private static final MutAngularAcceleration flywheel_autoAimAcc =
   // RadiansPerSecondPerSecond.mutable(0);
-
+  public static Command shootWhileMoving(ShooterSubsystem shooter, double adjustedDist) {
+    return shooter.run(() -> {
+      shooter.setHoodGoalPos(Radians.of(hub_metersToHoodRad.get(adjustedDist)));
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(hub_metersToFywheelRadPerSec.get(adjustedDist)));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(hub_metersToFywheelRadPerSec.get(adjustedDist)));
+    });
+  }
   public static Command autoAim(
       ShooterSubsystem shooter,
       Supplier<Pose2d> robotPoseSupplier,

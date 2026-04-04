@@ -24,6 +24,7 @@ import com.thethriftybot.devices.ThriftyNova.ThriftyNovaConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -36,13 +37,14 @@ import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class DrivetrainConstants {
+  public static final InterpolatingDoubleTreeMap ballArchTime = new InterpolatingDoubleTreeMap();
   public static final String NAME = "1_Drivetrain";
   public static final LoggedNetworkBoolean tunable =
       new LoggedNetworkBoolean(RobotConstants.TUNING_PREFIX + NAME + "/.Tunable", false);
 
   public static final class Chassis {
     public static final String name = DrivetrainConstants.NAME + "/Chassis";
-
+    //
     // physical properties
     public static final double trackLength_m = UnitUtil.inTom(21.625 - 1.6875); // 19.9375
     public static final double trackWidth_m = UnitUtil.inTom(25.625 - 1.6875); // 23.9375
@@ -112,8 +114,11 @@ public class DrivetrainConstants {
     //             KilogramSquareMeters.of(0.08),
     //             1.2));
   }
-
+  public DrivetrainConstants() {
+        ballArchTime.put(0.0,0.0);
+  }
   public static class Drive {
+    
     public static final String name = DrivetrainConstants.NAME + "/Drive";
 
     // physical properties
