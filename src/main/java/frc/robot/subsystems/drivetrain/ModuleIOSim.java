@@ -15,13 +15,12 @@ package frc.robot.subsystems.drivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.thethriftybot.devices.ThriftyNova.Error;
 import edu.wpi.first.math.controller.PIDController;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
-import frc.robot.util.SparkUtil;
-import frc.robot.util.components.bases.ComponentStates.AbsoluteEncoder_State;
-import frc.robot.util.components.bases.ComponentStates.Motor_State;
+import frc.robot.util.nova.NovaUtil;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
@@ -63,33 +62,35 @@ public class ModuleIOSim implements ModuleIO {
     azimuthMotor.requestVoltage(Volts.of(azimuthAppliedVolts));
 
     // Update drive inputs
-    inputs.driveMotor_State = new Motor_State(
-        moduleSimulation.getDriveWheelFinalPosition().in(Radians),
-        moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond),
-        driveAppliedVolts,
-        12,
-        Math.abs(moduleSimulation.getDriveMotorStatorCurrent().in(Amps)),
-        Math.abs(moduleSimulation.getDriveMotorSupplyCurrent().in(Amps)));
+    inputs.drive.position.mut_replace(moduleSimulation.getDriveWheelFinalPosition());
+    inputs.drive.velocity.mut_replace(moduleSimulation.getDriveWheelFinalSpeed());
+    inputs.drive.outputVoltage.mut_replace(driveAppliedVolts, Volts);
+    inputs.drive.inputVoltage.mut_replace(12, Volts);
+    inputs.drive.outputCurrent.mut_replace(moduleSimulation.getDriveMotorStatorCurrent());
+    inputs.drive.inputCurrent.mut_replace(moduleSimulation.getDriveMotorSupplyCurrent());
+    inputs.drive.errors = new Error[0];
+    inputs.drive.connected = true;
 
     // Update azimuth inputs
-    inputs.azimuthMotor_State = new Motor_State(
-        moduleSimulation.getSteerRelativeEncoderPosition().in(Radians) / Azimuth.reduction,
-        moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond),
-        azimuthAppliedVolts,
-        12,
-        Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps)),
-        Math.abs(moduleSimulation.getSteerMotorSupplyCurrent().in(Amps)));
-    inputs.azimuthAbsolutePosition_State =
-        new AbsoluteEncoder_State(moduleSimulation.getSteerAbsoluteFacing().getRadians());
-    // currentAzimuthVelocity_radPs = inputs.azimuthMotor_State.radPs();
+    inputs.azimuth.position.mut_replace(moduleSimulation.getSteerRelativeEncoderPosition());
+    inputs.azimuth.velocity.mut_replace(moduleSimulation.getSteerAbsoluteEncoderSpeed());
+    inputs.azimuth.outputVoltage.mut_replace(azimuthAppliedVolts, Volts);
+    inputs.azimuth.inputVoltage.mut_replace(12, Volts);
+    inputs.azimuth.outputCurrent.mut_replace(moduleSimulation.getSteerMotorStatorCurrent());
+    inputs.azimuth.inputCurrent.mut_replace(moduleSimulation.getSteerMotorSupplyCurrent());
+    inputs.azimuth.errors = new Error[0];
+    inputs.azimuth.connected = true;
+
+    inputs.absoluteEncoder.heading = moduleSimulation.getSteerAbsoluteFacing();
+    inputs.absoluteEncoder.connected = true;
 
     // Update odometry inputs
-    inputs.odometryTimestamps = SparkUtil.getSimulationOdometryTimeStamps();
-    inputs.odometryDrivePositions_rad = Arrays.stream(
+    inputs.odometry.timestamps = NovaUtil.getSimulationOdometryTimeStamps();
+    inputs.odometry.drivePositions_rad = Arrays.stream(
             moduleSimulation.getCachedDriveWheelFinalPositions())
         .mapToDouble(angle -> angle.in(Radians))
         .toArray();
-    inputs.odometryAzimuthPositions_rad = Arrays.stream(
+    inputs.odometry.azimuthPositions_rad = Arrays.stream(
             moduleSimulation.getCachedSteerAbsolutePositions())
         .mapToDouble((rotation) -> rotation.getRadians())
         .toArray();
