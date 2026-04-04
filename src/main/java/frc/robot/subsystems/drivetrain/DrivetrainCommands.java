@@ -567,7 +567,11 @@ public class DrivetrainCommands {
               resetAngleController(drivetrain);
             },
             () -> {
-              Alliance alliance;
+              double robotWidthIn = 25;
+              double robotLengthIn = 25; // change these
+              double hubTopY = 4.644;
+              double hubBottomY = 3.480;
+              Alliance alliance = null;
               Translation2d hubPose = new Translation2d();
               //return Commands.none();
               if (DriverStation.getAlliance().isPresent()) {
@@ -579,15 +583,15 @@ public class DrivetrainCommands {
                   hubPose = new Translation2d();
                 }
               }
+
               //
                Pose2d robotPose = drivetrain.getPose();
                //double robotYaw = drivetrain.getPose().getRotation().getDegrees() * (Math.PI/180); // converted to radians
-               double targetYaw = Math.atan2(
-                robotPose.getY()-hubPose.getY(),
-                robotPose.getX()-hubPose.getX()); // does the subtract order matter?
+               
               
               Rotation2d robotOrientation =
                   drivetrain.getNavXYaw();
+              // MAYBE: do fancy math to determine robot y length accounting for orientation, maybe just guesstimate!
               //compensate for shooting delay:
               InterpolatingDoubleTreeMap archTimes = DrivetrainConstants.ballArchTime;
               Translation2d robotTranslation = new Translation2d(robotPose.getX(),robotPose.getY());
@@ -602,36 +606,84 @@ public class DrivetrainCommands {
               double lastTargetYaw = Math.atan2(
                 lastRobotPose.getY()-hubPose.getY(),
                 lastRobotPose.getX()-hubPose.getX());
-              double yawDif = targetYaw - lastTargetYaw;
-              double sign = (movementDirection > 0)
-                ? -1.0
-                :  1.0;
-              double yawMod = sign * yawDif * ( // the overall speed using mr pythags theorem w chassis x and y meters/sec
-                Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) 
-                + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)))
-                * 0.1; // adjust 0.1!!! idk how large this number needs to be
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds = new ChassisSpeeds(
-                  drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                  drivetrain.getChassisSpeeds().vyMetersPerSecond,
-                  angularVelFromAngleProfile(
-                    robotOrientation, new Rotation2d(robotOrientation.getRadians()+yawMod)));
-
-              speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
-              drivetrain.setGoalVelocity(speeds);
-              // next adjust shooter velocity based on changing distance from hub
-              double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
-              double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
-              // change 0.1!!! i pulled that out of my ass idk what it should actually be
-              // idk if velocity should be involved here, idk if the above distance dif calcs cover ts??? IDFK
-              double adjustedDist = (new Translation2d((lastDistDifX * 0.1),(lastDistDifY * 0.1)))
-              .getDistance(robotTranslation);
               
-              ShooterCommands.shootWhileMoving(shooter,adjustedDist).schedule();
-              // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how to run
-              // the shooter command from in here, there's prolly some command keyword that could fix it but idk
-              // and theoretically it all works perfectly first try with no need to account for physics or
-              // scale modifiers ^^
+              if (robotTranslation.getX() <= 4.634 || robotTranslation.getX() >= 11.893) { // if in AZ
+                double targetYaw = Math.atan2(
+                robotPose.getY()-hubPose.getY(),
+                robotPose.getX()-hubPose.getX()); // does the subtract order matter?
+                double yawDif = targetYaw - lastTargetYaw;
+                
+                  double sign = (movementDirection > 0)
+                    ? -1.0
+                    :  1.0;
+                  double yawMod = sign * yawDif * ( // the overall speed using mr pythags theorem w chassis x and y meters/sec
+                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) 
+                    + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)))
+                    * shotDelay * 0.1; // adjust 0.1!!! idk how large this number needs to be
+                  // Convert to field relative speeds & send command
+                  ChassisSpeeds speeds = new ChassisSpeeds(
+                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                      drivetrain.getChassisSpeeds().vyMetersPerSecond,
+                      angularVelFromAngleProfile(
+                        robotOrientation, new Rotation2d(robotOrientation.getRadians()+yawMod)));
+                        // should this be +yawMod?? review logic idk
+
+                  speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
+                  drivetrain.setGoalVelocity(speeds);
+                  // next adjust shooter velocity based on changing distance from hub
+                  double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
+                  double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
+                  // change 0.1!!! i pulled that out of my ass idk what it should actually be
+                  // idk if velocity should be involved here, idk if the above distance dif calcs cover ts??? IDFK
+                  double adjustedDist = (new Translation2d((lastDistDifX * 0.1),(lastDistDifY * 0.1)))
+                  .getDistance(robotTranslation);
+                  
+                  ShooterCommands.shootWhileMoving(shooter,adjustedDist).schedule();
+                  // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how to run
+                  // the shooter command from in here, there's prolly some command keyword that could fix it but idk
+                  // and theoretically it all works perfectly first try with no need to account for physics or
+                  // scale modifiers ^^
+              }
+              else { // if in NZ (so passing) we don't have full field pass i don't think, so that's not
+              // - important here? idk maybe ask to confirm
+                // make sure you're not passing to the back of the hub
+                double adjustedYaw;
+                if (alliance == Alliance.Blue) {
+                  if (3.047 <= robotTranslation.getY() && robotTranslation.getY() <= 5.052)  {// if in way of hub
+                    figure out nearest angle that passes hub, 
+                  }
+                  else { // if out of way of hub
+                    double targetYaw = Math.PI/2;
+                  }
+                }
+                else if (alliance == Alliance.Red) {
+                  if (3.047 <= robotTranslation.getY() && robotTranslation.getY() <= 5.052)  {// if in way of hub
+
+                  }
+                  else { // if out of way of hub
+                    double targetYaw = 0.0;
+                  }
+                }
+                // make sure to adjust yaw for the delay after this as well!!!!
+                ChassisSpeeds speeds = new ChassisSpeeds(
+                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                      drivetrain.getChassisSpeeds().vyMetersPerSecond,
+                      angularVelFromAngleProfile(
+                        robotOrientation, new Rotation2d(adjustedYaw)));
+
+                  speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
+                  drivetrain.setGoalVelocity(speeds);
+                // shooter; same, but mult needs to be more, idk if this just works or not
+                double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
+                  double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
+                  // change 0.1!!! i pulled that out of my ass idk what it should actually be
+                  // idk if velocity should be involved here, idk if the above distance dif calcs cover ts??? IDFK
+                  double adjustedDist = (new Translation2d((lastDistDifX * 2),(lastDistDifY * 2)))
+                  // PLEASE CHANGE THESE MULTIPLIERS I BEG OF YOU
+                  .getDistance(robotTranslation);
+                  
+                  ShooterCommands.shootWhileMoving(shooter,adjustedDist).schedule();
+              }
             });
         /*.onlyIf(() -> {
           double x = drivetrain.getPose().getX();
