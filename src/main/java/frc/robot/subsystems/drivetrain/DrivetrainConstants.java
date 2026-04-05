@@ -37,7 +37,7 @@ import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class DrivetrainConstants {
-  public static final InterpolatingDoubleTreeMap ballArchTime = new InterpolatingDoubleTreeMap();
+  public static final InterpolatingDoubleTreeMap ballIntoHubTimes = new InterpolatingDoubleTreeMap();
   public static final String NAME = "1_Drivetrain";
   public static final LoggedNetworkBoolean tunable =
       new LoggedNetworkBoolean(RobotConstants.TUNING_PREFIX + NAME + "/.Tunable", false);
@@ -114,8 +114,25 @@ public class DrivetrainConstants {
     //             KilogramSquareMeters.of(0.08),
     //             1.2));
   }
-  public DrivetrainConstants() {
-        ballArchTime.put(0.0,0.0);
+  public DrivetrainConstants() { // is a interpolation table right for this??? i feel like if we have enough
+    // - data it should be as accurate as anything, right?
+    // k = distance, v = time to get thru hub threshold (**like until it disappears basically**)
+    // these will all be outdated once we replace the flywheels, oh well :(((
+    // TODO: REPLACE THIS DATA WHEN THE WHEELS ARE REPLACED!!!!
+        ballIntoHubTimes.put(2.29839758199,1.205);
+        ballIntoHubTimes.put(3.38639966802,1.425);
+        ballIntoHubTimes.put(3.90687834425,1.605);
+
+
+
+
+
+
+
+
+
+
+
   }
   public static class Drive {
     

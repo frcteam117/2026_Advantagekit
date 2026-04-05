@@ -577,13 +577,13 @@ public class DrivetrainCommands {
               if (DriverStation.getAlliance().isPresent()) {
                 alliance = DriverStation.getAlliance().get();
                 if (alliance == Alliance.Red) {
-                  hubPose = new Translation2d(); // edit for coords!!!
+                  hubPose = new Translation2d(11.922,4); // edit for coords!!!
                 }
                 else {
-                  hubPose = new Translation2d();
+                  hubPose = new Translation2d(4.644,4);
                 }
               }
-
+              //TODO: CHECK IF ALL THIS LOGIC WORKS FROM BOTH SIDES USING EXAMPLE POSITIONS
               //
                Pose2d robotPose = drivetrain.getPose();
                //double robotYaw = drivetrain.getPose().getRotation().getDegrees() * (Math.PI/180); // converted to radians
@@ -593,10 +593,13 @@ public class DrivetrainCommands {
                   drivetrain.getNavXYaw();
               // MAYBE: do fancy math to determine robot y length accounting for orientation, maybe just guesstimate!
               //compensate for shooting delay:
-              InterpolatingDoubleTreeMap archTimes = DrivetrainConstants.ballArchTime;
+              InterpolatingDoubleTreeMap archTimes = DrivetrainConstants.ballIntoHubTimes;
               Translation2d robotTranslation = new Translation2d(robotPose.getX(),robotPose.getY());
               double toHub = robotTranslation.getDistance(hubPose);
-              double shotDelay = archTimes.get(toHub);
+              double shotDelay = 0.0; // add error catch maybe but also maybe it doesn't matter
+              if (!archTimes.get(toHub).isNaN()) {
+                shotDelay = archTimes.get(toHub);
+              }
               // next need to figure out which direction the robot is moving?? vvv
               // bro atan2 is my bestie fr fr
               double movementDirection = Math.atan2(
