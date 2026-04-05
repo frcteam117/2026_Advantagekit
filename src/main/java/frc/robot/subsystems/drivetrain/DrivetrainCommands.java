@@ -647,24 +647,53 @@ public class DrivetrainCommands {
               else { // if in NZ (so passing) we don't have full field pass i don't think, so that's not
               // - important here? idk maybe ask to confirm
                 // make sure you're not passing to the back of the hub
+                double robotX = robotTranslation.getX();
+                double robotY = robotTranslation.getY();
                 double adjustedYaw;
+                double targetYaw = 0.0; // i dont think the possible non initialization due to no alliance
+                // - really matters here but thought id make a note of it
                 if (alliance == Alliance.Blue) {
-                  if (3.047 <= robotTranslation.getY() && robotTranslation.getY() <= 5.052)  {// if in way of hub
-                    figure out nearest angle that passes hub, 
+                  if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
+                    double toHubX = Math.abs(robotX - hubPose.getX());
+                      // adjust 1 if not accurate enough vvv
+                    double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
+                    if (robotTranslation.getY() > 4) { // if on top half of field
+                      targetYaw = 180 - Math.atan(toPassSpotY / toHubX); // 180 - because on blue side
+                    }
+                    else { // if on bottom half of field
+                      targetYaw = 180 + Math.atan(toPassSpotY / toHubX); // 180 + because on blue side
+                    }
                   }
                   else { // if out of way of hub
-                    double targetYaw = Math.PI/2;
+                    targetYaw = Math.PI/2; // actually maybe isn't the best way to do this? idk
+                    // - if the margin of error close to the wall is a big enough issues, will need to test
+                    // also the angle transition from non flat to flat should work just fine
                   }
                 }
                 else if (alliance == Alliance.Red) {
                   if (3.047 <= robotTranslation.getY() && robotTranslation.getY() <= 5.052)  {// if in way of hub
-
+                    double toHubX = Math.abs(robotX - hubPose.getX());
+                      // adjust 1 if not accurate enough vvv
+                    double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
+                    if (robotTranslation.getY() > 4) { // if on top half of field
+                      targetYaw = Math.atan(toPassSpotY / toHubX); // no add/sub because on red side
+                    }
+                    else { // if on bottom half of field
+                      targetYaw = 360 - Math.atan(toPassSpotY / toHubX); // 360 - because on red side
+                    }
                   }
                   else { // if out of way of hub
-                    double targetYaw = 0.0;
+                    targetYaw = 0.0;
                   }
                 }
-                // make sure to adjust yaw for the delay after this as well!!!!
+                // next adjusted targetYaw for movement direction/delay!!!
+                double yawDif = targetYaw - lastTargetYaw;
+                
+
+
+
+
+                //^^^
                 ChassisSpeeds speeds = new ChassisSpeeds(
                       drivetrain.getChassisSpeeds().vxMetersPerSecond,
                       drivetrain.getChassisSpeeds().vyMetersPerSecond,
