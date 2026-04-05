@@ -603,15 +603,18 @@ public class DrivetrainCommands {
                 curRobotPose.getY()-lastRobotPose.getY(),
                 curRobotPose.getX()-lastRobotPose.getX());
               // next adjust needed yaw 
-              double lastTargetYaw = Math.atan2(
-                lastRobotPose.getY()-hubPose.getY(),
-                lastRobotPose.getX()-hubPose.getX());
+              
               
               if (robotTranslation.getX() <= 4.634 || robotTranslation.getX() >= 11.893) { // if in AZ
+                double lastTargetYaw = Math.atan2(
+                lastRobotPose.getY()-hubPose.getY(),
+                lastRobotPose.getX()-hubPose.getX());
                 double targetYaw = Math.atan2(
                 robotPose.getY()-hubPose.getY(),
                 robotPose.getX()-hubPose.getX()); // does the subtract order matter?
-                double yawDif = targetYaw - lastTargetYaw;
+                double yawDif = (movementDirection > 0) 
+                  ? Math.abs(targetYaw - lastTargetYaw)
+                  : -Math.abs(targetYaw - lastTargetYaw);
                 
                   double sign = (movementDirection > 0)
                     ? -1.0
@@ -625,7 +628,7 @@ public class DrivetrainCommands {
                       drivetrain.getChassisSpeeds().vxMetersPerSecond,
                       drivetrain.getChassisSpeeds().vyMetersPerSecond,
                       angularVelFromAngleProfile(
-                        robotOrientation, new Rotation2d(robotOrientation.getRadians()+yawMod)));
+                        robotOrientation, new Rotation2d(targetYaw+yawMod)));
                         // should this be +yawMod?? review logic idk
 
                   speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
@@ -649,8 +652,11 @@ public class DrivetrainCommands {
                 // make sure you're not passing to the back of the hub
                 double robotX = robotTranslation.getX();
                 double robotY = robotTranslation.getY();
-                double adjustedYaw;
                 double targetYaw = 0.0; // i dont think the possible non initialization due to no alliance
+                double lastTargetYaw = 0.0;
+                double lastX = lastRobotPose.getX();
+                double lastY = lastRobotPose.getY();
+
                 // - really matters here but thought id make a note of it
                 if (alliance == Alliance.Blue) {
                   if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
@@ -658,20 +664,52 @@ public class DrivetrainCommands {
                       // adjust 1 if not accurate enough vvv
                     double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                     if (robotTranslation.getY() > 4) { // if on top half of field
-                      targetYaw = 180 - Math.atan(toPassSpotY / toHubX); // 180 - because on blue side
+                      targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
                     }
                     else { // if on bottom half of field
-                      targetYaw = 180 + Math.atan(toPassSpotY / toHubX); // 180 + because on blue side
+                      targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
                     }
                   }
                   else { // if out of way of hub
                     targetYaw = Math.PI/2; // actually maybe isn't the best way to do this? idk
                     // - if the margin of error close to the wall is a big enough issues, will need to test
                     // also the angle transition from non flat to flat should work just fine
+                  }// TODO: REMEMBER THIS ALL IN RADIANS!!!!
+                  if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
+                    double toHubX = Math.abs(robotX - hubPose.getX());
+                      // adjust 1 if not accurate enough vvv
+                    double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
+                    if (robotTranslation.getY() > 4) { // if on top half of field
+                      targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
+                    }
+                    else { // if on bottom half of field
+                      targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
+                    }
+                  } // last vvv
+                  else { // if out of way of hub
+                    targetYaw = Math.PI/2; // actually maybe isn't the best way to do this? idk
+                    // - if the margin of error close to the wall is a big enough issues, will need to test
+                    // also the angle transition from non flat to flat should work just fine
+                  }
+                  if (3.047 <= lastY && lastY <= 5.052)  {// if in way of hub
+                    double lastToHubX = Math.abs(lastX - hubPose.getX());
+                      // adjust 1 if not accurate enough vvv
+                    double lastToPassSpotY = Math.abs(hubTopY - lastY) + 1;
+                    if (robotTranslation.getY() > 4) { // if on top half of field
+                      lastTargetYaw = Math.PI - Math.atan(lastToPassSpotY / lastToHubX); // pi - because on blue side
+                    }
+                    else { // if on bottom half of field
+                      lastTargetYaw = Math.PI + Math.atan(lastToPassSpotY / lastToHubX); // pi + because on blue side
+                    }
+                  }
+                  else { // if out of way of hub
+                    lastTargetYaw = Math.PI/2; // actually maybe isn't the best way to do this? idk
+                    // - if the margin of error close to the wall is a big enough issues, will need to test
+                    // also the angle transition from non flat to flat should work just fine
                   }
                 }
                 else if (alliance == Alliance.Red) {
-                  if (3.047 <= robotTranslation.getY() && robotTranslation.getY() <= 5.052)  {// if in way of hub
+                  if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
                     double toHubX = Math.abs(robotX - hubPose.getX());
                       // adjust 1 if not accurate enough vvv
                     double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
@@ -679,26 +717,49 @@ public class DrivetrainCommands {
                       targetYaw = Math.atan(toPassSpotY / toHubX); // no add/sub because on red side
                     }
                     else { // if on bottom half of field
-                      targetYaw = 360 - Math.atan(toPassSpotY / toHubX); // 360 - because on red side
+                      targetYaw = 2*Math.PI - Math.atan(toPassSpotY / toHubX); // 2pi - because on red side
                     }
                   }
                   else { // if out of way of hub
                     targetYaw = 0.0;
+                  } // last vvv
+                  if (3.047 <= lastY && lastY <= 5.052)  {// if in way of hub
+                    double lastToHubX = Math.abs(lastX - hubPose.getX());
+                      // adjust 1 if not accurate enough vvv
+                    double toPassSpotY = Math.abs(hubTopY - lastY) + 1;
+                    if (robotTranslation.getY() > 4) { // if on top half of field
+                      lastTargetYaw = Math.atan(toPassSpotY / lastToHubX); // no add/sub because on red side
+                    }
+                    else { // if on bottom half of field
+                      lastTargetYaw = 2*Math.PI - Math.atan(toPassSpotY / lastToHubX); // 2pi - because on red side
+                    }
+                  }
+                  else { // if out of way of hub
+                    lastTargetYaw = 0.0;
                   }
                 }
-                // next adjusted targetYaw for movement direction/delay!!!
-                double yawDif = targetYaw - lastTargetYaw;
-                
-
-
-
-
+                // next adjust targetYaw for movement direction/delay!!!
+                double yawDif = (movementDirection > 0) 
+                  ? Math.abs(targetYaw - lastTargetYaw)
+                  : -Math.abs(targetYaw - lastTargetYaw);
+                double scaler = 2*Math.PI / yawDif; //gives percent of full circle, PLEASE ADJUST TS IDFK
+                double adjustedYawTarget = targetYaw + yawDif * scaler * ( // the overall speed using 
+                //mr pythags theorem w chassis x and y meters/sec
+                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) 
+                    + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)));
+                // i completely made all of this up so the outputs need to be measured somewhere;
+                // TODO: add print statements for ts???
+                // System.out.println(scaler, adjustedYawTarget);
+                // please test and adjust all of the scalers!!!
+                // also is this prediction enough or do i need to account for controller input???
+                // i dont KNOW
                 //^^^
                 ChassisSpeeds speeds = new ChassisSpeeds(
                       drivetrain.getChassisSpeeds().vxMetersPerSecond,
                       drivetrain.getChassisSpeeds().vyMetersPerSecond,
                       angularVelFromAngleProfile(
-                        robotOrientation, new Rotation2d(adjustedYaw)));
+                        robotOrientation, new Rotation2d(adjustedYawTarget))); // this should be the target not
+                        // - the offset
 
                   speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
                   drivetrain.setGoalVelocity(speeds);
