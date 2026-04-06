@@ -65,6 +65,7 @@ public class RobotContainer {
   private final IntakeSubsystem intake;
   private final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
+  public final DrivetrainConstants drivetrainConstants;
   private SwerveDriveSimulation driveSimulation = null;
 
   // Controller
@@ -131,6 +132,7 @@ public class RobotContainer {
         break;
     }
     indexer = new IndexerSubsystem();
+    drivetrainConstants = new DrivetrainConstants();
 
     SysIdUtil.registerController(controller);
 
@@ -286,7 +288,7 @@ public class RobotContainer {
             () -> IndexerCommands.runningBackwards = false));
     controller2.square().whileTrue(IndexerCommands.runForwardCommand(indexer));
     // controller2.circle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
-    controller2.circle().whileTrue(DrivetrainCommands.shootWhileMoving(drivetrain, shooter));
+    controller.circle().whileTrue(DrivetrainCommands.shootWhileMoving(drivetrain, shooter));
 
     // Shooter
     if (ShooterCommands.isTuning) {
