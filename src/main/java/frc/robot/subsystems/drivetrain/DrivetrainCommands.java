@@ -567,8 +567,8 @@ public class DrivetrainCommands {
               resetAngleController(drivetrain);
             },
             () -> {
-              double robotWidthIn = 25;
-              double robotLengthIn = 25; // change these
+              double robotWidthIn = 25; // idk which is 25 and which is 29 and i don't think that's w/ bumpers?
+              double robotLengthIn = 29; // change these
               double hubTopY = 4.644;
               double hubBottomY = 3.480;
               Alliance alliance = null;
@@ -580,7 +580,7 @@ public class DrivetrainCommands {
                   hubPose = new Translation2d(11.922,4); // edit for coords!!!
                 }
                 else {
-                  hubPose = new Translation2d(4.644,4);
+                  hubPose = new Translation2d(4.626,4);
                 }
               }
               //TODO: CHECK IF ALL THIS LOGIC WORKS FROM BOTH SIDES USING EXAMPLE POSITIONS
@@ -622,10 +622,10 @@ public class DrivetrainCommands {
                   double sign = (movementDirection > 0)
                     ? -1.0
                     :  1.0;
-                  double yawMod = sign * yawDif * ( // the overall speed using mr pythags theorem w chassis x and y meters/sec
+                  double yawMod = sign * (yawDif * ( // the overall speed using mr pythags theorem w chassis x and y meters/sec
                     Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) 
                     + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)))
-                    * shotDelay * 0.1; // adjust 0.1!!! idk how large this number needs to be
+                  ) + shotDelay * 0.1; // adjust 0.1!!! idk how large this number needs to be
                   // Convert to field relative speeds & send command
                   ChassisSpeeds speeds = new ChassisSpeeds(
                       drivetrain.getChassisSpeeds().vxMetersPerSecond,
@@ -665,11 +665,12 @@ public class DrivetrainCommands {
                   if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
                     double toHubX = Math.abs(robotX - hubPose.getX());
                       // adjust 1 if not accurate enough vvv
-                    double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                     if (robotTranslation.getY() > 4) { // if on top half of field
+                      double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                       targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
                     }
                     else { // if on bottom half of field
+                      double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
                       targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
                     }
                   }
@@ -681,11 +682,12 @@ public class DrivetrainCommands {
                   if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
                     double toHubX = Math.abs(robotX - hubPose.getX());
                       // adjust 1 if not accurate enough vvv
-                    double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                     if (robotTranslation.getY() > 4) { // if on top half of field
+                      double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                       targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
                     }
                     else { // if on bottom half of field
+                      double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
                       targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
                     }
                   } // last vvv
@@ -697,11 +699,12 @@ public class DrivetrainCommands {
                   if (3.047 <= lastY && lastY <= 5.052)  {// if in way of hub
                     double lastToHubX = Math.abs(lastX - hubPose.getX());
                       // adjust 1 if not accurate enough vvv
-                    double lastToPassSpotY = Math.abs(hubTopY - lastY) + 1;
                     if (robotTranslation.getY() > 4) { // if on top half of field
+                      double lastToPassSpotY = Math.abs(hubTopY - lastY) + 1;
                       lastTargetYaw = Math.PI - Math.atan(lastToPassSpotY / lastToHubX); // pi - because on blue side
                     }
                     else { // if on bottom half of field
+                      double lastToPassSpotY = Math.abs(hubBottomY - lastY) + 1;
                       lastTargetYaw = Math.PI + Math.atan(lastToPassSpotY / lastToHubX); // pi + because on blue side
                     }
                   }
@@ -715,11 +718,12 @@ public class DrivetrainCommands {
                   if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
                     double toHubX = Math.abs(robotX - hubPose.getX());
                       // adjust 1 if not accurate enough vvv
-                    double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                     if (robotTranslation.getY() > 4) { // if on top half of field
+                      double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                       targetYaw = Math.atan(toPassSpotY / toHubX); // no add/sub because on red side
                     }
                     else { // if on bottom half of field
+                      double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
                       targetYaw = 2*Math.PI - Math.atan(toPassSpotY / toHubX); // 2pi - because on red side
                     }
                   }
@@ -729,11 +733,12 @@ public class DrivetrainCommands {
                   if (3.047 <= lastY && lastY <= 5.052)  {// if in way of hub
                     double lastToHubX = Math.abs(lastX - hubPose.getX());
                       // adjust 1 if not accurate enough vvv
-                    double toPassSpotY = Math.abs(hubTopY - lastY) + 1;
                     if (robotTranslation.getY() > 4) { // if on top half of field
+                      double toPassSpotY = Math.abs(hubTopY - lastY) + 1;
                       lastTargetYaw = Math.atan(toPassSpotY / lastToHubX); // no add/sub because on red side
                     }
                     else { // if on bottom half of field
+                      double toPassSpotY = Math.abs(hubBottomY - lastY) + 1;
                       lastTargetYaw = 2*Math.PI - Math.atan(toPassSpotY / lastToHubX); // 2pi - because on red side
                     }
                   }
