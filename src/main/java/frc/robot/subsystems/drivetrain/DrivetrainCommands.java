@@ -644,7 +644,7 @@ public class DrivetrainCommands {
                   double adjustedDist = (new Translation2d((lastDistDifX * 0.1),(lastDistDifY * 0.1)))
                   .getDistance(robotTranslation);
                   
-                  ShooterCommands.shootWhileMoving(shooter,adjustedDist).schedule();
+                  ShooterSubsystem.shootWhileMoving(shooter,adjustedDist);
                   // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how to run
                   // the shooter command from in here, there's prolly some command keyword that could fix it but idk
                   // and theoretically it all works perfectly first try with no need to account for physics or
@@ -780,7 +780,7 @@ public class DrivetrainCommands {
                   // PLEASE CHANGE THESE MULTIPLIERS I BEG OF YOU
                   .getDistance(robotTranslation);
                   
-                  ShooterCommands.shootWhileMoving(shooter,adjustedDist).schedule();
+                  ShooterSubsystem.shootWhileMoving(shooter,adjustedDist);
               }
             });
         /*.onlyIf(() -> {

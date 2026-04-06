@@ -76,13 +76,13 @@ public class ShooterCommands {
     //     });
   }
 
-  private static final InterpolatingDoubleTreeMap hub_metersToFywheelRadPerSec =
+  public static final InterpolatingDoubleTreeMap hub_metersToFywheelRadPerSec =
       new InterpolatingDoubleTreeMap();
-  private static final InterpolatingDoubleTreeMap hub_metersToHoodRad =
+  public static final InterpolatingDoubleTreeMap hub_metersToHoodRad =
       new InterpolatingDoubleTreeMap();
-  private static final InterpolatingDoubleTreeMap passing_metersToFywheelRadPerSec =
+  public static final InterpolatingDoubleTreeMap passing_metersToFywheelRadPerSec =
       new InterpolatingDoubleTreeMap();
-  private static final InterpolatingDoubleTreeMap passing_metersToHoodRad =
+  public static final InterpolatingDoubleTreeMap passing_metersToHoodRad =
       new InterpolatingDoubleTreeMap();
   private static final List<Boolean> hub_autoAimUsedValuesList = new ArrayList<>();
   private static final List<Double> hub_autoAimDistancesList = new ArrayList<>();
@@ -334,13 +334,7 @@ public class ShooterCommands {
   private static final MutAngularVelocity flywheel_autoAimVel = RadiansPerSecond.mutable(0);
   // private static final MutAngularAcceleration flywheel_autoAimAcc =
   // RadiansPerSecondPerSecond.mutable(0);
-  public static Command shootWhileMoving(ShooterSubsystem shooter, double adjustedDist) {
-    return shooter.run(() -> {
-      shooter.setHoodGoalPos(Radians.of(hub_metersToHoodRad.get(adjustedDist)));
-      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(hub_metersToFywheelRadPerSec.get(adjustedDist)));
-      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(hub_metersToFywheelRadPerSec.get(adjustedDist)));
-    });
-  }
+
   public static Command autoAim(
       ShooterSubsystem shooter,
       Supplier<Pose2d> robotPoseSupplier,
