@@ -89,12 +89,12 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "EndLunge"
+      "linkedName": null
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.45,
+      "waypointRelativePos": 0.44999999999999996,
       "rotationDegrees": 180.0
     },
     {
@@ -106,8 +106,8 @@
       "rotationDegrees": 105.00000000000001
     },
     {
-      "waypointRelativePos": 3.294849023090592,
-      "rotationDegrees": 65.656
+      "waypointRelativePos": 2.246891651864988,
+      "rotationDegrees": 90.0
     },
     {
       "waypointRelativePos": 3.783303730017754,
@@ -136,21 +136,15 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "IntakeDeploy",
-      "waypointRelativePos": 0.5,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "IntakeRetract",
-      "waypointRelativePos": 0.6,
+      "name": "flywheel_acc_1",
+      "waypointRelativePos": 4.229471316085516,
       "endWaypointRelativePos": null,
       "command": null
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 5.0,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -166,5 +160,5 @@
     "velocity": 0,
     "rotation": 180.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
