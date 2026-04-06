@@ -255,10 +255,10 @@ public class RobotContainer {
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
-    controller
-        .circle()
-        .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
-            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+    /*controller
+    .circle()
+    .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
+        .alongWith(IndexerCommands.runBackwardCommand(indexer)));*/
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
     controller
         .button(10)
@@ -285,7 +285,8 @@ public class RobotContainer {
             () -> IndexerCommands.runningBackwards = true,
             () -> IndexerCommands.runningBackwards = false));
     controller2.square().whileTrue(IndexerCommands.runForwardCommand(indexer));
-    controller2.circle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    // controller2.circle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+    controller2.circle().whileTrue(DrivetrainCommands.shootWhileMoving(drivetrain, shooter));
 
     // Shooter
     if (ShooterCommands.isTuning) {

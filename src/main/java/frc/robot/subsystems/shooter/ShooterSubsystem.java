@@ -14,7 +14,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.shooter.ShooterConstants.*;
@@ -239,9 +238,10 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public static void shootWhileMoving(ShooterSubsystem shooter, double adjustedDist) {
-      shooter.setHoodGoalPos(Radians.of(ShooterCommands.hub_metersToHoodRad.get(adjustedDist)));
-      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(ShooterCommands.hub_metersToFywheelRadPerSec.get(adjustedDist)));
-      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(ShooterCommands.hub_metersToFywheelRadPerSec.get(adjustedDist)));
-
+    shooter.setHoodGoalPos(Radians.of(ShooterCommands.hub_metersToHoodRad.get(adjustedDist)));
+    shooter.setRIOFlywheelGoalVel(
+        RadiansPerSecond.of(ShooterCommands.hub_metersToFywheelRadPerSec.get(adjustedDist)));
+    shooter.setPDHFlywheelGoalVel(
+        RadiansPerSecond.of(ShooterCommands.hub_metersToFywheelRadPerSec.get(adjustedDist)));
   }
 }

@@ -186,7 +186,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroYaw, modulePositions);
 
-      DrivetrainCommands.updatePoses(getPose()); // maybe get this from somewhere that also considers the vison est???
+      DrivetrainCommands.updatePoses(
+          getPose()); // maybe get this from somewhere that also considers the vison est???
     }
   }
 

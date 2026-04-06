@@ -20,7 +20,6 @@ import static edu.wpi.first.units.Units.Volts;
 
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -31,8 +30,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -44,7 +41,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.intake.IntakeConstants;
-import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
@@ -545,250 +541,250 @@ public class DrivetrainCommands {
   }
 
   private Translation2d shootWhileMoving_shooterVelocity = new Translation2d();
-  
+
   public static void updatePoses(Pose2d estPose2d) {
     lastRobotPose = curRobotPose;
     curRobotPose = estPose2d;
   }
-    
-    // Rotation2d targetTagRotation2d);
-  public static Command shootWhileMoving( // TODO: HEY SO WE ALSO NEED TO COMPENSATE FOR SHOOTER VELOCITY (like if getting farther away overshoot)
-      DrivetrainSubsystem drivetrain,
-      ShooterSubsystem shooter,
-      DoubleSupplier xSupplier,
-      DoubleSupplier ySupplier,
-      BooleanSupplier driveAssistSupplier) {
+
+  // Rotation2d targetTagRotation2d);
+
+  public static Command
+      shootWhileMoving( // TODO: HEY SO WE ALSO NEED TO COMPENSATE FOR SHOOTER VELOCITY (like if
+          // getting farther away overshoot)
+          DrivetrainSubsystem drivetrain, ShooterSubsystem shooter) {
     //
-    //return Commands.none();
-    return drivetrain
-        .startRun(
-            () -> {
-                //
-              resetAngleController(drivetrain);
-            },
-            () -> {
-              double robotWidthIn = 25; // idk which is 25 and which is 29 and i don't think that's w/ bumpers?
-              double robotLengthIn = 29; // change these
-              double hubTopY = 4.644;
-              double hubBottomY = 3.480;
-              Alliance alliance = null;
-              Translation2d hubPose = new Translation2d();
-              //return Commands.none();
-              if (DriverStation.getAlliance().isPresent()) {
-                alliance = DriverStation.getAlliance().get();
-                if (alliance == Alliance.Red) {
-                  hubPose = new Translation2d(11.922,4); // edit for coords!!!
-                }
-                else {
-                  hubPose = new Translation2d(4.626,4);
-                }
-              }
-              //TODO: CHECK IF ALL THIS LOGIC WORKS FROM BOTH SIDES USING EXAMPLE POSITIONS
-              //
-               Pose2d robotPose = drivetrain.getPose();
-               //double robotYaw = drivetrain.getPose().getRotation().getDegrees() * (Math.PI/180); // converted to radians
-               
-              
-              Rotation2d robotOrientation =
-                  drivetrain.getNavXYaw();
-              // MAYBE: do fancy math to determine robot y length accounting for orientation, maybe just guesstimate!
-              //compensate for shooting delay:
-              InterpolatingDoubleTreeMap archTimes = DrivetrainConstants.ballIntoHubTimes;
-              Translation2d robotTranslation = new Translation2d(robotPose.getX(),robotPose.getY());
-              double toHub = robotTranslation.getDistance(hubPose);
-              double shotDelay = 0.0; // add error catch maybe but also maybe it doesn't matter
-              if (!archTimes.get(toHub).isNaN()) {
-                shotDelay = archTimes.get(toHub);
-              }
-              // next need to figure out which direction the robot is moving?? vvv
-              // bro atan2 is my bestie fr fr
-              double movementDirection = Math.atan2(
-                curRobotPose.getY()-lastRobotPose.getY(),
-                curRobotPose.getX()-lastRobotPose.getX());
-              // next adjust needed yaw 
-              
-              
-              if (robotTranslation.getX() <= 4.634 || robotTranslation.getX() >= 11.893) { // if in AZ
-                double lastTargetYaw = Math.atan2(
-                lastRobotPose.getY()-hubPose.getY(),
-                lastRobotPose.getX()-hubPose.getX());
-                double targetYaw = Math.atan2(
-                robotPose.getY()-hubPose.getY(),
-                robotPose.getX()-hubPose.getX()); // does the subtract order matter?
-                double yawDif = (movementDirection > 0) 
-                  ? Math.abs(targetYaw - lastTargetYaw)
-                  : -Math.abs(targetYaw - lastTargetYaw);
-                
-                  double sign = (movementDirection > 0)
-                    ? -1.0
-                    :  1.0;
-                  double yawMod = sign * (yawDif * ( // the overall speed using mr pythags theorem w chassis x and y meters/sec
-                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) 
-                    + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)))
-                  ) + shotDelay * 0.1; // adjust 0.1!!! idk how large this number needs to be
-                  // Convert to field relative speeds & send command
-                  ChassisSpeeds speeds = new ChassisSpeeds(
-                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                      drivetrain.getChassisSpeeds().vyMetersPerSecond,
-                      angularVelFromAngleProfile(
-                        robotOrientation, new Rotation2d(targetYaw+yawMod)));
-                        // should this be +yawMod?? review logic idk
+    // return Commands.none();
+    return drivetrain.runOnce(() -> {
+      resetAngleController(drivetrain); // is this in the right place?
+      double robotWidthIn =
+          25; // idk which is 25 and which is 29 and i don't think that's w/ bumpers?
+      double robotLengthIn = 29; // change these
+      double hubTopY = 4.644;
+      double hubBottomY = 3.480;
+      Alliance alliance = null;
+      Translation2d hubPose = new Translation2d();
+      // return Commands.none();
+      if (DriverStation.getAlliance().isPresent()) {
+        alliance = DriverStation.getAlliance().get();
+        if (alliance == Alliance.Red) {
+          hubPose = new Translation2d(11.922, 4); // edit for coords!!!
+        } else {
+          hubPose = new Translation2d(4.626, 4);
+        }
+      }
+      // TODO: CHECK IF ALL THIS LOGIC WORKS FROM BOTH SIDES USING EXAMPLE POSITIONS
+      //
+      Pose2d robotPose = drivetrain.getPose();
+      // double robotYaw = drivetrain.getPose().getRotation().getDegrees() * (Math.PI/180); //
+      // converted to radians
 
-                  speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
-                  drivetrain.setGoalVelocity(speeds);
-                  // next adjust shooter velocity based on changing distance from hub
-                  double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
-                  double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
-                  // change 0.1!!! i pulled that out of my ass idk what it should actually be
-                  // idk if velocity should be involved here, idk if the above distance dif calcs cover ts??? IDFK
-                  double adjustedDist = (new Translation2d((lastDistDifX * 0.1),(lastDistDifY * 0.1)))
-                  .getDistance(robotTranslation);
-                  
-                  ShooterSubsystem.shootWhileMoving(shooter,adjustedDist);
-                  // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how to run
-                  // the shooter command from in here, there's prolly some command keyword that could fix it but idk
-                  // and theoretically it all works perfectly first try with no need to account for physics or
-                  // scale modifiers ^^
-              }
-              else { // if in NZ (so passing) we don't have full field pass i don't think, so that's not
-              // - important here? idk maybe ask to confirm
-                // make sure you're not passing to the back of the hub
-                double robotX = robotTranslation.getX();
-                double robotY = robotTranslation.getY();
-                double targetYaw = 0.0; // i dont think the possible non initialization due to no alliance
-                double lastTargetYaw = 0.0;
-                double lastX = lastRobotPose.getX();
-                double lastY = lastRobotPose.getY();
+      Rotation2d robotOrientation = drivetrain.getNavXYaw();
+      // MAYBE: do fancy math to determine robot y length accounting for orientation, maybe just
+      // guesstimate!
+      // compensate for shooting delay:
+      InterpolatingDoubleTreeMap archTimes = DrivetrainConstants.ballIntoHubTimes;
+      Translation2d robotTranslation = new Translation2d(robotPose.getX(), robotPose.getY());
+      double toHub = robotTranslation.getDistance(hubPose);
+      double shotDelay = 0.0; // add error catch maybe but also maybe it doesn't matter
+      if (!archTimes.get(toHub).isNaN()) {
+        shotDelay = archTimes.get(toHub);
+      }
+      // next need to figure out which direction the robot is moving?? vvv
+      // bro atan2 is my bestie fr fr
+      double movementDirection = Math.atan2(
+          curRobotPose.getY() - lastRobotPose.getY(), curRobotPose.getX() - lastRobotPose.getX());
+      // next adjust needed yaw
 
-                // - really matters here but thought id make a note of it
-                if (alliance == Alliance.Blue) {
-                  if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
-                    double toHubX = Math.abs(robotX - hubPose.getX());
-                      // adjust 1 if not accurate enough vvv
-                    if (robotTranslation.getY() > 4) { // if on top half of field
-                      double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
-                      targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
-                    }
-                    else { // if on bottom half of field
-                      double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
-                      targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
-                    }
-                  }
-                  else { // if out of way of hub
-                    targetYaw = Math.PI/2; // actually maybe isn't the best way to do this? idk
-                    // - if the margin of error close to the wall is a big enough issues, will need to test
-                    // also the angle transition from non flat to flat should work just fine
-                  }// TODO: REMEMBER THIS ALL IN RADIANS!!!!
-                  if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
-                    double toHubX = Math.abs(robotX - hubPose.getX());
-                      // adjust 1 if not accurate enough vvv
-                    if (robotTranslation.getY() > 4) { // if on top half of field
-                      double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
-                      targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
-                    }
-                    else { // if on bottom half of field
-                      double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
-                      targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
-                    }
-                  } // last vvv
-                  else { // if out of way of hub
-                    targetYaw = Math.PI/2; // actually maybe isn't the best way to do this? idk
-                    // - if the margin of error close to the wall is a big enough issues, will need to test
-                    // also the angle transition from non flat to flat should work just fine
-                  }
-                  if (3.047 <= lastY && lastY <= 5.052)  {// if in way of hub
-                    double lastToHubX = Math.abs(lastX - hubPose.getX());
-                      // adjust 1 if not accurate enough vvv
-                    if (robotTranslation.getY() > 4) { // if on top half of field
-                      double lastToPassSpotY = Math.abs(hubTopY - lastY) + 1;
-                      lastTargetYaw = Math.PI - Math.atan(lastToPassSpotY / lastToHubX); // pi - because on blue side
-                    }
-                    else { // if on bottom half of field
-                      double lastToPassSpotY = Math.abs(hubBottomY - lastY) + 1;
-                      lastTargetYaw = Math.PI + Math.atan(lastToPassSpotY / lastToHubX); // pi + because on blue side
-                    }
-                  }
-                  else { // if out of way of hub
-                    lastTargetYaw = Math.PI/2; // actually maybe isn't the best way to do this? idk
-                    // - if the margin of error close to the wall is a big enough issues, will need to test
-                    // also the angle transition from non flat to flat should work just fine
-                  }
-                }
-                else if (alliance == Alliance.Red) {
-                  if (3.047 <= robotY && robotY <= 5.052)  {// if in way of hub
-                    double toHubX = Math.abs(robotX - hubPose.getX());
-                      // adjust 1 if not accurate enough vvv
-                    if (robotTranslation.getY() > 4) { // if on top half of field
-                      double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
-                      targetYaw = Math.atan(toPassSpotY / toHubX); // no add/sub because on red side
-                    }
-                    else { // if on bottom half of field
-                      double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
-                      targetYaw = 2*Math.PI - Math.atan(toPassSpotY / toHubX); // 2pi - because on red side
-                    }
-                  }
-                  else { // if out of way of hub
-                    targetYaw = 0.0;
-                  } // last vvv
-                  if (3.047 <= lastY && lastY <= 5.052)  {// if in way of hub
-                    double lastToHubX = Math.abs(lastX - hubPose.getX());
-                      // adjust 1 if not accurate enough vvv
-                    if (robotTranslation.getY() > 4) { // if on top half of field
-                      double toPassSpotY = Math.abs(hubTopY - lastY) + 1;
-                      lastTargetYaw = Math.atan(toPassSpotY / lastToHubX); // no add/sub because on red side
-                    }
-                    else { // if on bottom half of field
-                      double toPassSpotY = Math.abs(hubBottomY - lastY) + 1;
-                      lastTargetYaw = 2*Math.PI - Math.atan(toPassSpotY / lastToHubX); // 2pi - because on red side
-                    }
-                  }
-                  else { // if out of way of hub
-                    lastTargetYaw = 0.0;
-                  }
-                }
-                // next adjust targetYaw for movement direction/delay!!!
-                double yawDif = (movementDirection > 0) 
-                  ? Math.abs(targetYaw - lastTargetYaw)
-                  : -Math.abs(targetYaw - lastTargetYaw);
-                double scaler = 2*Math.PI / yawDif; //gives percent of full circle, PLEASE ADJUST TS IDFK
-                double adjustedYawTarget = targetYaw + yawDif * scaler * ( // the overall speed using 
-                //mr pythags theorem w chassis x and y meters/sec
-                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) 
+      if (robotTranslation.getX() <= 4.634 || robotTranslation.getX() >= 11.893) { // if in AZ
+        double lastTargetYaw = Math.atan2(
+            lastRobotPose.getY() - hubPose.getY(), lastRobotPose.getX() - hubPose.getX());
+        double targetYaw = Math.atan2(
+            robotPose.getY() - hubPose.getY(),
+            robotPose.getX() - hubPose.getX()); // does the subtract order matter?
+        double yawDif = (movementDirection > 0)
+            ? Math.abs(targetYaw - lastTargetYaw)
+            : -Math.abs(targetYaw - lastTargetYaw);
+
+        double sign = (movementDirection > 0) ? -1.0 : 1.0;
+        double yawMod = sign
+                * (yawDif
+                    * ( // the overall speed using mr pythags theorem w chassis x and y
+                    // meters/sec
+                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2)
+                        + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2))))
+            + shotDelay * 0.1; // adjust 0.1!!! idk how large this number needs to be
+        // Convert to field relative speeds & send command
+        ChassisSpeeds speeds = new ChassisSpeeds(
+            drivetrain.getChassisSpeeds().vxMetersPerSecond,
+            drivetrain.getChassisSpeeds().vyMetersPerSecond,
+            angularVelFromAngleProfile(robotOrientation, new Rotation2d(targetYaw + yawMod)));
+        // should this be +yawMod?? review logic idk
+
+        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
+        drivetrain.setGoalVelocity(speeds);
+        // next adjust shooter velocity based on changing distance from hub
+        double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
+        double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
+        // change 0.1!!! i pulled that out of my ass idk what it should actually be
+        // idk if velocity should be involved here, idk if the above distance dif calcs cover
+        // ts??? IDFK
+        double adjustedDist = (new Translation2d(
+                (lastDistDifX * 0.1 + robotTranslation.getX()),
+                (lastDistDifY * 0.1 + robotTranslation.getY())))
+            .getDistance(robotTranslation);
+
+        ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
+        // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how
+        // to run
+        // the shooter command from in here, there's prolly some command keyword that could fix
+        // it but idk
+        // and theoretically it all works perfectly first try with no need to account for
+        // physics or
+        // scale modifiers ^^
+      } else { // if in NZ (so passing) we don't have full field pass i don't think, so that's
+        // not
+        // - important here? idk maybe ask to confirm
+        // make sure you're not passing to the back of the hub
+        double robotX = robotTranslation.getX();
+        double robotY = robotTranslation.getY();
+        double targetYaw = 0.0; // i dont think the possible non initialization due to no alliance
+        double lastTargetYaw = 0.0;
+        double lastX = lastRobotPose.getX();
+        double lastY = lastRobotPose.getY();
+
+        // - really matters here but thought id make a note of it
+        if (alliance == Alliance.Blue) {
+          if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
+            double toHubX = Math.abs(robotX - hubPose.getX());
+            // adjust 1 if not accurate enough vvv
+            if (robotTranslation.getY() > 4) { // if on top half of field
+              double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
+              targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
+            } else { // if on bottom half of field
+              double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
+              targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
+            }
+          } else { // if out of way of hub
+            targetYaw = Math.PI / 2; // actually maybe isn't the best way to do this? idk
+            // - if the margin of error close to the wall is a big enough issues, will need to
+            // test
+            // also the angle transition from non flat to flat should work just fine
+          } // TODO: REMEMBER THIS ALL IN RADIANS!!!!
+          if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
+            double toHubX = Math.abs(robotX - hubPose.getX());
+            // adjust 1 if not accurate enough vvv
+            if (robotTranslation.getY() > 4) { // if on top half of field
+              double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
+              targetYaw = Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
+            } else { // if on bottom half of field
+              double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
+              targetYaw = Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
+            }
+          } // last vvv
+          else { // if out of way of hub
+            targetYaw = Math.PI / 2; // actually maybe isn't the best way to do this? idk
+            // - if the margin of error close to the wall is a big enough issues, will need to
+            // test
+            // also the angle transition from non flat to flat should work just fine
+          }
+          if (3.047 <= lastY && lastY <= 5.052) { // if in way of hub
+            double lastToHubX = Math.abs(lastX - hubPose.getX());
+            // adjust 1 if not accurate enough vvv
+            if (robotTranslation.getY() > 4) { // if on top half of field
+              double lastToPassSpotY = Math.abs(hubTopY - lastY) + 1;
+              lastTargetYaw =
+                  Math.PI - Math.atan(lastToPassSpotY / lastToHubX); // pi - because on blue side
+            } else { // if on bottom half of field
+              double lastToPassSpotY = Math.abs(hubBottomY - lastY) + 1;
+              lastTargetYaw =
+                  Math.PI + Math.atan(lastToPassSpotY / lastToHubX); // pi + because on blue side
+            }
+          } else { // if out of way of hub
+            lastTargetYaw = Math.PI / 2; // actually maybe isn't the best way to do this? idk
+            // - if the margin of error close to the wall is a big enough issues, will need to
+            // test
+            // also the angle transition from non flat to flat should work just fine
+          }
+        } else if (alliance == Alliance.Red) {
+          if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
+            double toHubX = Math.abs(robotX - hubPose.getX());
+            // adjust 1 if not accurate enough vvv
+            if (robotTranslation.getY() > 4) { // if on top half of field
+              double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
+              targetYaw = Math.atan(toPassSpotY / toHubX); // no add/sub because on red side
+            } else { // if on bottom half of field
+              double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
+              targetYaw =
+                  2 * Math.PI - Math.atan(toPassSpotY / toHubX); // 2pi - because on red side
+            }
+          } else { // if out of way of hub
+            targetYaw = 0.0;
+          } // last vvv
+          if (3.047 <= lastY && lastY <= 5.052) { // if in way of hub
+            double lastToHubX = Math.abs(lastX - hubPose.getX());
+            // adjust 1 if not accurate enough vvv
+            if (robotTranslation.getY() > 4) { // if on top half of field
+              double toPassSpotY = Math.abs(hubTopY - lastY) + 1;
+              lastTargetYaw = Math.atan(toPassSpotY / lastToHubX); // no add/sub because on red side
+            } else { // if on bottom half of field
+              double toPassSpotY = Math.abs(hubBottomY - lastY) + 1;
+              lastTargetYaw =
+                  2 * Math.PI - Math.atan(toPassSpotY / lastToHubX); // 2pi - because on red side
+            }
+          } else { // if out of way of hub
+            lastTargetYaw = 0.0;
+          }
+        }
+        // next adjust targetYaw for movement direction/delay!!!
+        double yawDif = (movementDirection > 0)
+            ? Math.abs(targetYaw - lastTargetYaw)
+            : -Math.abs(targetYaw - lastTargetYaw);
+        double scaler = 2 * Math.PI / yawDif; // gives percent of full circle, PLEASE ADJUST TS IDFK
+        double adjustedYawTarget = targetYaw
+            + yawDif
+                * scaler
+                * ( // the overall speed using
+                // mr pythags theorem w chassis x and y meters/sec
+                Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2)
                     + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)));
-                // i completely made all of this up so the outputs need to be measured somewhere;
-                // TODO: add print statements for ts???
-                // System.out.println(scaler, adjustedYawTarget);
-                // please test and adjust all of the scalers!!!
-                // also is this prediction enough or do i need to account for controller input???
-                // i dont KNOW
-                //^^^
-                ChassisSpeeds speeds = new ChassisSpeeds(
-                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                      drivetrain.getChassisSpeeds().vyMetersPerSecond,
-                      angularVelFromAngleProfile(
-                        robotOrientation, new Rotation2d(adjustedYawTarget))); // this should be the target not
-                        // - the offset
+        // i completely made all of this up so the outputs need to be measured somewhere;
+        // TODO: add print statements for ts???
+        // System.out.println(scaler, adjustedYawTarget);
+        // please test and adjust all of the scalers!!!
+        // also is this prediction enough or do i need to account for controller input???
+        // i dont KNOW
+        // ^^^
+        ChassisSpeeds speeds = new ChassisSpeeds(
+            drivetrain.getChassisSpeeds().vxMetersPerSecond,
+            drivetrain.getChassisSpeeds().vyMetersPerSecond,
+            angularVelFromAngleProfile(
+                robotOrientation,
+                new Rotation2d(adjustedYawTarget))); // this should be the target not
+        // - the offset
 
-                  speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
-                  drivetrain.setGoalVelocity(speeds);
-                // shooter; same, but mult needs to be more, idk if this just works or not
-                double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
-                  double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
-                  // change 0.1!!! i pulled that out of my ass idk what it should actually be
-                  // idk if velocity should be involved here, idk if the above distance dif calcs cover ts??? IDFK
-                  double adjustedDist = (new Translation2d((lastDistDifX * 2),(lastDistDifY * 2)))
-                  // PLEASE CHANGE THESE MULTIPLIERS I BEG OF YOU
-                  .getDistance(robotTranslation);
-                  
-                  ShooterSubsystem.shootWhileMoving(shooter,adjustedDist);
-              }
-            });
-        /*.onlyIf(() -> {
-          double x = drivetrain.getPose().getX();
-          return (x > 1.7 && x < 7.7) || (x > 8.4 && x < 14.4);
-        })
-        .finallyDo(() -> drivetrain.resetTranslationWithVision())
-        .until(() -> pathOverBump_overBump);*/
+        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
+        drivetrain.setGoalVelocity(speeds);
+        // shooter; same, but mult needs to be more, idk if this just works or not
+        double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
+        double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
+        // change 0.1!!! i pulled that out of my ass idk what it should actually be
+        // idk if velocity should be involved here, idk if the above distance dif calcs cover
+        // ts??? IDFK
+        double adjustedDist = (new Translation2d(
+                (lastDistDifX * 0.1 + robotTranslation.getX()),
+                (lastDistDifY * 0.1 + robotTranslation.getY())))
+            .getDistance(robotTranslation);
+
+        ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
+      }
+    });
+    /*.onlyIf(() -> {
+      double x = drivetrain.getPose().getX();
+      return (x > 1.7 && x < 7.7) || (x > 8.4 && x < 14.4);
+    })
+    .finallyDo(() -> drivetrain.resetTranslationWithVision())
+    .until(() -> pathOverBump_overBump);*/
   }
 
   private static final DoubleSupplier pathOverBump_VELOCITY =
