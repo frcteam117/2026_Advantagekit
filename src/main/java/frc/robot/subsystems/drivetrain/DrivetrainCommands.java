@@ -560,6 +560,10 @@ public class DrivetrainCommands {
           resetAngleController(drivetrain);
         },
         () -> { // is this in the right place?
+          double chassisVel = ( // the overall speed using
+                    // mr pythags theorem w chassis x and y meters/sec
+                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2)
+                        + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)));
           double robotWidthIn =
               25; // idk which is 25 and which is 29 and i don't think that's w/ bumpers?
           double robotLengthIn = 29; // change these
@@ -612,18 +616,16 @@ public class DrivetrainCommands {
 
             double sign = (movementDirection > 0) ? -1.0 : 1.0;
             double yawMod = sign
-                    * (yawDif
-                        * ( // the overall speed using mr pythags theorem w chassis x and y
-                        // meters/sec
-                        Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2)
-                            + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2))))
-                + shotDelay * 0.1; // adjust 0.1!!! idk how large this number needs to be
+                    * (yawDif * chassisVel)
+                + shotDelay * chassisVel; // adjust 0.1!!! idk how large this number needs to be
             // Convert to field relative speeds & send command
             ChassisSpeeds speeds = new ChassisSpeeds(
                 drivetrain.getChassisSpeeds().vxMetersPerSecond,
                 drivetrain.getChassisSpeeds().vyMetersPerSecond,
                 // use this for movement direction???
-                angularVelFromAngleProfile(robotOrientation, new Rotation2d(targetYaw + yawMod)));
+                angularVelFromAngleProfile(robotOrientation, 
+                new Rotation2d(Math.PI + targetYaw + yawMod))); // +180 bc i thought the robot
+                // was in the other direction
             // should this be +yawMod?? review logic idk
 
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
@@ -635,8 +637,8 @@ public class DrivetrainCommands {
             // idk if velocity should be involved here, idk if the above distance dif calcs cover
             // ts??? IDFK
             double adjustedDist = (new Translation2d(
-                    (lastDistDifX * 0.1 + robotTranslation.getX()),
-                    (lastDistDifY * 0.1 + robotTranslation.getY())))
+                    (lastDistDifX * chassisVel+ robotTranslation.getX()),
+                    (lastDistDifY * chassisVel+ robotTranslation.getY())))
                 .getDistance(robotTranslation);
 
             ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
@@ -669,7 +671,7 @@ public class DrivetrainCommands {
                   targetYaw =
                       Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
                 } else { // if on bottom half of field
-                  double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
+                  double toPassSpotY = Math.abs(hubBottomY - robotY) - 1;
                   targetYaw =
                       Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
                 }
@@ -687,7 +689,7 @@ public class DrivetrainCommands {
                   targetYaw =
                       Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
                 } else { // if on bottom half of field
-                  double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
+                  double toPassSpotY = Math.abs(hubBottomY - robotY) - 1;
                   targetYaw =
                       Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
                 }
@@ -706,7 +708,7 @@ public class DrivetrainCommands {
                   lastTargetYaw = Math.PI
                       - Math.atan(lastToPassSpotY / lastToHubX); // pi - because on blue side
                 } else { // if on bottom half of field
-                  double lastToPassSpotY = Math.abs(hubBottomY - lastY) + 1;
+                  double lastToPassSpotY = Math.abs(hubBottomY - lastY) - 1;
                   lastTargetYaw = Math.PI
                       + Math.atan(lastToPassSpotY / lastToHubX); // pi + because on blue side
                 }
@@ -724,7 +726,7 @@ public class DrivetrainCommands {
                   double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
                   targetYaw = Math.atan(toPassSpotY / toHubX); // no add/sub because on red side
                 } else { // if on bottom half of field
-                  double toPassSpotY = Math.abs(hubBottomY - robotY) + 1;
+                  double toPassSpotY = Math.abs(hubBottomY - robotY) - 1;
                   targetYaw =
                       2 * Math.PI - Math.atan(toPassSpotY / toHubX); // 2pi - because on red side
                 }
@@ -739,7 +741,7 @@ public class DrivetrainCommands {
                   lastTargetYaw =
                       Math.atan(toPassSpotY / lastToHubX); // no add/sub because on red side
                 } else { // if on bottom half of field
-                  double toPassSpotY = Math.abs(hubBottomY - lastY) + 1;
+                  double toPassSpotY = Math.abs(hubBottomY - lastY) - 1;
                   lastTargetYaw = 2 * Math.PI
                       - Math.atan(toPassSpotY / lastToHubX); // 2pi - because on red side
                 }
@@ -756,10 +758,7 @@ public class DrivetrainCommands {
             double adjustedYawTarget = targetYaw
                 + yawDif
                     * scaler
-                    * ( // the overall speed using
-                    // mr pythags theorem w chassis x and y meters/sec
-                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2)
-                        + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)));
+                    * chassisVel; // modify?
             // i completely made all of this up so the outputs need to be measured somewhere;
             // TODO: add print statements for ts???
             // System.out.println(scaler, adjustedYawTarget);
@@ -772,8 +771,8 @@ public class DrivetrainCommands {
                 drivetrain.getChassisSpeeds().vyMetersPerSecond,
                 angularVelFromAngleProfile(
                     robotOrientation,
-                    new Rotation2d(adjustedYawTarget))); // this should be the target not
-            // - the offset
+                    new Rotation2d(Math.PI + adjustedYawTarget))); // this should be the target not
+            // - the offset, also + pi bc i thought the robot was the other way round
 
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
             drivetrain.setGoalVelocity(speeds);
@@ -784,8 +783,8 @@ public class DrivetrainCommands {
             // idk if velocity should be involved here, idk if the above distance dif calcs cover
             // ts??? IDFK
             double adjustedDist = (new Translation2d(
-                    (lastDistDifX * 0.1 + robotTranslation.getX()),
-                    (lastDistDifY * 0.1 + robotTranslation.getY())))
+                    (lastDistDifX * chassisVel+ robotTranslation.getX()),
+                    (lastDistDifY * chassisVel+ robotTranslation.getY())))
                 .getDistance(robotTranslation);
 
             ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
