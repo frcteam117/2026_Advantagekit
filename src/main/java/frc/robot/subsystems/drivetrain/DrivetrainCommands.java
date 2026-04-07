@@ -570,6 +570,7 @@ public class DrivetrainCommands {
           double hubTopY = 4.644;
           double hubBottomY = 3.480;
           Alliance alliance = null;
+          Translation2d passGoal = new Translation2d();
           Translation2d hubPose = new Translation2d();
           // return Commands.none();
           if (DriverStation.getAlliance().isPresent()) {
@@ -608,8 +609,8 @@ public class DrivetrainCommands {
             double lastTargetYaw = Math.atan2(
                 lastRobotPose.getY() - hubPose.getY(), lastRobotPose.getX() - hubPose.getX());
             double targetYaw = Math.atan2(
-                robotPose.getY() - hubPose.getY(),
-                robotPose.getX() - hubPose.getX()); // does the subtract order matter?
+                hubPose.getY() - robotPose.getY(),
+                hubPose.getX() - robotPose.getX()); // does the subtract order matter?
             double yawDif = (movementDirection > 0)
                 ? Math.abs(targetYaw - lastTargetYaw)
                 : -Math.abs(targetYaw - lastTargetYaw);
@@ -639,7 +640,7 @@ public class DrivetrainCommands {
             double adjustedDist = (new Translation2d(
                     (lastDistDifX * chassisVel+ robotTranslation.getX()),
                     (lastDistDifY * chassisVel+ robotTranslation.getY())))
-                .getDistance(robotTranslation);
+                .getDistance(hubPose);
 
             ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
             // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how
@@ -663,6 +664,7 @@ public class DrivetrainCommands {
 
             // - really matters here but thought id make a note of it
             if (alliance == Alliance.Blue) {
+              passGoal = new Translation2d(1.058,3.698);
               if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
                 double toHubX = Math.abs(robotX - hubPose.getX());
                 // adjust 1 if not accurate enough vvv
@@ -719,6 +721,7 @@ public class DrivetrainCommands {
                 // also the angle transition from non flat to flat should work just fine
               }
             } else if (alliance == Alliance.Red) {
+              passGoal = new Translation2d(15.464,4.347);
               if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
                 double toHubX = Math.abs(robotX - hubPose.getX());
                 // adjust 1 if not accurate enough vvv
@@ -785,7 +788,7 @@ public class DrivetrainCommands {
             double adjustedDist = (new Translation2d(
                     (lastDistDifX * chassisVel+ robotTranslation.getX()),
                     (lastDistDifY * chassisVel+ robotTranslation.getY())))
-                .getDistance(robotTranslation);
+                .getDistance(passGoal);
 
             ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
           }
