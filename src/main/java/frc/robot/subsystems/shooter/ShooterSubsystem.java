@@ -236,12 +236,4 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput(PDH_Flywheel.NT_KEY + "/3_OutputVoltage", voltage);
     pdhFlywheel_PrevNextVel_radPs = nextVel_radPs;
   }
-
-  public static void shootWhileMoving(ShooterSubsystem shooter, double adjustedDist) {
-    shooter.setHoodGoalPos(Radians.of(ShooterCommands.hub_metersToHoodRad.get(adjustedDist)));
-    shooter.setRIOFlywheelGoalVel(
-        RadiansPerSecond.of(ShooterCommands.hub_metersToFywheelRadPerSec.get(adjustedDist)));
-    shooter.setPDHFlywheelGoalVel(
-        RadiansPerSecond.of(ShooterCommands.hub_metersToFywheelRadPerSec.get(adjustedDist)));
-  }
 }

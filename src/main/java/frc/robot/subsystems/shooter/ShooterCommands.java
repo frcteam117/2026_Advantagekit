@@ -36,11 +36,31 @@ public class ShooterCommands {
       new TunableDouble(TUNING_NT_KEY + "/Hood_radPs", .2, () -> true);
   // private static final InterpolatingDoubleTreeMap distanceToSpeedLerp =
   //     new InterpolatingDoubleTreeMap();
-
+  public static double adjustedDist_m = 0.0;
   // static {
   //   distanceToSpeedLerp.put(0.0, 0.0);
   //   distanceToSpeedLerp.put(86.8261633902, 350.0);
   // }
+  public static Command shootWhileMoving(ShooterSubsystem shooter) {
+    return shooter.run(() -> {
+      if (!(adjustedDist_m == 0.0)) {
+        shooter.setHoodGoalPos(Radians.of(hub_metersToHoodRad.get(adjustedDist_m)));
+        shooter.setRIOFlywheelGoalVel(
+            RadiansPerSecond.of(hub_metersToFywheelRadPerSec.get(adjustedDist_m)));
+        shooter.setPDHFlywheelGoalVel(
+            RadiansPerSecond.of(hub_metersToFywheelRadPerSec.get(adjustedDist_m)));
+        //
+        System.out.println(hub_metersToFywheelRadPerSec.get(adjustedDist_m) + " "
+            + hub_metersToHoodRad.get(adjustedDist_m));
+      }
+    });
+  }
+
+  public static void updateAdjustedDist(double adjustedDist) {
+    adjustedDist_m = adjustedDist;
+    System.out.println("adjustedDist:" + adjustedDist);
+  }
+
   public static double getFlywheelGoal() {
     return targetSpeed_radPs.getAsDouble();
   }

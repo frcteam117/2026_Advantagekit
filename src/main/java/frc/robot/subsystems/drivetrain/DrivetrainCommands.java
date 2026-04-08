@@ -41,7 +41,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.intake.IntakeConstants;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
 import frc.robot.util.UnitUtil;
@@ -553,7 +553,6 @@ public class DrivetrainCommands {
       shootWhileMoving( // TODO: HEY SO WE ALSO NEED TO COMPENSATE FOR SHOOTER VELOCITY (like if
           // getting farther away overshoot)
           DrivetrainSubsystem drivetrain,
-          ShooterSubsystem shooter,
           DoubleSupplier xSupplier,
           DoubleSupplier ySupplier,
           DoubleSupplier rotXSupplier,
@@ -690,6 +689,7 @@ public class DrivetrainCommands {
           if (!(archTimes.get(toHub) == null)) {
             shotDelay = archTimes.get(toHub);
           }
+          // System.out.println(shotDelay);
           // next need to figure out which direction the robot is moving?? vvv
           // bro atan2 is my bestie fr fr
           double movementDirection = Math.atan2(
@@ -735,7 +735,9 @@ public class DrivetrainCommands {
                     (lastDistDifY * chassisVel + robotTranslation.getY())))
                 .getDistance(hubPose);
 
-            ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
+            // System.out.println(adjustedDist);
+
+            ShooterCommands.updateAdjustedDist(adjustedDist);
             // there's a better way to do this i guarantee it, i just don't know what ^^^^ idk how
             // to run
             // the shooter command from in here, there's prolly some command keyword that could fix
@@ -881,8 +883,8 @@ public class DrivetrainCommands {
                     (lastDistDifX * chassisVel + robotTranslation.getX()),
                     (lastDistDifY * chassisVel + robotTranslation.getY())))
                 .getDistance(passGoal);
-
-            ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
+            // System.out.println(adjustedDist);
+            ShooterCommands.updateAdjustedDist(adjustedDist);
           }
         });
     /*.onlyIf(() -> {

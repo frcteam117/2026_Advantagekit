@@ -292,7 +292,6 @@ public class RobotContainer {
         .circle()
         .whileTrue(DrivetrainCommands.shootWhileMoving(
             drivetrain,
-            shooter,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             () -> -controller.getRightY(),
@@ -302,6 +301,7 @@ public class RobotContainer {
             controller.R1(),
             () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
             () -> false));
+    controller.circle().whileTrue(ShooterCommands.shootWhileMoving(shooter));
 
     // Shooter
     if (ShooterCommands.isTuning) {
