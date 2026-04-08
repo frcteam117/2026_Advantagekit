@@ -288,7 +288,20 @@ public class RobotContainer {
             () -> IndexerCommands.runningBackwards = false));
     controller2.square().whileTrue(IndexerCommands.runForwardCommand(indexer));
     // controller2.circle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
-    controller.circle().whileTrue(DrivetrainCommands.shootWhileMoving(drivetrain, shooter));
+    controller
+        .circle()
+        .whileTrue(DrivetrainCommands.shootWhileMoving(
+            drivetrain,
+            shooter,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightY(),
+            () -> -controller.getRightX(),
+            .2,
+            controller.R3(),
+            controller.R1(),
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+            () -> false));
 
     // Shooter
     if (ShooterCommands.isTuning) {

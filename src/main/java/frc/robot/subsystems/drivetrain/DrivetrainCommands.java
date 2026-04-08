@@ -552,18 +552,110 @@ public class DrivetrainCommands {
   public static Command
       shootWhileMoving( // TODO: HEY SO WE ALSO NEED TO COMPENSATE FOR SHOOTER VELOCITY (like if
           // getting farther away overshoot)
-          DrivetrainSubsystem drivetrain, ShooterSubsystem shooter) {
+          DrivetrainSubsystem drivetrain,
+          ShooterSubsystem shooter,
+          DoubleSupplier xSupplier,
+          DoubleSupplier ySupplier,
+          DoubleSupplier rotXSupplier,
+          DoubleSupplier rotYSupplier,
+          double deadband,
+          BooleanSupplier snapToAngle1,
+          BooleanSupplier snapToAngle2,
+          Supplier<Translation2d> centerOfRotationSupplier,
+          BooleanSupplier driveAssistSupplier) {
     //
     // return Commands.none();
     return drivetrain.startRun(
         () -> {
           resetAngleController(drivetrain);
         },
-        () -> { // is this in the right place?
+        () -> {
+          // drive at angle vvv
+          boolean isFlipped = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+          /*if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
+            joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
+                Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
+            if (snapToAngle2.getAsBoolean()) {
+              double snapToAngleJoystickTarget_deg =
+                  MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
+              for (int i = 0; i < snapToAngle2targetBorders_deg.length; i++) {
+                if (snapToAngleJoystickTarget_deg < snapToAngle2targetBorders_deg[i]) {
+                  joystickDriveAtAngle_rotTarget =
+                      Rotation2d.fromDegrees(snapToAngle2Targets_deg[i]);
+                  break;
+                }
+              }
+            } else if (snapToAngle1.getAsBoolean()) {
+              double snapToAngleJoystickTarget_deg =
+                  MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
+              for (int i = 0; i < snapToAngle1targetBorders_deg.length; i++) {
+                if (snapToAngleJoystickTarget_deg < snapToAngle1targetBorders_deg[i]) {
+                  joystickDriveAtAngle_rotTarget =
+                      Rotation2d.fromDegrees(snapToAngle1Targets_deg[i]);
+                  break;
+                }
+              }
+            }
+          } else {
+            if (snapToAngle1.getAsBoolean()) {
+              joystickDriveAtAngle_rotTarget = MathUtil.isNear(
+                      0,
+                      drivetrain.getPose().getRotation().getRadians(),
+                      Math.PI / 2,
+                      -Math.PI,
+                      Math.PI)
+                  ? Rotation2d.kZero
+                  : Rotation2d.k180deg;
+              joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
+                  isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
+            }
+          }*/
+
+          // Get linear velocity
+          Translation2d linearVelocity =
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+          // Convert to field relative speeds & send command
+          /*ChassisSpeeds speeds = new ChassisSpeeds(
+                linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                angularVelFromAngleProfile(
+                    drivetrain.getPose().getRotation(),
+                    isFlipped
+                        ? joystickDriveAtAngle_rotTarget.plus(Rotation2d.k180deg)
+                        : joystickDriveAtAngle_rotTarget));
+            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                speeds,
+                isFlipped
+                    ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+                    : drivetrain.getPose().getRotation());
+            setGoalVelocity(
+                drivetrain,
+                speeds,
+                centerOfRotationSupplier.get(),
+                driveAssistSupplier.getAsBoolean());
+          })
+          // Reset PID controller when command starts
+          .beforeStarting(() -> {
+            resetAngleController(drivetrain);
+            if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
+              joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
+                  Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
+            } else {
+              joystickDriveAtAngle_rotTarget = drivetrain
+                  .getPose()
+                  .getRotation()
+                  .plus(
+                      DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                          ? Rotation2d.k180deg
+                          : Rotation2d.kZero);
+            }
+          });*/
+          // is this in the right place?
           double chassisVel = ( // the overall speed using
-                    // mr pythags theorem w chassis x and y meters/sec
-                    Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2)
-                        + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)));
+              // mr pythags theorem w chassis x and y meters/sec
+              Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2)
+                  + Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)));
           double robotWidthIn =
               25; // idk which is 25 and which is 29 and i don't think that's w/ bumpers?
           double robotLengthIn = 29; // change these
@@ -606,27 +698,28 @@ public class DrivetrainCommands {
           // next adjust needed yaw
 
           if (robotTranslation.getX() <= 4.634 || robotTranslation.getX() >= 11.893) { // if in AZ
-            double lastTargetYaw = Math.PI + Math.atan2(
-                hubPose.getY() - lastRobotPose.getY(), 
-                hubPose.getX() - lastRobotPose.getX());
-            double targetYaw = Math.PI + Math.atan2(
-                hubPose.getY() - robotPose.getY(),
-                hubPose.getX() - robotPose.getX()); // does the subtract order matter?
+            double lastTargetYaw = Math.PI
+                + Math.atan2(
+                    hubPose.getY() - lastRobotPose.getY(), hubPose.getX() - lastRobotPose.getX());
+            double targetYaw = Math.PI
+                + Math.atan2(
+                    hubPose.getY() - robotPose.getY(),
+                    hubPose.getX() - robotPose.getX()); // does the subtract order matter?
             double yawDif = (movementDirection > 0)
                 ? Math.abs(targetYaw - lastTargetYaw)
                 : -Math.abs(targetYaw - lastTargetYaw);
 
             double sign = (movementDirection > 0) ? -1.0 : 1.0;
-            double yawMod = sign
-                    * (yawDif * chassisVel)
-                + shotDelay * chassisVel * 0.1; // adjust 0.1!!! idk how large this number needs to be
+            double yawMod = sign * (yawDif * chassisVel)
+                + shotDelay
+                    * chassisVel
+                    * 0.1; // adjust 0.1!!! idk how large this number needs to be
             // Convert to field relative speeds & send command
             ChassisSpeeds speeds = new ChassisSpeeds(
-                drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                drivetrain.getChassisSpeeds().vyMetersPerSecond,
+                -linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                -linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 // use this for movement direction???
-                angularVelFromAngleProfile(robotOrientation, 
-                new Rotation2d(targetYaw + yawMod))); 
+                angularVelFromAngleProfile(robotOrientation, new Rotation2d(targetYaw + yawMod)));
             // should this be +yawMod?? review logic idk
 
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
@@ -638,8 +731,8 @@ public class DrivetrainCommands {
             // idk if velocity should be involved here, idk if the above distance dif calcs cover
             // ts??? IDFK
             double adjustedDist = (new Translation2d(
-                    (lastDistDifX * chassisVel+ robotTranslation.getX()),
-                    (lastDistDifY * chassisVel+ robotTranslation.getY())))
+                    (lastDistDifX * chassisVel + robotTranslation.getX()),
+                    (lastDistDifY * chassisVel + robotTranslation.getY())))
                 .getDistance(hubPose);
 
             ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
@@ -664,7 +757,7 @@ public class DrivetrainCommands {
 
             // - really matters here but thought id make a note of it
             if (alliance == Alliance.Blue) {
-              passGoal = new Translation2d(1.058,3.698);
+              passGoal = new Translation2d(1.058, 3.698);
               if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
                 double toHubX = Math.abs(robotX - hubPose.getX());
                 // adjust 1 if not accurate enough vvv
@@ -721,7 +814,7 @@ public class DrivetrainCommands {
                 // also the angle transition from non flat to flat should work just fine
               }
             } else if (alliance == Alliance.Red) {
-              passGoal = new Translation2d(15.464,4.347);
+              passGoal = new Translation2d(15.464, 4.347);
               if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
                 double toHubX = Math.abs(robotX - hubPose.getX());
                 // adjust 1 if not accurate enough vvv
@@ -760,10 +853,7 @@ public class DrivetrainCommands {
                 : -Math.abs(targetYaw - lastTargetYaw);
             double scaler =
                 2 * Math.PI / yawDif; // gives percent of full circle, PLEASE ADJUST TS IDFK
-            double adjustedYawTarget = targetYaw
-                + yawDif
-                    * scaler
-                    * chassisVel; // modify?
+            double adjustedYawTarget = targetYaw + yawDif * scaler * chassisVel; // modify?
             // i completely made all of this up so the outputs need to be measured somewhere;
             // TODO: add print statements for ts???
             // System.out.println(scaler, adjustedYawTarget);
@@ -772,8 +862,8 @@ public class DrivetrainCommands {
             // i dont KNOW
             // ^^^
             ChassisSpeeds speeds = new ChassisSpeeds(
-                drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                drivetrain.getChassisSpeeds().vyMetersPerSecond,
+                -linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                -linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 angularVelFromAngleProfile(
                     robotOrientation,
                     new Rotation2d(adjustedYawTarget))); // this should be the target not
@@ -788,8 +878,8 @@ public class DrivetrainCommands {
             // idk if velocity should be involved here, idk if the above distance dif calcs cover
             // ts??? IDFK
             double adjustedDist = (new Translation2d(
-                    (lastDistDifX * chassisVel+ robotTranslation.getX()),
-                    (lastDistDifY * chassisVel+ robotTranslation.getY())))
+                    (lastDistDifX * chassisVel + robotTranslation.getX()),
+                    (lastDistDifY * chassisVel + robotTranslation.getY())))
                 .getDistance(passGoal);
 
             ShooterSubsystem.shootWhileMoving(shooter, adjustedDist);
