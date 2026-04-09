@@ -708,13 +708,15 @@ public class DrivetrainCommands {
             //
             double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
             double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
-
+            double sign = (movementDirection > 0) ? -1.0 : 1.0;
             double toMidYMult;
             if (robotTranslation.getY() > 0) {
-              toMidYMult = (Math.abs(4 - robotTranslation.getY()) / 4 + 1)
-                  * 8
-                  * (lastDistDifX / 8 * 10 + 1); // 1.5x mult for ex
-            } else { // if y=0 (this would never happen but we're not taking any chances)
+              toMidYMult = (alliance == Alliance.Red)
+                  ? sign
+                  : -sign
+                      * (Math.abs(4 - robotTranslation.getY()) / 4 + 1)
+                      * chassisVel * 1.5; // 1.5x mult for ex.
+            } else { // if y<=0 (this would never happen but we're not taking any chances)
               toMidYMult = 0.00025 + 1;
             }
 
@@ -722,7 +724,6 @@ public class DrivetrainCommands {
                 ? Math.abs(targetYaw - lastTargetYaw) * toMidYMult
                 : -Math.abs(targetYaw - lastTargetYaw) * toMidYMult;
 
-            double sign = (movementDirection > 0) ? -1.0 : 1.0;
             double yawMod = sign * (yawDif * chassisVel * 6)
                 + shotDelay
                     * chassisVel
@@ -737,9 +738,8 @@ public class DrivetrainCommands {
                 // use this for movement direction???
                 (chassisVel > 0)
                     ? angularVelFromAngleProfile(
-                        robotOrientation,
-                        new Rotation2d((targetYaw + yawMod)
-                            * (DrivetrainConstants.Drive.max_mPs / chassisVel + 1)))
+                        robotOrientation, new Rotation2d((targetYaw + yawMod)))
+                    // * (DrivetrainConstants.Drive.max_mPs / chassisVel + 1)))
                     : angularVelFromAngleProfile(
                         robotOrientation, new Rotation2d(targetYaw + yawMod)));
             // should this be +yawMod?? review logic idk
