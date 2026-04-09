@@ -705,19 +705,35 @@ public class DrivetrainCommands {
                 + Math.atan2(
                     hubPose.getY() - robotPose.getY(),
                     hubPose.getX() - robotPose.getX()); // does the subtract order matter?
+            //
+            double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
+            double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
+
+            double toMidYMult;
+            if (robotTranslation.getY() > 0) {
+              toMidYMult = (Math.abs(4 - robotTranslation.getY()) / 4 + 1)
+                  * 4
+                  * (lastDistDifX / 8 * 10 + 1); // 1.5x mult for ex
+            } else { // if y=0 (this would never happen but we're not taking any chances)
+              toMidYMult = 0.00025 + 1;
+            }
+
             double yawDif = (movementDirection > 0)
-                ? Math.abs(targetYaw - lastTargetYaw)
-                : -Math.abs(targetYaw - lastTargetYaw);
+                ? Math.abs(targetYaw - lastTargetYaw) * toMidYMult
+                : -Math.abs(targetYaw - lastTargetYaw) * toMidYMult;
 
             double sign = (movementDirection > 0) ? -1.0 : 1.0;
-            double yawMod = sign * (yawDif * chassisVel)
+            double yawMod = sign * (yawDif * chassisVel * 6)
                 + shotDelay
                     * chassisVel
-                    * 0.1; // adjust 0.1!!! idk how large this number needs to be
+                    * 0.1; // adjust 0.1 & 1.5!!! idk how large this number needs to be
             // Convert to field relative speeds & send command
+            double flipped = (alliance == Alliance.Blue) // negative if blue side
+                ? 1.0
+                : -1.0;
             ChassisSpeeds speeds = new ChassisSpeeds(
-                -linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
-                -linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                flipped * linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                flipped * linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 // use this for movement direction???
                 angularVelFromAngleProfile(robotOrientation, new Rotation2d(targetYaw + yawMod)));
             // should this be +yawMod?? review logic idk
@@ -725,8 +741,6 @@ public class DrivetrainCommands {
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
             drivetrain.setGoalVelocity(speeds);
             // next adjust shooter velocity based on changing distance from hub
-            double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
-            double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
             // change 0.1!!! i pulled that out of my ass idk what it should actually be
             // idk if velocity should be involved here, idk if the above distance dif calcs cover
             // ts??? IDFK
@@ -772,49 +786,13 @@ public class DrivetrainCommands {
                   targetYaw =
                       Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
                 }
+                // System.out.println(targetYaw + " " + toHubX);
               } else { // if out of way of hub
                 targetYaw = Math.PI / 2; // actually maybe isn't the best way to do this? idk
                 // - if the margin of error close to the wall is a big enough issues, will need to
                 // test
                 // also the angle transition from non flat to flat should work just fine
               } // TODO: REMEMBER THIS ALL IN RADIANS!!!!
-              if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
-                double toHubX = Math.abs(robotX - hubPose.getX());
-                // adjust 1 if not accurate enough vvv
-                if (robotTranslation.getY() > 4) { // if on top half of field
-                  double toPassSpotY = Math.abs(hubTopY - robotY) + 1;
-                  targetYaw =
-                      Math.PI - Math.atan(toPassSpotY / toHubX); // pi - because on blue side
-                } else { // if on bottom half of field
-                  double toPassSpotY = Math.abs(hubBottomY - robotY) - 1;
-                  targetYaw =
-                      Math.PI + Math.atan(toPassSpotY / toHubX); // pi + because on blue side
-                }
-              } // last vvv
-              else { // if out of way of hub
-                targetYaw = Math.PI / 2; // actually maybe isn't the best way to do this? idk
-                // - if the margin of error close to the wall is a big enough issues, will need to
-                // test
-                // also the angle transition from non flat to flat should work just fine
-              }
-              if (3.047 <= lastY && lastY <= 5.052) { // if in way of hub
-                double lastToHubX = Math.abs(lastX - hubPose.getX());
-                // adjust 1 if not accurate enough vvv
-                if (robotTranslation.getY() > 4) { // if on top half of field
-                  double lastToPassSpotY = Math.abs(hubTopY - lastY) + 1;
-                  lastTargetYaw = Math.PI
-                      - Math.atan(lastToPassSpotY / lastToHubX); // pi - because on blue side
-                } else { // if on bottom half of field
-                  double lastToPassSpotY = Math.abs(hubBottomY - lastY) - 1;
-                  lastTargetYaw = Math.PI
-                      + Math.atan(lastToPassSpotY / lastToHubX); // pi + because on blue side
-                }
-              } else { // if out of way of hub
-                lastTargetYaw = Math.PI / 2; // actually maybe isn't the best way to do this? idk
-                // - if the margin of error close to the wall is a big enough issues, will need to
-                // test
-                // also the angle transition from non flat to flat should work just fine
-              }
             } else if (alliance == Alliance.Red) {
               passGoal = new Translation2d(15.464, 4.347);
               if (3.047 <= robotY && robotY <= 5.052) { // if in way of hub
@@ -831,21 +809,6 @@ public class DrivetrainCommands {
               } else { // if out of way of hub
                 targetYaw = 0.0;
               } // last vvv
-              if (3.047 <= lastY && lastY <= 5.052) { // if in way of hub
-                double lastToHubX = Math.abs(lastX - hubPose.getX());
-                // adjust 1 if not accurate enough vvv
-                if (robotTranslation.getY() > 4) { // if on top half of field
-                  double toPassSpotY = Math.abs(hubTopY - lastY) + 1;
-                  lastTargetYaw =
-                      Math.atan(toPassSpotY / lastToHubX); // no add/sub because on red side
-                } else { // if on bottom half of field
-                  double toPassSpotY = Math.abs(hubBottomY - lastY) - 1;
-                  lastTargetYaw = 2 * Math.PI
-                      - Math.atan(toPassSpotY / lastToHubX); // 2pi - because on red side
-                }
-              } else { // if out of way of hub
-                lastTargetYaw = 0.0;
-              }
             }
             lastTargetYaw += Math.PI; // bc i thought the robot was the other way round
             targetYaw += Math.PI; // same reason ^^^
@@ -863,9 +826,12 @@ public class DrivetrainCommands {
             // also is this prediction enough or do i need to account for controller input???
             // i dont KNOW
             // ^^^
+            double flipped = (alliance == Alliance.Blue) // negative if blue side
+                ? 1.0
+                : -1.0;
             ChassisSpeeds speeds = new ChassisSpeeds(
-                -linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
-                -linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                flipped * linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                flipped * linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 angularVelFromAngleProfile(
                     robotOrientation,
                     new Rotation2d(adjustedYawTarget))); // this should be the target not
