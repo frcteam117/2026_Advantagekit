@@ -712,7 +712,7 @@ public class DrivetrainCommands {
             double toMidYMult;
             if (robotTranslation.getY() > 0) {
               toMidYMult = (Math.abs(4 - robotTranslation.getY()) / 4 + 1)
-                  * 4
+                  * 8
                   * (lastDistDifX / 8 * 10 + 1); // 1.5x mult for ex
             } else { // if y=0 (this would never happen but we're not taking any chances)
               toMidYMult = 0.00025 + 1;
@@ -735,7 +735,13 @@ public class DrivetrainCommands {
                 flipped * linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 flipped * linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 // use this for movement direction???
-                angularVelFromAngleProfile(robotOrientation, new Rotation2d(targetYaw + yawMod)));
+                (chassisVel > 0)
+                    ? angularVelFromAngleProfile(
+                        robotOrientation,
+                        new Rotation2d((targetYaw + yawMod)
+                            * (DrivetrainConstants.Drive.max_mPs / chassisVel + 1)))
+                    : angularVelFromAngleProfile(
+                        robotOrientation, new Rotation2d(targetYaw + yawMod)));
             // should this be +yawMod?? review logic idk
 
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
@@ -834,7 +840,9 @@ public class DrivetrainCommands {
                 flipped * linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 angularVelFromAngleProfile(
                     robotOrientation,
-                    new Rotation2d(adjustedYawTarget))); // this should be the target not
+                    new Rotation2d(
+                        adjustedYawTarget))); // ? -> *chassisVel))); // this should be the target
+            // not
             // - the offset
 
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
