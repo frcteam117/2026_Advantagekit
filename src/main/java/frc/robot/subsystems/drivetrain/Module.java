@@ -13,17 +13,38 @@
 
 package frc.robot.subsystems.drivetrain;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radian;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.subsystems.drivetrain.DrivetrainConstants.*;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.LinearVelocityUnit;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.PerUnit;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.subsystems.drivetrain.ModuleIO.ModuleIOInputs;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
+  private static final Measure<? extends PerUnit<DistanceUnit, AngleUnit>>
+      drivePosConversionFactor =
+          ((PerUnit<DistanceUnit, AngleUnit>) Meters.per(Radian)).of(Drive.radius_m);
+  private static final Measure<? extends PerUnit<LinearVelocityUnit, AngularVelocityUnit>>
+      driveVelConversionFactor = ((PerUnit<LinearVelocityUnit, AngularVelocityUnit>)
+              MetersPerSecond.per(RadiansPerSecond))
+          .of(Drive.radius_m);
+
   private final ModuleIO io;
   private final ModuleIOInputs inputs = new ModuleIOInputs();
   private final int index;
@@ -48,11 +69,11 @@ public class Module {
     Logger.processInputs(DrivetrainConstants.NAME + "/Module" + Integer.toString(index), inputs);
 
     // Calculate positions for odometry
-    int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
+    int sampleCount = inputs.odometry.timestamps.length; // All signals are sampled together
     odometryPositions = new SwerveModulePosition[sampleCount];
     for (int i = 0; i < sampleCount; i++) {
-      double positionMeters = inputs.odometryDrivePositions_rad[i] * Drive.radius_m;
-      double angle_rad = inputs.odometryAzimuthPositions_rad[i];
+      double positionMeters = inputs.odometry.drivePositions_rad[i] * Drive.radius_m;
+      double angle_rad = inputs.odometry.azimuthPositions_rad[i];
       odometryPositions[i] =
           new SwerveModulePosition(positionMeters, Rotation2d.fromRadians(angle_rad));
     }
@@ -77,11 +98,11 @@ public class Module {
   public void setNextState(SwerveModuleState state, double acceleration_mPs2) {
     // Optimize velocity setpoint
     double acceleration_radPs2 =
-        Math.cos(state.angle.getRadians() - inputs.azimuthAbsolutePosition_State.rad())
+        Math.cos(state.angle.getRadians() - inputs.absoluteEncoder.heading.getRadians())
             * acceleration_mPs2
             / Drive.radius_m;
-    state.optimize(Rotation2d.fromRadians(inputs.azimuthAbsolutePosition_State.rad()));
-    state.cosineScale(Rotation2d.fromRadians(inputs.azimuthAbsolutePosition_State.rad()));
+    state.optimize(Rotation2d.fromRadians(inputs.absoluteEncoder.heading.getRadians()));
+    state.cosineScale(Rotation2d.fromRadians(inputs.absoluteEncoder.heading.getRadians()));
 
     // Apply setpoints
     io.setNextDriveState(state.speedMetersPerSecond / Drive.radius_m, acceleration_radPs2);
@@ -112,28 +133,28 @@ public class Module {
   }
 
   /** Returns the current azimuth angle of the module in radians. */
-  public double getAngle() {
-    return inputs.azimuthAbsolutePosition_State.rad();
+  public Rotation2d getHeading() {
+    return inputs.absoluteEncoder.heading;
   }
 
   /** Returns the current drive position of the module in meters. */
-  public double getPositionMeters() {
-    return inputs.driveMotor_State.rad() * Drive.radius_m;
+  public Distance getDrivePosition() {
+    return inputs.drive.position.timesConversionFactor(drivePosConversionFactor);
   }
 
   /** Returns the current drive velocity of the module in meters per second. */
-  public double getVelocityMetersPerSec() {
-    return inputs.driveMotor_State.radPs() * Drive.radius_m;
+  public LinearVelocity getDriveVelocity() {
+    return inputs.drive.velocity.timesConversionFactor(driveVelConversionFactor);
   }
 
   /** Returns the module position (azimuth angle and drive position). */
   public SwerveModulePosition getPosition() {
-    return new SwerveModulePosition(getPositionMeters(), Rotation2d.fromRadians(getAngle()));
+    return new SwerveModulePosition(getDrivePosition(), getHeading());
   }
 
   /** Returns the module state (azimuth angle and drive velocity). */
   public SwerveModuleState getState() {
-    return new SwerveModuleState(getVelocityMetersPerSec(), Rotation2d.fromRadians(getAngle()));
+    return new SwerveModuleState(getDriveVelocity(), getHeading());
   }
 
   /** Returns the module positions received this cycle. */
@@ -143,17 +164,17 @@ public class Module {
 
   /** Returns the timestamps of the samples received this cycle. */
   public double[] getOdometryTimestamps() {
-    return inputs.odometryTimestamps;
+    return inputs.odometry.timestamps;
   }
 
   /** Returns the module position in radians. */
   public double getWheelRadiusCharacterizationPosition() {
-    return inputs.driveMotor_State.rad();
+    return inputs.drive.position.in(Radians);
   }
 
   /** Returns the module velocity in rad/sec. */
   public double getFFCharacterizationVelocity() {
-    return inputs.driveMotor_State.radPs();
+    return inputs.drive.velocity.in(RadiansPerSecond);
   }
 
   public ModuleIOInputs getInputs() {

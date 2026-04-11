@@ -21,6 +21,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -134,7 +135,8 @@ public class RobotContainer {
 
     SysIdUtil.registerController(controller);
 
-    NamedCommands.registerCommand("IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false));
+    NamedCommands.registerCommand(
+        "IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false, () -> true));
     NamedCommands.registerCommand("PivotDown", IntakeCommands.lowerIntake(intake));
     NamedCommands.registerCommand("AutoOverBump", DrivetrainCommands.pathOverBump(drivetrain));
     // NamedCommands.registerCommand("ResetPose", DrivetrainSubsystem.resetPoseWithVision());
@@ -251,12 +253,16 @@ public class RobotContainer {
             drivetrain,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
+            // () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())
+            () -> new Translation2d(-.2, 0)));
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
-    controller.circle().whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1()));
-    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
+    controller
+        .circle()
+        .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
     controller
         .button(10)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5)), intake));
@@ -300,13 +306,14 @@ public class RobotContainer {
     // should this be whileTrue? vvv
     controller
         .R2()
-        .whileTrue(RobotCommands.autoAim(
-                drivetrain,
-                shooter,
-                indexer,
-                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-                () -> true)
-            .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
+            .andThen(RobotCommands.autoAim(
+                    drivetrain,
+                    shooter,
+                    indexer,
+                    () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                    () -> true)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)));
     if (ShooterCommands.isTuning) {
       controller2
           .R2()

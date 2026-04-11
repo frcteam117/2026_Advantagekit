@@ -377,8 +377,9 @@ public class DrivetrainCommands {
           double omegaFF = robotCenteredTarget.cross(targetVelSupplier
                   .get()
                   .minus(new Translation2d(
-                      drivetrain.getChassisSpeeds().vxMetersPerSecond,
-                      drivetrain.getChassisSpeeds().vyMetersPerSecond)))
+                          drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                          drivetrain.getChassisSpeeds().vyMetersPerSecond)
+                      .rotateBy(drivetrain.getPose().getRotation())))
               / (robotCenteredTarget.getNorm() * robotCenteredTarget.getNorm());
 
           // Convert to field relative speeds & send command
@@ -741,12 +742,12 @@ public class DrivetrainCommands {
             < joystickDrive_velTolerance) {
       drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
     } else {
-      Translation2d linearVelFromRotation = centerOfRotation
-          .unaryMinus()
-          .rotateBy(Rotation2d.kCCW_90deg)
-          .times(speeds.omegaRadiansPerSecond);
-      speeds.vxMetersPerSecond += linearVelFromRotation.getX();
-      speeds.vyMetersPerSecond += linearVelFromRotation.getY();
+      Translation2d discretizedLinVelFromAngVel = centerOfRotation
+          .minus(centerOfRotation.rotateBy(
+              Rotation2d.fromRadians(speeds.omegaRadiansPerSecond * RobotConstants.CODE_PERIOD_s)))
+          .div(RobotConstants.CODE_PERIOD_s);
+      speeds.vxMetersPerSecond += discretizedLinVelFromAngVel.getX();
+      speeds.vyMetersPerSecond += discretizedLinVelFromAngVel.getY();
       // if (driveAssist) {
       //   final Translation2d robotVelocity =
       //       new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);

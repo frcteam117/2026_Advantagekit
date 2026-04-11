@@ -13,14 +13,18 @@
 
 package frc.robot.subsystems.drivetrain;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import com.thethriftybot.devices.ThriftyNova;
 import com.thethriftybot.devices.ThriftyNova.MotorType;
+import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.AbsEncoder;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.util.UnitUtil;
-import frc.robot.util.components.bases.ComponentStates.AbsoluteEncoder_State;
-import frc.robot.util.components.bases.ComponentStates.Motor_State;
 import java.util.Queue;
 
 /**
@@ -31,6 +35,7 @@ public class ModuleIONova implements ModuleIO {
   // Hardware objects
   private final ThriftyNova driveNova;
   private final ThriftyNova azimuthNova;
+  private final int moduleIndex;
 
   // Queue inputs from odometry thread
   private final Queue<Double> timestampQueue;
@@ -42,6 +47,7 @@ public class ModuleIONova implements ModuleIO {
   private double currentAzimuthPosition_rad = 0.0;
 
   public ModuleIONova(int module) {
+    moduleIndex = module;
     driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
 
@@ -108,36 +114,40 @@ public class ModuleIONova implements ModuleIO {
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     // Update drive inputs
-    inputs.driveMotor_State = new Motor_State(
-        UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction),
-        UnitUtil.rotTorad(driveNova.getVelocityInternal() / Drive.reduction),
-        driveNova.getAppliedVoltage(),
-        driveNova.getStatorCurrent(),
-        driveNova.getSupplyCurrent());
-    // inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
+    inputs.drive.position.mut_replace(
+        UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction), Radians);
+    inputs.drive.velocity.mut_replace(
+        UnitUtil.rotTorad(driveNova.getVelocityInternal() / Drive.reduction), RadiansPerSecond);
+    inputs.drive.outputVoltage.mut_replace(driveNova.getAppliedVoltage(), Volts);
+    inputs.drive.inputVoltage.mut_replace(driveNova.getVoltage(), Volts);
+    inputs.drive.outputCurrent.mut_replace(driveNova.getStatorCurrent(), Amps);
+    inputs.drive.inputCurrent.mut_replace(driveNova.getSupplyCurrent(), Amps);
+    inputs.drive.errors = driveNova.errors.toArray(ThriftyNova.Error[]::new);
+    inputs.drive.connected = true;
 
     // Update azimuth inputs
-    // sparkStickyFault = false;
-    inputs.azimuthAbsolutePosition_State = new AbsoluteEncoder_State(
-        UnitUtil.rotTorad(1 - azimuthNova.getPositionAbs())); // - zeroRotation_rad;
+    inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - azimuthNova.getPositionAbs());
     currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - azimuthNova.getPositionAbs());
+    inputs.absoluteEncoder.connected = true;
 
-    inputs.azimuthMotor_State = new Motor_State(
-        UnitUtil.rotTorad(
-            azimuthNova.getPositionInternal() / Azimuth.reduction), // - zeroRotation_rad,
-        UnitUtil.rotTorad(azimuthNova.getVelocityInternal() / Azimuth.reduction),
-        azimuthNova.getAppliedVoltage(),
-        azimuthNova.getStatorCurrent(),
-        azimuthNova.getSupplyCurrent());
-    // inputs.azimuthConnected = azimuthConnectedDebounce.calculate(!sparkStickyFault);
+    inputs.azimuth.position.mut_replace(
+        UnitUtil.rotTorad(azimuthNova.getPositionInternal() / Azimuth.reduction), Radians);
+    inputs.azimuth.velocity.mut_replace(
+        UnitUtil.rotTorad(azimuthNova.getVelocityInternal() / Azimuth.reduction), RadiansPerSecond);
+    inputs.azimuth.outputVoltage.mut_replace(azimuthNova.getAppliedVoltage(), Volts);
+    inputs.azimuth.inputVoltage.mut_replace(azimuthNova.getVoltage(), Volts);
+    inputs.azimuth.outputCurrent.mut_replace(azimuthNova.getStatorCurrent(), Amps);
+    inputs.azimuth.inputCurrent.mut_replace(azimuthNova.getSupplyCurrent(), Amps);
+    inputs.azimuth.errors = azimuthNova.errors.toArray(ThriftyNova.Error[]::new);
+    inputs.azimuth.connected = true;
 
     // Update odometry inputs
-    inputs.odometryTimestamps =
+    inputs.odometry.timestamps =
         timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryDrivePositions_rad = drivePositionQueue.stream()
+    inputs.odometry.drivePositions_rad = drivePositionQueue.stream()
         .mapToDouble((Double value) -> UnitUtil.rotTorad(value / Drive.reduction))
         .toArray();
-    inputs.odometryAzimuthPositions_rad = azimuthPositionQueue.stream()
+    inputs.odometry.azimuthPositions_rad = azimuthPositionQueue.stream()
         .mapToDouble((Double value) -> UnitUtil.rotTorad(value)) // - zeroRotation_rad)
         .toArray();
     timestampQueue.clear();
@@ -154,12 +164,6 @@ public class ModuleIONova implements ModuleIO {
   public void setAzimuthVoltage(double voltage_V) {
     azimuthNova.setVoltage(voltage_V);
   }
-
-  //   @Override
-  //   public void setNextDriveVelocity(double nextVelocity_radPs) {
-  //     driveNova.setVelocityInternal(nextVelocity_radPs * Drive.reduction / 60);
-  //     // Drive.realFF.calculateWithVelocities(currentDriveVelocity_radPs, nextVelocity_radPs));
-  //   }
 
   @Override
   public void setNextDriveState(double nextVelocity_radPs, double nextAcceleration_radPs2) {
