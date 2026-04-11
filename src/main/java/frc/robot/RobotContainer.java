@@ -21,6 +21,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -252,7 +253,8 @@ public class RobotContainer {
             drivetrain,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
+            // () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())
+            () -> new Translation2d(-.2, 0)));
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));

@@ -20,7 +20,7 @@ import edu.wpi.first.math.controller.PIDController;
 import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
-import frc.robot.util.nova.NovaUtil;
+import frc.robot.util.SimUtil;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
@@ -85,7 +85,7 @@ public class ModuleIOSim implements ModuleIO {
     inputs.absoluteEncoder.connected = true;
 
     // Update odometry inputs
-    inputs.odometry.timestamps = NovaUtil.getSimulationOdometryTimeStamps();
+    inputs.odometry.timestamps = SimUtil.getSimulationOdometryTimeStamps();
     inputs.odometry.drivePositions_rad = Arrays.stream(
             moduleSimulation.getCachedDriveWheelFinalPositions())
         .mapToDouble(angle -> angle.in(Radians))
