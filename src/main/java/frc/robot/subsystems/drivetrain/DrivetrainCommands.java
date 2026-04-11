@@ -732,6 +732,16 @@ public class DrivetrainCommands {
             double flipped = (alliance == Alliance.Blue) // negative if blue side
                 ? 1.0
                 : -1.0;
+            // really stupid fix:
+            if (yawMod < 0) {
+              if (yawMod < -Math.PI / 5) {
+                yawMod = -Math.PI / 5;
+              }
+            } else if (yawMod > 0) {
+              if (yawMod > Math.PI / 5) {
+                yawMod = Math.PI / 5;
+              }
+            }
             ChassisSpeeds speeds = new ChassisSpeeds(
                 flipped * linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 flipped * linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
