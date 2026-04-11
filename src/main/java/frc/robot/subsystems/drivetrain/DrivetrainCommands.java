@@ -708,19 +708,18 @@ public class DrivetrainCommands {
             //
             double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
             double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
-            double sign = (movementDirection > 0) ? -1.0 : 1.0;
+            double sign = (alliance == Alliance.Red) ? 1.0 : -1.0;
+
+            // sign = (alliance == Alliance.Red) ? sign : -sign;
             double toMidYMult;
             if (robotTranslation.getY() > 0) {
-              toMidYMult = (alliance == Alliance.Red)
-                  ? sign
-                  : -sign
-                      * (Math.abs(4 - robotTranslation.getY()) / 4 + 1)
-                      * chassisVel
-                      * 1.5; // 1.5x mult for ex.
+              toMidYMult = (Math.abs(4 - robotTranslation.getY()) / 4 + 1)
+                  * chassisVel
+                  * 1.5; // 1.5x mult for ex.
             } else { // if y<=0 (this would never happen but we're not taking any chances)
               toMidYMult = 0.00025 + 1;
             }
-
+            // TODO: fix problem where robot overcorrects yaw too much while collecting from corners
             double yawDif = (movementDirection > 0)
                 ? Math.abs(targetYaw - lastTargetYaw) * toMidYMult
                 : -Math.abs(targetYaw - lastTargetYaw) * toMidYMult;
@@ -728,7 +727,7 @@ public class DrivetrainCommands {
             double yawMod = sign * (yawDif * chassisVel * 6)
                 + shotDelay
                     * chassisVel
-                    * 0.1; // adjust 0.1 & 1.5!!! idk how large this number needs to be
+                    * 0.1; // adjust 0.1 & 6!!! idk how large these numbers needs to be
             // Convert to field relative speeds & send command
             double flipped = (alliance == Alliance.Blue) // negative if blue side
                 ? 1.0
