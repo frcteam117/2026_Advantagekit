@@ -255,7 +255,7 @@ public class DrivetrainConstants {
     // public static final double[] zeroRotations_rad =
     //     new double[] {4.26675, 2.99095, 2.40695, 3.355259};
 
-    /** FL, FR, BL, BR. Rotation of each absolute encoder when the wheels face forward */
+    /** FL, FR, BL, BR. Negative rotation of each absolute encoder when the wheels face forward */
     public static final int[] zeroRotations_ticks =
         new int[] {1837 + 2048 - 2157, 2048 - 1529 - 1994, 2273 + 2048 - 3930, 1339 + 2048 - 1751};
   }

@@ -249,7 +249,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
     controllingHeadings = true;
     for (int i = 0; i < 4; i++) {
       if (!MathUtil.isNear(
-          modules[i].getAngle(), goalHeadings[i].getRadians(), Math.PI / 2, -Math.PI, Math.PI)) {
+          modules[i].getHeading().getRadians(),
+          goalHeadings[i].getRadians(),
+          Math.PI / 2,
+          -Math.PI,
+          Math.PI)) {
         goalHeadings[i] = goalHeadings[i].rotateBy(Rotation2d.k180deg);
       }
       this.goalHeadings[i] = goalHeadings[i];

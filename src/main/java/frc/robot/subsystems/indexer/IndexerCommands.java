@@ -12,7 +12,7 @@ public class IndexerCommands {
   private static final DoubleSupplier forwardSpeed =
       new TunableDouble(TUNING_NT_KEY + "/ForwardSpeed", 1);
   private static final DoubleSupplier reverseSpeed =
-      new TunableDouble(TUNING_NT_KEY + "/ReverseSpeed", -0.5);
+      new TunableDouble(TUNING_NT_KEY + "/ReverseSpeed", -0.9);
   public static boolean runningBackwards = false;
 
   public static Command stop(IndexerSubsystem indexer) {

@@ -136,7 +136,8 @@ public class RobotContainer {
 
     SysIdUtil.registerController(controller);
 
-    NamedCommands.registerCommand("IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false));
+    NamedCommands.registerCommand(
+        "IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false, () -> true));
     NamedCommands.registerCommand("PivotDown", IntakeCommands.lowerIntake(intake));
     NamedCommands.registerCommand("AutoOverBump", DrivetrainCommands.pathOverBump(drivetrain));
     // NamedCommands.registerCommand("ResetPose", DrivetrainSubsystem.resetPoseWithVision());
@@ -257,11 +258,19 @@ public class RobotContainer {
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
+<<<<<<< HEAD
     /*controller
     .circle()
     .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
         .alongWith(IndexerCommands.runBackwardCommand(indexer)));*/
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
+=======
+    controller
+        .circle()
+        .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
+>>>>>>> path-over-bump
     controller
         .button(10)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5)), intake));
