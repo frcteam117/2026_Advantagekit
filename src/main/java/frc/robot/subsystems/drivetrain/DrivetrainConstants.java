@@ -118,15 +118,19 @@ public class DrivetrainConstants {
 
   public
   DrivetrainConstants() { // is a interpolation table right for this??? i feel like if we have
-    // enough
-    // - data it should be as accurate as anything, right?
+    // enough data it should be as accurate as anything, right?
     // k = distance, v = time to get thru hub threshold (**like until it disappears basically**)
-    // these will all be outdated once we replace the flywheels, oh well :(((
-    // TODO: REPLACE THIS DATA WHEN THE WHEELS ARE REPLACED!!!!
-    ballIntoHubTimes.put(2.29839758199, 1.205);
-    ballIntoHubTimes.put(3.38639966802, 1.425);
-    ballIntoHubTimes.put(3.90687834425, 1.605);
-    ballIntoHubTimes.put(14.0, 2.0);
+    // in order of distance, comments = number in data list (1st, 2nd, 3rd filmed etc)
+    ballIntoHubTimes.put(1.308, 1.02); //2
+    ballIntoHubTimes.put(1.784, 1.13); //1 ==
+    ballIntoHubTimes.put(2.366, 1.26); //3
+    ballIntoHubTimes.put(2.844, 1.33); //4 ==
+
+
+
+
+
+
   }
 
   public static class Drive {
