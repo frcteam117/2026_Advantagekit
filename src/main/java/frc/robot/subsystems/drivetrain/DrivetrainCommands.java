@@ -706,6 +706,9 @@ public class DrivetrainCommands {
                     hubPose.getY() - robotPose.getY(),
                     hubPose.getX() - robotPose.getX()); // does the subtract order matter?
             //
+            double flipped = (alliance == Alliance.Blue) // negative if blue side
+                ? 1.0
+                : -1.0;
             double lastDistDifX = curRobotPose.getX() - lastRobotPose.getX();
             double lastDistDifY = curRobotPose.getY() - lastRobotPose.getY();
             double sign = (alliance == Alliance.Red) ? 1.0 : -1.0;
@@ -729,9 +732,7 @@ public class DrivetrainCommands {
                     * chassisVel
                     * 0.1; // adjust 0.1 & 6!!! idk how large these numbers needs to be
             // Convert to field relative speeds & send command
-            double flipped = (alliance == Alliance.Blue) // negative if blue side
-                ? 1.0
-                : -1.0;
+
             // really stupid fix:
             if (yawMod < 0) {
               if (yawMod < -Math.PI / 5) {
@@ -748,10 +749,12 @@ public class DrivetrainCommands {
                 // use this for movement direction???
                 (chassisVel > 0)
                     ? angularVelFromAngleProfile(
-                        robotOrientation, new Rotation2d((targetYaw + yawMod)))
+                        robotOrientation,
+                        new Rotation2d((targetYaw + yawMod + Math.PI / 4 * -flipped)))
                     // * (DrivetrainConstants.Drive.max_mPs / chassisVel + 1)))
                     : angularVelFromAngleProfile(
-                        robotOrientation, new Rotation2d(targetYaw + yawMod)));
+                        robotOrientation,
+                        new Rotation2d(targetYaw + yawMod + Math.PI / 4 * -flipped)));
             // should this be +yawMod?? review logic idk
 
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
@@ -839,8 +842,8 @@ public class DrivetrainCommands {
                 lastTargetYaw = 0.0;
               } // last vvv
             }
-            lastTargetYaw += Math.PI; // bc i thought the robot was the other way round
-            targetYaw += Math.PI; // same reason ^^^
+            // lastTargetYaw += Math.PI; // bc i thought the robot was the other way round
+            // targetYaw += Math.PI; // same reason ^^^
             // next adjust targetYaw for movement direction/delay!!!
             double yawDif = (movementDirection > 0)
                 ? Math.abs(targetYaw - lastTargetYaw)
@@ -867,8 +870,8 @@ public class DrivetrainCommands {
                 flipped * linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 angularVelFromAngleProfile(
                     robotOrientation,
-                    new Rotation2d(
-                        adjustedYawTarget))); // ? -> *chassisVel))); // this should be the target
+                    new Rotation2d(adjustedYawTarget
+                        + Math.PI))); // ? -> *chassisVel))); // this should be the target
             // not
             // - the offset
 

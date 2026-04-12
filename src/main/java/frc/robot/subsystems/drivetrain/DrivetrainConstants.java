@@ -121,16 +121,10 @@ public class DrivetrainConstants {
     // enough data it should be as accurate as anything, right?
     // k = distance, v = time to get thru hub threshold (**like until it disappears basically**)
     // in order of distance, comments = number in data list (1st, 2nd, 3rd filmed etc)
-    ballIntoHubTimes.put(1.308, 1.02); //2
-    ballIntoHubTimes.put(1.784, 1.13); //1 ==
-    ballIntoHubTimes.put(2.366, 1.26); //3
-    ballIntoHubTimes.put(2.844, 1.33); //4 ==
-
-
-
-
-
-
+    ballIntoHubTimes.put(1.308, 1.02); // 2
+    ballIntoHubTimes.put(1.784, 1.13); // 1 ==
+    ballIntoHubTimes.put(2.366, 1.26); // 3
+    ballIntoHubTimes.put(2.844, 1.33); // 4 ==
   }
 
   public static class Drive {
@@ -257,6 +251,6 @@ public class DrivetrainConstants {
 
     /** FL, FR, BL, BR. Negative rotation of each absolute encoder when the wheels face forward */
     public static final int[] zeroRotations_ticks =
-        new int[] {1837 + 2048 - 2157, 2048 - 1529 - 1994, 2273 + 2048 - 3930, 1339 + 2048 - 1751};
+        new int[] {1837 - 2157, 2048 - 1529 - 1994 - 2048, 2273 - 3930, 1339 - 1751};
   }
 }
