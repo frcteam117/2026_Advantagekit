@@ -258,19 +258,15 @@ public class RobotContainer {
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
-<<<<<<< HEAD
     /*controller
     .circle()
     .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
         .alongWith(IndexerCommands.runBackwardCommand(indexer)));*/
-    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1()));
-=======
-    controller
+    /*controller
         .circle()
         .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
-            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));*/
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
->>>>>>> path-over-bump
     controller
         .button(10)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5)), intake));
