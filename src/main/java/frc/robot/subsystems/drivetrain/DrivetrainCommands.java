@@ -571,85 +571,10 @@ public class DrivetrainCommands {
         () -> {
           // drive at angle vvv
           boolean isFlipped = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
-          /*if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
-            joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
-                Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
-            if (snapToAngle2.getAsBoolean()) {
-              double snapToAngleJoystickTarget_deg =
-                  MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
-              for (int i = 0; i < snapToAngle2targetBorders_deg.length; i++) {
-                if (snapToAngleJoystickTarget_deg < snapToAngle2targetBorders_deg[i]) {
-                  joystickDriveAtAngle_rotTarget =
-                      Rotation2d.fromDegrees(snapToAngle2Targets_deg[i]);
-                  break;
-                }
-              }
-            } else if (snapToAngle1.getAsBoolean()) {
-              double snapToAngleJoystickTarget_deg =
-                  MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
-              for (int i = 0; i < snapToAngle1targetBorders_deg.length; i++) {
-                if (snapToAngleJoystickTarget_deg < snapToAngle1targetBorders_deg[i]) {
-                  joystickDriveAtAngle_rotTarget =
-                      Rotation2d.fromDegrees(snapToAngle1Targets_deg[i]);
-                  break;
-                }
-              }
-            }
-          } else {
-            if (snapToAngle1.getAsBoolean()) {
-              joystickDriveAtAngle_rotTarget = MathUtil.isNear(
-                      0,
-                      drivetrain.getPose().getRotation().getRadians(),
-                      Math.PI / 2,
-                      -Math.PI,
-                      Math.PI)
-                  ? Rotation2d.kZero
-                  : Rotation2d.k180deg;
-              joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
-                  isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
-            }
-          }*/
 
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-
-          // Convert to field relative speeds & send command
-          /*ChassisSpeeds speeds = new ChassisSpeeds(
-                linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
-                linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
-                angularVelFromAngleProfile(
-                    drivetrain.getPose().getRotation(),
-                    isFlipped
-                        ? joystickDriveAtAngle_rotTarget.plus(Rotation2d.k180deg)
-                        : joystickDriveAtAngle_rotTarget));
-            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                speeds,
-                isFlipped
-                    ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
-                    : drivetrain.getPose().getRotation());
-            setGoalVelocity(
-                drivetrain,
-                speeds,
-                centerOfRotationSupplier.get(),
-                driveAssistSupplier.getAsBoolean());
-          })
-          // Reset PID controller when command starts
-          .beforeStarting(() -> {
-            resetAngleController(drivetrain);
-            if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
-              joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
-                  Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
-            } else {
-              joystickDriveAtAngle_rotTarget = drivetrain
-                  .getPose()
-                  .getRotation()
-                  .plus(
-                      DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                          ? Rotation2d.k180deg
-                          : Rotation2d.kZero);
-            }
-          });*/
           // is this in the right place?
           double chassisVel = ( // the overall speed using
               // mr pythags theorem w chassis x and y meters/sec
@@ -743,7 +668,40 @@ public class DrivetrainCommands {
                 yawMod = Math.PI / 5;
               }
             }
+
+            Translation2d robotCenteredTarget =
+                hubPose.minus(robotTranslation);
+
+            double omegaFF = robotCenteredTarget.cross(new Translation2d(
+                        drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                        drivetrain.getChassisSpeeds().vyMetersPerSecond)
+                    .rotateBy(drivetrain.getPose().getRotation())
+                    .times(1.25)
+                    .minus(new Translation2d(
+                        drivetrain.getChassisSpeeds().vxMetersPerSecond,
+                        drivetrain.getChassisSpeeds().vyMetersPerSecond)))
+                / (robotCenteredTarget.getNorm() * robotCenteredTarget.getNorm());
+
+            // Convert to field relative speeds & send command
             ChassisSpeeds speeds = new ChassisSpeeds(
+                linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+                angularVelFromAngleProfile(
+                    drivetrain.getPose().getRotation().plus(Rotation2d.k180deg),
+                    new TrapezoidProfile.State(
+                        robotCenteredTarget.getAngle().getRadians(), omegaFF)));
+
+            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                speeds,
+                isFlipped
+                    ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+                    : drivetrain.getPose().getRotation());
+            setGoalVelocity(
+                drivetrain,
+                speeds,
+                centerOfRotationSupplier.get(),
+                driveAssistSupplier.getAsBoolean());
+            /*ChassisSpeeds speeds = new ChassisSpeeds(
                 flipped * linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 flipped * linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
                 // use this for movement direction???
@@ -755,7 +713,7 @@ public class DrivetrainCommands {
                     : angularVelFromAngleProfile(
                         robotOrientation,
                         new Rotation2d(targetYaw + yawMod + Math.PI / 4 * -flipped)));
-            // should this be +yawMod?? review logic idk
+            // should this be +yawMod?? review logic idk*/
 
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
             drivetrain.setGoalVelocity(speeds);
@@ -782,6 +740,7 @@ public class DrivetrainCommands {
             // not
             // - important here? idk maybe ask to confirm
             // make sure you're not passing to the back of the hub
+            // TODO: UPDATE LIKE U DID FOR AZ SIDE!!!!
             double robotX = robotTranslation.getX();
             double robotY = robotTranslation.getY();
             double targetYaw =
