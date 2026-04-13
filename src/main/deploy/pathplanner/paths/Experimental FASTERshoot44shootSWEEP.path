@@ -12,7 +12,7 @@
         "y": 0.25314353499406816
       },
       "isLocked": false,
-      "linkedName": "EndLunge"
+      "linkedName": null
     },
     {
       "anchor": {
@@ -78,7 +78,7 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.19182948490231147,
+      "waypointRelativePos": 0.16341030195381925,
       "rotationDegrees": 180.0
     },
     {
@@ -90,7 +90,7 @@
       "rotationDegrees": 110.0
     },
     {
-      "waypointRelativePos": 2.4937833037300137,
+      "waypointRelativePos": 2.479573712255774,
       "rotationDegrees": -72.46525912417539
     },
     {
@@ -108,8 +108,8 @@
       "minWaypointRelativePos": 1.3138357705286847,
       "maxWaypointRelativePos": 2.0427446569178898,
       "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 1.5,
+        "maxVelocity": 1.7,
+        "maxAcceleration": 1.7,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -118,10 +118,17 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "flywheel_acc_1",
+      "waypointRelativePos": 3.491563554555679,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 5.0,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -129,7 +136,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -122.72968542059314
+    "rotation": -108.0
   },
   "reversed": false,
   "folder": null,
@@ -137,5 +144,5 @@
     "velocity": 0,
     "rotation": -108.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
