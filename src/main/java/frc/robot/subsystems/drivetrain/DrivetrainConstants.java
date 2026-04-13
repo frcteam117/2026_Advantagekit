@@ -118,7 +118,7 @@ public class DrivetrainConstants {
 
     // physical properties
     public static final double radius_m =
-        0.050; // 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
+        0.049; // 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
     public static final double cof = 1.2;
     /** FL, FR, BL, BR */
     public static final int[] canIds = new int[] {7, 1, 5, 3};
@@ -236,6 +236,6 @@ public class DrivetrainConstants {
 
     /** FL, FR, BL, BR. Negative rotation of each absolute encoder when the wheels face forward */
     public static final int[] zeroRotations_ticks =
-        new int[] {1837 + 2048 - 2157, 2048 - 1529 - 1994, 2273 + 2048 - 3930, 1339 + 2048 - 1751};
+        new int[] {1837 - 2157, -1529 - 1994, 2273 - 3930, 1339 - 1751};
   }
 }
