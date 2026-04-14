@@ -23,16 +23,22 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Depot grab 1"
+                  "pathName": "LeftDoubleDip1"
                 }
               }
             ]
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBump"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Leave Depot"
+            "pathName": "LeftDoubleDip2"
           }
         },
         {
@@ -40,24 +46,18 @@
           "data": {
             "commands": [
               {
-                "type": "wait",
-                "data": {
-                  "waitTime": 3.0
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "alignAndShoot"
                 }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.5
+                }
               }
             ]
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.0
           }
         },
         {
@@ -79,10 +79,22 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Depot trench"
+                  "pathName": "LeftDoubleDip3"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftDoubleDip4"
           }
         },
         {
@@ -98,16 +110,10 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.0
+                  "waitTime": 3.5
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Middle park or grab"
           }
         }
       ]
