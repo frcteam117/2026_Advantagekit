@@ -61,11 +61,12 @@ public class ShooterSubsystem extends SubsystemBase {
       hood_FF = new SimpleMotorFeedforward(0.1, 6.7, .25, RobotConstants.CODE_PERIOD_s);
       // RIO Flywheel
       rioFlywheel_PID = new PIDController(0.006, 0, 0, RobotConstants.CODE_PERIOD_s);
-      rioFlywheel_FF = new SimpleMotorFeedforward(.14, .0177, 0.002, RobotConstants.CODE_PERIOD_s);
+      rioFlywheel_FF =
+          new SimpleMotorFeedforward(0.23, 0.01774, 0.0013, RobotConstants.CODE_PERIOD_s);
       // PDH Flywheel
       pdhFlywheel_PID = new PIDController(0.006, 0, 0, RobotConstants.CODE_PERIOD_s);
       pdhFlywheel_FF =
-          new SimpleMotorFeedforward(0.142, 0.0175, 0.002, RobotConstants.CODE_PERIOD_s);
+          new SimpleMotorFeedforward(0.132, 0.01705, 0.0013, RobotConstants.CODE_PERIOD_s);
     } else {
       // Hood
       hood_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);

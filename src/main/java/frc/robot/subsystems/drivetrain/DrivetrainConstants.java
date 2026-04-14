@@ -118,7 +118,7 @@ public class DrivetrainConstants {
 
     // physical properties
     public static final double radius_m =
-        0.050; // 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
+        0.049; // 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
     public static final double cof = 1.2;
     /** FL, FR, BL, BR */
     public static final int[] canIds = new int[] {7, 1, 5, 3};

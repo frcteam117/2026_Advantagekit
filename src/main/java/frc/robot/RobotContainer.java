@@ -244,7 +244,7 @@ public class RobotContainer {
         .2,
         controller.R3(),
         controller.R1(),
-        () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+        () -> new Translation2d(),
         () -> false));
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
     controller
