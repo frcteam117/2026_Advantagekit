@@ -161,7 +161,9 @@ public class ShooterCommands {
     hub_autoAimUsedValuesList.add(true);
     hub_autoAimUsedValuesList.add(true);
     // new
-    // hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
 
     hub_autoAimDistancesList.add(1.78377858);
     hub_autoAimDistancesList.add(1.307805649);
@@ -179,7 +181,7 @@ public class ShooterCommands {
     // new
     hub_autoAimFlywheelVelsList.add(365.0);
     hub_autoAimFlywheelVelsList.add(387.0);
-    hub_autoAimFlywheelVelsList.add(400.0);
+    hub_autoAimFlywheelVelsList.add(403.0);
 
     hub_autoAimHoodPosesList.add(0.000420749);
     hub_autoAimHoodPosesList.add(0.000420749);
