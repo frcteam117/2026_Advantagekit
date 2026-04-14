@@ -1,0 +1,105 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.4257954545454545,
+        "y": 7.291954545454546
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.992909090909091,
+        "y": 7.384715909090909
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.77,
+        "y": 6.704465909090909
+      },
+      "prevControl": {
+        "x": 0.7596931818181819,
+        "y": 7.652693181818181
+      },
+      "nextControl": {
+        "x": 0.7772850070478213,
+        "y": 6.034245260691358
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.77,
+        "y": 5.550102272727272
+      },
+      "prevControl": {
+        "x": 0.7769431818181816,
+        "y": 5.869613636363637
+      },
+      "nextControl": {
+        "x": 0.7592145487635981,
+        "y": 5.053777342426243
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.4984204545454543,
+        "y": 5.127522727272727
+      },
+      "prevControl": {
+        "x": 1.1050396453968518,
+        "y": 5.173839062638215
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Argos Depot End"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 2.3962264150943398,
+      "rotationDegrees": -135.0
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.6624775583482936,
+      "maxWaypointRelativePos": 2.4614003590664284,
+      "constraints": {
+        "maxVelocity": 1.0,
+        "maxAcceleration": 1.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 152.0
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0.0,
+    "rotation": -135.0
+  },
+  "useDefaultConstraints": true
+}
