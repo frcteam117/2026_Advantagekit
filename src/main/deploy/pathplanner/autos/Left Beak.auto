@@ -23,7 +23,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "TopLungeBeak"
+                  "pathName": "Left Beak 1"
                 }
               }
             ]
@@ -38,7 +38,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "TopBeakShoot"
+            "pathName": "Left Beak 2"
           }
         },
         {
@@ -54,7 +54,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 5.0
+                  "waitTime": 3.5
                 }
               }
             ]
@@ -79,7 +79,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "SweepTopBeak"
+                  "pathName": "Left Beak 3"
                 }
               }
             ]
@@ -94,7 +94,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "TopBeakShoot"
+            "pathName": "Left Beak 4"
           }
         },
         {
@@ -110,7 +110,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 5.0
+                  "waitTime": 3.5
                 }
               }
             ]
