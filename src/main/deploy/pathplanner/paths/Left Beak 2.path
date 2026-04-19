@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "flywheel_acc_1",
+      "name": "flywheel_acc_2",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": 1.0,
       "command": null
