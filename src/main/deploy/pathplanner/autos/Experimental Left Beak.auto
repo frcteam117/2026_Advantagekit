@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "PivotDown"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -23,10 +17,22 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Depot then Middle 1"
+                  "pathName": "Experimental Left Beak 1"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpWithFlywheelRev"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Beak 2"
           }
         },
         {
@@ -49,12 +55,6 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 0
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -73,7 +73,38 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Depot then Middle 2"
+                  "pathName": "Left Beak 3"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpWithFlywheelRev"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Beak 4"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "alignAndShoot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.5
                 }
               }
             ]

@@ -31,7 +31,8 @@ public class ShooterCommands {
   public static final boolean isTuning = false;
   private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
   private static final DoubleSupplier targetSpeed_radPs =
-      new TunableDouble(TUNING_NT_KEY + "/Flywheel_radPs", 471, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/Flywheel_radPs", 320, () -> true);
+  //Change if flywheel accelerates too much during auto
   private static final DoubleSupplier targetHoodSpeed_radPs =
       new TunableDouble(TUNING_NT_KEY + "/Hood_radPs", .2, () -> true);
   // private static final InterpolatingDoubleTreeMap distanceToSpeedLerp =
