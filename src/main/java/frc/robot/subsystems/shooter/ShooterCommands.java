@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -32,7 +33,7 @@ public class ShooterCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
   private static final DoubleSupplier targetSpeed_radPs =
       new TunableDouble(TUNING_NT_KEY + "/Flywheel_radPs", 320, () -> true);
-  //Change if flywheel accelerates too much during auto
+  // Change if flywheel accelerates too much during auto
   private static final DoubleSupplier targetHoodSpeed_radPs =
       new TunableDouble(TUNING_NT_KEY + "/Hood_radPs", .2, () -> true);
   // private static final InterpolatingDoubleTreeMap distanceToSpeedLerp =
@@ -307,6 +308,27 @@ public class ShooterCommands {
             flywheel_autoAimVel.in(RadiansPerSecond),
             shooter.getPDHFlywheelVel().in(RadiansPerSecond),
             maxAllowableErrorRadPS.getAsDouble()));
+  }
+
+  public static boolean isPassingReady(ShooterSubsystem shooter) {
+    double batteryMult = 1 / (RobotController.getBatteryVoltage() / 13.0);
+    if (batteryMult > 1.35) {
+      batteryMult = 1.35;
+    }
+    ;
+    double scalar = 1.25 * batteryMult;
+    return isReadyDebouncer.calculate(MathUtil.isNear(
+            hood_goalPos.in(Radians),
+            shooter.getHoodPos().in(Radians),
+            maxAllowableErrorRad.getAsDouble())
+        && MathUtil.isNear(
+            flywheel_autoAimVel.in(RadiansPerSecond),
+            shooter.getRIOFlywheelVel().in(RadiansPerSecond),
+            maxAllowableErrorRadPS.getAsDouble() * scalar)
+        && MathUtil.isNear(
+            flywheel_autoAimVel.in(RadiansPerSecond),
+            shooter.getPDHFlywheelVel().in(RadiansPerSecond),
+            maxAllowableErrorRadPS.getAsDouble() * scalar));
   }
 
   public static Command stopAndZeroHood(ShooterSubsystem shooter) {
