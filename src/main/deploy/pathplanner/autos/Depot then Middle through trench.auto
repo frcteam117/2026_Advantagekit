@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.5
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -29,22 +23,10 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "6238 Auto 1 Trench Variant"
+                  "pathName": "Depot then Middle 1"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBump"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "6328 Auto 2"
           }
         },
         {
@@ -67,6 +49,12 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 0
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
@@ -85,7 +73,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "6238 Auto 3"
+                  "pathName": "Depot then Middle 2"
                 }
               }
             ]
