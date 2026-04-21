@@ -111,8 +111,7 @@ public class RobotCommands {
                       () -> getTarget(drivetrain.getPose())
                           .minus(new Translation2d(
                                   drivetrain.getChassisSpeeds().vxMetersPerSecond
-                                  // + -0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond
-                                  ,
+                                      + -0.4 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond,
                                   drivetrain.getChassisSpeeds().vyMetersPerSecond)
                               .rotateBy(drivetrain.getPose().getRotation())
                               .times(1.25)),
@@ -121,12 +120,13 @@ public class RobotCommands {
                       () -> false),
                   IndexerCommands.conditionalRunForward(
                       indexer,
-                      () -> shootWhenReady.getAsBoolean() && ShooterCommands.isAutoAimReady(shooter)
+                      () -> shootWhenReady.getAsBoolean() && ShooterCommands.isPassingReady(shooter)
+
                       // && DrivetrainCommands.isAutoAimReady(drivetrain)
                       ),
                   Commands.run(
                       () -> IntakeCommands.shooting =
-                          shootWhenReady.getAsBoolean() && ShooterCommands.isAutoAimReady(shooter)
+                          shootWhenReady.getAsBoolean() && ShooterCommands.isPassingReady(shooter)
                       // && DrivetrainCommands.isAutoAimReady(drivetrain)
                       ))
               .beforeStarting(() -> isAutoShooting = true)
