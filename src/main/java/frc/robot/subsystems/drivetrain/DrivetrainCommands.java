@@ -604,7 +604,7 @@ public class DrivetrainCommands {
                   angularVelFromAngleProfile(robotOrientation, pathOverBump_angleTarget));
 
               speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
-              drivetrain.setGoalVelocity(speeds);
+              drivetrain.setGoalVelocity(speeds, new Translation2d());
             })
         .onlyIf(() -> {
           double x = drivetrain.getPose().getX();
@@ -631,7 +631,7 @@ public class DrivetrainCommands {
             Commands.run(
                 () -> {
                   double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
-                  drive.setGoalVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                  drive.setGoalVelocity(new ChassisSpeeds(0.0, 0.0, speed), new Translation2d());
                 },
                 drive)),
 
@@ -742,12 +742,12 @@ public class DrivetrainCommands {
     //         < joystickDrive_velTolerance) {
     // drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
     // } else {
-    Translation2d discretizedLinVelFromAngVel = centerOfRotation
-        .minus(centerOfRotation.rotateBy(
-            Rotation2d.fromRadians(speeds.omegaRadiansPerSecond * RobotConstants.CODE_PERIOD_s)))
-        .div(RobotConstants.CODE_PERIOD_s);
-    speeds.vxMetersPerSecond += discretizedLinVelFromAngVel.getX();
-    speeds.vyMetersPerSecond += discretizedLinVelFromAngVel.getY();
+    // Translation2d discretizedLinVelFromAngVel = centerOfRotation
+    //     .minus(centerOfRotation.rotateBy(
+    //         Rotation2d.fromRadians(speeds.omegaRadiansPerSecond * RobotConstants.CODE_PERIOD_s)))
+    //     .div(RobotConstants.CODE_PERIOD_s);
+    // speeds.vxMetersPerSecond += discretizedLinVelFromAngVel.getX();
+    // speeds.vyMetersPerSecond += discretizedLinVelFromAngVel.getY();
     // if (driveAssist) {
     //   final Translation2d robotVelocity =
     //       new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
@@ -818,7 +818,7 @@ public class DrivetrainCommands {
     // speeds.times(1 / scaleFactor);
     final double tempPrevRobotOmega = speeds.omegaRadiansPerSecond;
     prevRobotOmega = tempPrevRobotOmega;
-    drivetrain.setGoalVelocity(speeds);
+    drivetrain.setGoalVelocity(speeds, centerOfRotation);
     // }
   }
 
