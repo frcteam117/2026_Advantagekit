@@ -34,6 +34,10 @@ public class RobotCommands {
   private static final Translation2d redRPassingTarget = new Translation2d(13.1, 2);
   private static final Translation2d blueLPassingTarget = new Translation2d(3, 6.6);
   private static final Translation2d blueRPassingTarget = new Translation2d(3, 1.5);
+  private static final Translation2d redLOppAZPassingTarget = new Translation2d(9.6, 6.1);
+  private static final Translation2d redROppAZPassingTarget = new Translation2d(9.6, 2);
+  private static final Translation2d blueLOppAZPassingTarget = new Translation2d(6.5, 6.6);
+  private static final Translation2d blueROppAZPassingTarget = new Translation2d(6.5, 1.5);
 
   public static Command autoAim(
       DrivetrainSubsystem drivetrain,
@@ -199,10 +203,18 @@ public class RobotCommands {
     boolean isBlueAlliance = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
     boolean isPassing = // false;
         isBlueAlliance ? robotPose.getX() > 6.2 : robotPose.getX() < 9.9;
+    boolean inOppAZ = isBlueAlliance ? robotPose.getX() > 12.55 : robotPose.getX() < 4;
     Translation2d target = isPassing
-        ? (robotPose.getY() < 4.05
+        ? ( inOppAZ
+            ?
+            (robotPose.getY() < 4.05
             ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)
             : (isBlueAlliance ? blueLPassingTarget : redLPassingTarget))
+            //
+            :
+            (robotPose.getY() < 4.05
+            ? (isBlueAlliance ? blueROppAZPassingTarget : redROppAZPassingTarget)
+            : (isBlueAlliance ? blueLOppAZPassingTarget : redLOppAZPassingTarget)))
         : (isBlueAlliance ? blueHub : redHub);
     Logger.recordOutput(
         "Commands/alliance",
