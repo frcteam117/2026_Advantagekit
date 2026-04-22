@@ -22,6 +22,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -264,18 +265,9 @@ public class RobotContainer {
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
     controller
-        .circle()
-        .whileTrue(RobotCommands.shootOnTheMove(
-            drivetrain,
-            shooter,
-            indexer,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> true));
-    /*controller
     .circle()
     .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
-        .alongWith(IndexerCommands.runBackwardCommand(indexer)));*/
+        .alongWith(IndexerCommands.runBackwardCommand(indexer)));
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
     controller
         .button(10)
@@ -321,7 +313,16 @@ public class RobotContainer {
     controller
         .R2()
         .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
-            .andThen(RobotCommands.autoAim(
+            .andThen((drivetrain.getPose().getX() < 12.55 && drivetrain.getPose().getX() > 4) 
+                    ? RobotCommands.shootOnTheMove(
+                    drivetrain,
+                    shooter,
+                    indexer,
+                    () -> -controller.getLeftY(),
+                    () -> -controller.getLeftX(),
+                    () -> true)
+                    :
+                    RobotCommands.autoAim(
                     drivetrain,
                     shooter,
                     indexer,
