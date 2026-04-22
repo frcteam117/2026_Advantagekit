@@ -90,6 +90,8 @@ public class RobotCommands {
           boolean isPassing = isBlueAlliance
               ? drivetrain.getPose().getX() > 4.7
               : drivetrain.getPose().getX() < 11.4;
+          double toMidYMult = 1 / (4 - Math.abs(drivetrain.getPose().getY()) + 0.00001);
+          double mult = 1.25;
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter,
@@ -111,10 +113,13 @@ public class RobotCommands {
                       () -> getTarget(drivetrain.getPose())
                           .minus(new Translation2d(
                                   drivetrain.getChassisSpeeds().vxMetersPerSecond
-                                      + -0.4 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond,
+                                      + -0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond,
                                   drivetrain.getChassisSpeeds().vyMetersPerSecond)
                               .rotateBy(drivetrain.getPose().getRotation())
-                              .times(1.25)),
+                              .times((Math.abs(toMidYMult) > mult
+                                      ? toMidYMult > 0 ? mult : -mult
+                                      : toMidYMult)
+                                  * (isBlueAlliance ? -1.0 : 1.0))),
                       () -> new Translation2d(),
                       () -> new Translation2d(-0, 0),
                       () -> false),

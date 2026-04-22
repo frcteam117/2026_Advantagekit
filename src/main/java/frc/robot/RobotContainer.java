@@ -139,8 +139,10 @@ public class RobotContainer {
         "IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false, () -> true));
     NamedCommands.registerCommand("PivotDown", IntakeCommands.lowerIntake(intake));
     NamedCommands.registerCommand("AutoOverBump", DrivetrainCommands.pathOverBump(drivetrain));
-    NamedCommands.registerCommand("AutoOverBumpWithFlywheelRev",
-        DrivetrainCommands.pathOverBump(drivetrain).deadlineWith(ShooterCommands.runForward(shooter)));
+    NamedCommands.registerCommand(
+        "AutoOverBumpWithFlywheelRev",
+        DrivetrainCommands.pathOverBump(drivetrain)
+            .deadlineWith(ShooterCommands.runForward(shooter)));
     // NamedCommands.registerCommand("ResetPose", DrivetrainSubsystem.resetPoseWithVision());
     NamedCommands.registerCommand(
         "alignAndShoot",
@@ -159,8 +161,7 @@ public class RobotContainer {
         Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stopAndZeroHood(shooter)));
     NamedCommands.registerCommand(
         "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
-    NamedCommands.registerCommand(
-        "flywheel_acc_2", ShooterCommands.runForward(shooter));
+    NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -264,8 +265,17 @@ public class RobotContainer {
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
     controller
         .circle()
-        .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
-            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+        .whileTrue(RobotCommands.shootOnTheMove(
+            drivetrain,
+            shooter,
+            indexer,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> true));
+    /*controller
+    .circle()
+    .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
+        .alongWith(IndexerCommands.runBackwardCommand(indexer)));*/
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
     controller
         .button(10)
