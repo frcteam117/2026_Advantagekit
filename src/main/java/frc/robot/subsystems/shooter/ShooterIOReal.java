@@ -59,6 +59,8 @@ public class ShooterIOReal implements ShooterIO {
     inputs.pdhFlywheel_Vel.mut_replace(
         pdhFlywheel_Encoder.getVelocity() * 2 * Math.PI / (PDH_Flywheel.REDUCTION * 60),
         RadiansPerSecond);
+    inputs.rioFlywheel_AppliedOutput = rioFlywheel_Leader.getAppliedOutput();
+    inputs.pdhFlywheel_AppliedOutput = pdhFlywheel_Leader.getAppliedOutput();
   }
 
   @Override

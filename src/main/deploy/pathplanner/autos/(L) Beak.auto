@@ -5,19 +5,25 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "PivotDown"
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
               {
-                "type": "path",
-                "data": {
-                  "pathName": "TB1"
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "IntakeDeploy"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "(L) Beak 1"
                 }
               }
             ]
@@ -26,13 +32,13 @@
         {
           "type": "named",
           "data": {
-            "name": "AutoOverBump"
+            "name": "AutoOverBumpWithFlywheelRev"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "TB2"
+            "pathName": "(L) Beak 2"
           }
         },
         {
@@ -59,9 +65,9 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "TB3"
+                  "name": "stopFlywheel"
                 }
               },
               {
@@ -71,9 +77,40 @@
                 }
               },
               {
+                "type": "path",
+                "data": {
+                  "pathName": "(L) Beak 3"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpWithFlywheelRev"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(L) Beak 4"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
                 "type": "named",
                 "data": {
-                  "name": "stopFlywheel"
+                  "name": "alignAndShoot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.5
                 }
               }
             ]

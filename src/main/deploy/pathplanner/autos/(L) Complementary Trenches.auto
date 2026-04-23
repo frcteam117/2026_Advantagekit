@@ -23,7 +23,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Complementary Trenches 1"
+                  "pathName": "(L) Complementary Trenches 1"
                 }
               }
             ]
@@ -32,7 +32,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Complementary Trenches 2"
+            "pathName": "(L) Complementary Trenches 2"
           }
         },
         {
@@ -73,7 +73,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Complementary Trenches 3"
+                  "pathName": "(L) Complementary Trenches 3"
                 }
               }
             ]

@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "race",
           "data": {
-            "name": "PivotDown"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "PivotDown"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.3
+                }
+              }
+            ]
           }
         },
         {
@@ -23,7 +36,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Left Beak 1"
+                  "pathName": "(L) Popcorn Auto 1"
                 }
               }
             ]
@@ -32,13 +45,13 @@
         {
           "type": "named",
           "data": {
-            "name": "AutoOverBumpWithFlywheelRev"
+            "name": "AutoOverBump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Left Beak 2"
+            "pathName": "(L) Popcorn Auto 2"
           }
         },
         {
@@ -79,38 +92,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Left Beak 3"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBumpWithFlywheelRev"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Beak 4"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "alignAndShoot"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 3.5
+                  "pathName": "(L) Popcorn Auto 3"
                 }
               }
             ]
