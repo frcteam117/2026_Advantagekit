@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
@@ -15,6 +16,8 @@ public interface ShooterIO {
     public final MutAngularVelocity hood_Vel = RadiansPerSecond.mutable(0);
     public final MutAngularVelocity rioFlywheel_Vel = RadiansPerSecond.mutable(0);
     public final MutAngularVelocity pdhFlywheel_Vel = RadiansPerSecond.mutable(0);
+    public double rioFlywheel_AppliedOutput = 0;
+    public double pdhFlywheel_AppliedOutput = 0;
 
     @Override
     public void toLog(LogTable table) {
@@ -24,6 +27,8 @@ public interface ShooterIO {
           "RioFlywheel_Vel", rioFlywheel_Vel.magnitude(), rioFlywheel_Vel.unit().name());
       table.put(
           "PdhFlywheel_Vel", pdhFlywheel_Vel.magnitude(), pdhFlywheel_Vel.unit().name());
+      table.put("RioFlywheel_AppliedOutput", rioFlywheel_AppliedOutput, Volts.name());
+      table.put("PdhFlywheel_AppliedOutput", pdhFlywheel_AppliedOutput, Volts.name());
     }
 
     @Override
@@ -32,6 +37,8 @@ public interface ShooterIO {
       hood_Vel.mut_setMagnitude(table.get("Hood_Vel", hood_Vel.magnitude()));
       rioFlywheel_Vel.mut_setMagnitude(table.get("RioFlywheel_Vel", rioFlywheel_Vel.magnitude()));
       pdhFlywheel_Vel.mut_setMagnitude(table.get("PdhFlywheel_Vel", pdhFlywheel_Vel.magnitude()));
+      rioFlywheel_AppliedOutput = table.get("RioFlywheel_AppliedOutput", rioFlywheel_AppliedOutput);
+      rioFlywheel_AppliedOutput = table.get("PdhFlywheel_AppliedOutput", pdhFlywheel_AppliedOutput);
     }
   }
 

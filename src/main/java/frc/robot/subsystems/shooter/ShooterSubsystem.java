@@ -132,6 +132,14 @@ public class ShooterSubsystem extends SubsystemBase {
     return inputs.pdhFlywheel_Vel;
   }
 
+  public double getPDHFlywheelAppliedOutput() {
+    return inputs.pdhFlywheel_AppliedOutput;
+  }
+
+  public double getRIOFlywheelAppliedOutput() {
+    return inputs.rioFlywheel_AppliedOutput;
+  }
+
   // Hood
 
   public void setHoodVoltage(Voltage voltage) {

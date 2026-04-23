@@ -267,7 +267,11 @@ public class RobotContainer {
         .circle()
         .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
             .alongWith(IndexerCommands.runBackwardCommand(indexer)));
-    controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
+    controller
+        .L2()
+        .whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false))
+        .whileTrue(IndexerCommands.intakingAgitation(indexer)
+            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
     controller
         .button(10)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5)), intake));
@@ -313,12 +317,12 @@ public class RobotContainer {
         .R2()
         .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
             .andThen(RobotCommands.autoAim(
-                    drivetrain,
-                    shooter,
-                    indexer,
-                    () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-                    () -> true)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)));
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true))
+            .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
     if (ShooterCommands.isTuning) {
       controller2
           .R2()
