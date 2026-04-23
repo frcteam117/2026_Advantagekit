@@ -3,57 +3,57 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.921238636363636,
-        "y": 7.4465568181818185
+        "x": 4.31061684460261,
+        "y": 7.408007117437722
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.796595492289443,
-        "y": 7.483321470937129
-      },
-      "isLocked": false,
-      "linkedName": "Argos Trench Setup"
-    },
-    {
-      "anchor": {
-        "x": 7.8577272727272724,
-        "y": 7.240420454545455
-      },
-      "prevControl": {
-        "x": 7.672204545454546,
-        "y": 7.642386363636364
-      },
-      "nextControl": {
-        "x": 8.080865111143298,
-        "y": 6.756955137977395
+        "x": 5.849181494661923,
+        "y": 7.494080664294188
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.8577272727272724,
-        "y": 4.035
+        "x": 7.710521945432978,
+        "y": 6.665622775800712
       },
       "prevControl": {
-        "x": 8.020425116091264,
-        "y": 4.224814150591325
+        "x": 7.710521945432978,
+        "y": 7.169927632184518
       },
       "nextControl": {
-        "x": 7.6722045454545444,
-        "y": 3.8185568181818184
+        "x": 7.710521945432978,
+        "y": 6.095385527876631
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.2042348754448415,
-        "y": 4.035
+        "x": 7.710521945432978,
+        "y": 5.3048
       },
       "prevControl": {
-        "x": 6.626814420899387,
-        "y": 4.024693181818182
+        "x": 7.785836298932384,
+        "y": 5.82124128113879
+      },
+      "nextControl": {
+        "x": 7.607999566769284,
+        "y": 4.601789403448949
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.634,
+        "y": 5.493
+      },
+      "prevControl": {
+        "x": 5.999812574139977,
+        "y": 5.460722419928826
       },
       "nextControl": null,
       "isLocked": false,
@@ -62,30 +62,26 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.9811320754716981,
+      "waypointRelativePos": 0.3037300177619837,
       "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 1.1226415094339621,
+      "waypointRelativePos": 0.9520426287744157,
       "rotationDegrees": -90.0
     },
     {
-      "waypointRelativePos": 1.7547169811320797,
-      "rotationDegrees": -90.0
-    },
-    {
-      "waypointRelativePos": 2.0801886792452904,
-      "rotationDegrees": 180.0
+      "waypointRelativePos": 2.0674955595026874,
+      "rotationDegrees": -100.0
     }
   ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.2872531418312374,
-      "maxWaypointRelativePos": 3.0,
+      "minWaypointRelativePos": 1.1,
+      "maxWaypointRelativePos": 2.092238470191214,
       "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 1.5,
+        "maxVelocity": 1.35,
+        "maxAcceleration": 4.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -96,7 +92,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.0,
+    "maxVelocity": 4.0,
     "maxAcceleration": 4.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -104,13 +100,13 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 180.0
+    "velocity": 1.5,
+    "rotation": 160.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 0.0,
     "rotation": 180.0
   },
   "useDefaultConstraints": false
