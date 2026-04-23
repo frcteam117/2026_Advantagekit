@@ -103,8 +103,7 @@ public class RobotCommands {
                       () -> getTarget(drivetrain.getPose())
                           .minus(new Translation2d(
                                   drivetrain.getChassisSpeeds().vxMetersPerSecond
-                                  // + -0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond
-                                  ,
+                                      + 0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond,
                                   drivetrain.getChassisSpeeds().vyMetersPerSecond)
                               .rotateBy(drivetrain.getPose().getRotation())
                               .times(1.25)),
@@ -117,7 +116,7 @@ public class RobotCommands {
                       () -> getTarget(drivetrain.getPose())
                           .minus(new Translation2d(
                                   drivetrain.getChassisSpeeds().vxMetersPerSecond
-                                      + -0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond,
+                                      + 0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond,
                                   drivetrain.getChassisSpeeds().vyMetersPerSecond)
                               .rotateBy(drivetrain.getPose().getRotation())
                               .times((Math.abs(toMidYMult) > mult
@@ -125,7 +124,7 @@ public class RobotCommands {
                                       : toMidYMult)
                                   * (isBlueAlliance ? -1.0 : 1.0))),
                       () -> new Translation2d(),
-                      () -> new Translation2d(-0, 0),
+                      () -> new Translation2d(-0.2, 0),
                       () -> false),
                   IndexerCommands.conditionalRunForward(
                       indexer,
@@ -205,16 +204,14 @@ public class RobotCommands {
         isBlueAlliance ? robotPose.getX() > 6.2 : robotPose.getX() < 9.9;
     boolean inOppAZ = isBlueAlliance ? robotPose.getX() > 12.55 : robotPose.getX() < 4;
     Translation2d target = isPassing
-        ? ( inOppAZ
-            ?
-            (robotPose.getY() < 4.05
-            ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)
-            : (isBlueAlliance ? blueLPassingTarget : redLPassingTarget))
+        ? (inOppAZ
+            ? (robotPose.getY() < 4.05
+                ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)
+                : (isBlueAlliance ? blueLPassingTarget : redLPassingTarget))
             //
-            :
-            (robotPose.getY() < 4.05
-            ? (isBlueAlliance ? blueROppAZPassingTarget : redROppAZPassingTarget)
-            : (isBlueAlliance ? blueLOppAZPassingTarget : redLOppAZPassingTarget)))
+            : (robotPose.getY() < 4.05
+                ? (isBlueAlliance ? blueROppAZPassingTarget : redROppAZPassingTarget)
+                : (isBlueAlliance ? blueLOppAZPassingTarget : redLOppAZPassingTarget)))
         : (isBlueAlliance ? blueHub : redHub);
     Logger.recordOutput(
         "Commands/alliance",

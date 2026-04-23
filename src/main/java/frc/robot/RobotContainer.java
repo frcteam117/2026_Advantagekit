@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.commands.RobotCommands;
 import frc.robot.subsystems.drivetrain.*;
@@ -266,9 +267,9 @@ public class RobotContainer {
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
     controller
-    .circle()
-    .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
-        .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+        .circle()
+        .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
     controller.L2().whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false));
     controller
         .button(10)
@@ -314,37 +315,24 @@ public class RobotContainer {
     controller
         .R2()
         .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
-            .andThen(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                    ? (drivetrain.getPose().getX() < 12.55)
-                        ? RobotCommands.shootOnTheMove(
+            .andThen(new ConditionalCommand(
+                    RobotCommands.shootOnTheMove(
                         drivetrain,
                         shooter,
                         indexer,
                         () -> -controller.getLeftY(),
                         () -> -controller.getLeftX(),
-                        () -> true)
-                        :
-                        RobotCommands.autoAim(
+                        () -> true),
+                    RobotCommands.autoAim(
                         drivetrain,
                         shooter,
                         indexer,
                         () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-                        () -> true)
-                    : (drivetrain.getPose().getX() > 4)
-                        ? RobotCommands.shootOnTheMove(
-                        drivetrain,
-                        shooter,
-                        indexer,
-                        () -> -controller.getLeftY(),
-                        () -> -controller.getLeftX(),
-                        () -> true)
-                        :
-                        RobotCommands.autoAim(
-                        drivetrain,
-                        shooter,
-                        indexer,
-                        () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-                        () -> true)
+                        () -> true),
+                    () -> (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                            && drivetrain.getPose().getX() < 12.55)
+                        || (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                            && drivetrain.getPose().getX() > 4))
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)));
     if (ShooterCommands.isTuning) {
       controller2
