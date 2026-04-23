@@ -46,8 +46,8 @@ public class RobotCommands {
           boolean isBlueAlliance =
               DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
           boolean isPassing = isBlueAlliance
-              ? drivetrain.getPose().getX() > 4.7
-              : drivetrain.getPose().getX() < 11.4;
+              ? drivetrain.getPose().getX() > 4.6
+              : drivetrain.getPose().getX() < 11.9;
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter,
@@ -60,10 +60,10 @@ public class RobotCommands {
                   IndexerCommands.conditionalRunForward(
                       indexer,
                       () -> shootWhenReady.getAsBoolean()
-                          && ShooterCommands.isAutoAimReady(shooter)
+                          && ShooterCommands.isAutoAimReady(shooter, isPassing)
                           && DrivetrainCommands.isAutoAimReady(drivetrain)),
                   Commands.run(() -> IntakeCommands.shooting = shootWhenReady.getAsBoolean()
-                      && ShooterCommands.isAutoAimReady(shooter)
+                      && ShooterCommands.isAutoAimReady(shooter, isPassing)
                       && DrivetrainCommands.isAutoAimReady(drivetrain)))
               .beforeStarting(() -> isAutoShooting = true)
               .finallyDo(() -> {
@@ -88,8 +88,8 @@ public class RobotCommands {
           boolean isBlueAlliance =
               DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
           boolean isPassing = isBlueAlliance
-              ? drivetrain.getPose().getX() > 4.7
-              : drivetrain.getPose().getX() < 11.4;
+              ? drivetrain.getPose().getX() > 4.6
+              : drivetrain.getPose().getX() < 11.9;
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter,
@@ -143,8 +143,9 @@ public class RobotCommands {
     return Commands.parallel(
             ShooterCommands.autoAim(shooter, () -> pose, () -> blueHub, () -> false, () -> false),
             IndexerCommands.conditionalRunForward(
-                indexer, () -> ShooterCommands.isAutoAimReady(shooter)),
-            Commands.run(() -> IntakeCommands.shooting = ShooterCommands.isAutoAimReady(shooter)))
+                indexer, () -> ShooterCommands.isAutoAimReady(shooter, false)),
+            Commands.run(
+                () -> IntakeCommands.shooting = ShooterCommands.isAutoAimReady(shooter, false)))
         .beforeStarting(() -> isAutoShooting = true)
         .finallyDo(() -> {
           isAutoShooting = false;
@@ -193,7 +194,7 @@ public class RobotCommands {
   public static Translation2d getTarget(Pose2d robotPose) {
     boolean isBlueAlliance = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
     boolean isPassing = // false;
-        isBlueAlliance ? robotPose.getX() > 6.2 : robotPose.getX() < 9.9;
+        isBlueAlliance ? robotPose.getX() > 4.6 : robotPose.getX() < 11.9;
     Translation2d target = isPassing
         ? (robotPose.getY() < 4.05
             ? (isBlueAlliance ? blueRPassingTarget : redRPassingTarget)

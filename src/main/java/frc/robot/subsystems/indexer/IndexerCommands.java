@@ -22,21 +22,35 @@ public class IndexerCommands {
     });
   }
 
-  public static Command conditionalRunForward(IndexerSubsystem indexer, BooleanSupplier shouldRun) {
+  public static Command intakingAgitation(IndexerSubsystem indexer) {
     return indexer.run(() -> {
-      if (shouldRun.getAsBoolean()) {
-        if (runningBackwards) {
-          indexer.setHopperSpeed(reverseSpeed.getAsDouble());
-          indexer.setKickerSpeed(reverseSpeed.getAsDouble());
-        } else {
+      indexer.setHopperSpeed(0.1);
+      indexer.setKickerSpeed(-0.15);
+    });
+  }
+
+  public static Command conditionalRunForward(IndexerSubsystem indexer, BooleanSupplier shouldRun) {
+    return indexer
+        .run(() -> {
           indexer.setHopperSpeed(forwardSpeed.getAsDouble());
           indexer.setKickerSpeed(forwardSpeed.getAsDouble());
-        }
-      } else {
-        indexer.setHopperSpeed(0);
-        indexer.setKickerSpeed(0);
-      }
-    });
+        })
+        .withTimeout(.3)
+        .andThen(indexer.run(() -> {
+          if (shouldRun.getAsBoolean()) {
+            if (runningBackwards) {
+              indexer.setHopperSpeed(reverseSpeed.getAsDouble());
+              indexer.setKickerSpeed(reverseSpeed.getAsDouble());
+            } else {
+              indexer.setHopperSpeed(forwardSpeed.getAsDouble());
+              indexer.setKickerSpeed(forwardSpeed.getAsDouble());
+            }
+          } else {
+            indexer.setHopperSpeed(0);
+            indexer.setKickerSpeed(0);
+          }
+        }))
+        .withName("Intake_conditionalRunForward");
   }
 
   public static Command runForwardCommand(IndexerSubsystem indexer) {

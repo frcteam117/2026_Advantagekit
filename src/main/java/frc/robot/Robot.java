@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.util.logging.LogUtil;
 import java.util.HashMap;
 import java.util.Map;
@@ -120,7 +119,6 @@ public class Robot extends LoggedRobot {
     LogUtil.getInstance().runUpdateMethods();
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);
-    Logger.recordOutput("test", ShooterCommands.isAutoAimReady(robotContainer.shooter));
   }
 
   /** This function is called once when the robot becomes disabled. */
