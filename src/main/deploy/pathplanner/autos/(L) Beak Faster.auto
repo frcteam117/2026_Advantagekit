@@ -17,7 +17,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) Beak 1 Faster"
+                  "pathName": "(L) Trench-Bump 1 Faster"
                 }
               }
             ]
@@ -32,7 +32,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "(L) Beak 2"
+            "pathName": "(L) Trench-Bump 2"
           }
         },
         {
@@ -73,7 +73,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) Beak 3 Faster"
+                  "pathName": "(L) Trench-Bump 3 Faster"
                 }
               }
             ]
@@ -88,7 +88,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "(L) Beak 4"
+            "pathName": "(L) Trench-Bump 4"
           }
         },
         {
