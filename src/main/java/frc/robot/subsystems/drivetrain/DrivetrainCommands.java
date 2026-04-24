@@ -134,7 +134,7 @@ public class DrivetrainCommands {
     //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
     //   return false;
     // }
-    if (DriverStation.isAutonomous()) {
+    if (DrivetrainSubsystem.useSwerveSetpointGenerator()) {
       return anglePID.atSetpoint();
     }
     return angleProfiledPID.atSetpoint();
@@ -691,7 +691,7 @@ public class DrivetrainCommands {
     Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 
     // Square magnitude for more precise control
-    linearMagnitude = linearMagnitude * linearMagnitude;
+    // linearMagnitude = linearMagnitude * linearMagnitude;
 
     // Return new linear velocity
     return new Pose2d(new Translation2d(), linearDirection)
@@ -904,19 +904,21 @@ public class DrivetrainCommands {
     //         DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble())
     //     + goalState.velocity;
     double output = MathUtil.clamp(
-        (DriverStation.isAutonomous()
+        (DrivetrainSubsystem.useSwerveSetpointGenerator()
             ? anglePID.calculate(robotOrientation.getRadians(), goalState.position)
             : angleProfiledPID.calculate(robotOrientation.getRadians(), goalState.position)),
         -DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble(),
         DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble());
     Logger.recordOutput(
         DrivetrainConstants.NAME + "/AngleProfile/Error",
-        (DriverStation.isAutonomous() ? anglePID.getError() : angleProfiledPID.getPositionError()));
+        (DrivetrainSubsystem.useSwerveSetpointGenerator()
+            ? anglePID.getError()
+            : angleProfiledPID.getPositionError()));
     prevAngleSetpoints[0] = prevAngleSetpoints[1];
     prevAngleSetpoints[1] = prevAngleSetpoints[2];
     prevAngleSetpoints[2] = angleSetpoint.position;
     return output
-        + (DriverStation.isAutonomous()
+        + (DrivetrainSubsystem.useSwerveSetpointGenerator()
             ? goalState.velocity
             : angleProfiledPID.getSetpoint().velocity);
   }

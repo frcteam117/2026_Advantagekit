@@ -201,7 +201,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
    * @param goalSpeeds_mps Target speeds in meters/sec
    */
   public void setGoalVelocity(ChassisSpeeds goalSpeeds_mps, Translation2d centerOfRotation) {
-    if (DriverStation.isAutonomous()) {
+    if (DrivetrainSubsystem.useSwerveSetpointGenerator()) {
       Translation2d discretizedLinVelFromAngVel = centerOfRotation
           .minus(centerOfRotation.rotateBy(Rotation2d.fromRadians(
               goalSpeeds_mps.omegaRadiansPerSecond * RobotConstants.CODE_PERIOD_s)))
@@ -414,5 +414,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
       values[i] = modules[i].getWheelRadiusCharacterizationPosition();
     }
     return values;
+  }
+
+  public static boolean useSwerveSetpointGenerator() {
+    // return DriverStation.isAutonomous();
+    return true;
   }
 }

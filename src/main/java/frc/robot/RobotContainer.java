@@ -136,10 +136,7 @@ public class RobotContainer {
     SysIdUtil.registerController(controller);
 
     NamedCommands.registerCommand(
-        "IntakeDeploy",
-        IntakeCommands.intakeFuel(intake, () -> false, () -> true)
-            .alongWith(IndexerCommands.intakingAgitation(indexer)
-                .withInterruptBehavior(InterruptionBehavior.kCancelSelf)));
+        "IntakeDeploy", IntakeCommands.intakeFuel(intake, () -> false, () -> true));
     NamedCommands.registerCommand("PivotDown", IntakeCommands.lowerIntake(intake));
     NamedCommands.registerCommand("AutoOverBump", DrivetrainCommands.pathOverBump(drivetrain));
     NamedCommands.registerCommand(

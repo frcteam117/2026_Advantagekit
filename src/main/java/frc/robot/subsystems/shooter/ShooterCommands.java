@@ -48,40 +48,40 @@ public class ShooterCommands {
   }
 
   public static void setAutoAimPoint(double distance_m) {
-    // hub_autoAimUsedValuesList.add(true);
-    // hub_autoAimDistancesList.add(distance_m);
-    // hub_autoAimFlywheelVelsList.add(targetSpeed_radPs.getAsDouble());
-    // hub_autoAimHoodPosesList.add(hood_goalPos.in(Radians));
-    // resetAutoAim();
-    // final int i = hub_autoAimUsedValuesList.size() - 1;
-    // new TunableBoolean(
-    //     TUNING_NT_KEY + "/HubShooterTuningValues/" + i + "_"
-    //         + distanceFormatter.format(hub_autoAimDistancesList.get(i)) + "m_"
-    //         + flywheelFormatter.format(hub_autoAimFlywheelVelsList.get(i)) + "f_"
-    //         + hoodFormatter.format(hub_autoAimHoodPosesList.get(i)) + "h",
-    //     hub_autoAimUsedValuesList.get(i),
-    //     () -> true,
-    //     shouldUse -> {
-    //       hub_autoAimUsedValuesList.set(i, shouldUse);
-    //       resetAutoAim();
-    //     });
-    passing_autoAimUsedValuesList.add(true);
-    passing_autoAimDistancesList.add(distance_m);
-    passing_autoAimFlywheelVelsList.add(targetSpeed_radPs.getAsDouble());
-    passing_autoAimHoodPosesList.add(hood_goalPos.in(Radians));
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimDistancesList.add(distance_m);
+    hub_autoAimFlywheelVelsList.add(targetSpeed_radPs.getAsDouble());
+    hub_autoAimHoodPosesList.add(hood_goalPos.in(Radians));
     resetAutoAim();
-    final int i = passing_autoAimUsedValuesList.size() - 1;
+    final int i = hub_autoAimUsedValuesList.size() - 1;
     new TunableBoolean(
-        TUNING_NT_KEY + "/PassingShooterTuningValues/" + i + "_"
-            + distanceFormatter.format(passing_autoAimDistancesList.get(i)) + "m_"
-            + flywheelFormatter.format(passing_autoAimFlywheelVelsList.get(i)) + "f_"
-            + hoodFormatter.format(passing_autoAimHoodPosesList.get(i)) + "h",
-        passing_autoAimUsedValuesList.get(i),
+        TUNING_NT_KEY + "/HubShooterTuningValues/" + i + "_"
+            + distanceFormatter.format(hub_autoAimDistancesList.get(i)) + "m_"
+            + flywheelFormatter.format(hub_autoAimFlywheelVelsList.get(i)) + "f_"
+            + hoodFormatter.format(hub_autoAimHoodPosesList.get(i)) + "h",
+        hub_autoAimUsedValuesList.get(i),
         () -> true,
         shouldUse -> {
-          passing_autoAimUsedValuesList.set(i, shouldUse);
+          hub_autoAimUsedValuesList.set(i, shouldUse);
           resetAutoAim();
         });
+    // passing_autoAimUsedValuesList.add(true);
+    // passing_autoAimDistancesList.add(distance_m);
+    // passing_autoAimFlywheelVelsList.add(targetSpeed_radPs.getAsDouble());
+    // passing_autoAimHoodPosesList.add(hood_goalPos.in(Radians));
+    // resetAutoAim();
+    // final int i = passing_autoAimUsedValuesList.size() - 1;
+    // new TunableBoolean(
+    //     TUNING_NT_KEY + "/PassingShooterTuningValues/" + i + "_"
+    //         + distanceFormatter.format(passing_autoAimDistancesList.get(i)) + "m_"
+    //         + flywheelFormatter.format(passing_autoAimFlywheelVelsList.get(i)) + "f_"
+    //         + hoodFormatter.format(passing_autoAimHoodPosesList.get(i)) + "h",
+    //     passing_autoAimUsedValuesList.get(i),
+    //     () -> true,
+    //     shouldUse -> {
+    //       passing_autoAimUsedValuesList.set(i, shouldUse);
+    //       resetAutoAim();
+    //     });
   }
 
   private static final InterpolatingDoubleTreeMap hub_metersToFywheelRadPerSec =
@@ -163,11 +163,14 @@ public class ShooterCommands {
   }
 
   static {
-    // hub flywheel   hub_autoAimUsedValuesList.add(true);
+    // hub flywheel
     hub_autoAimUsedValuesList.add(true);
     hub_autoAimUsedValuesList.add(true);
     hub_autoAimUsedValuesList.add(true);
     hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(true);
+    hub_autoAimUsedValuesList.add(false);
     hub_autoAimUsedValuesList.add(true);
     hub_autoAimUsedValuesList.add(true);
     hub_autoAimDistancesList.add(1.78377858);
@@ -177,6 +180,9 @@ public class ShooterCommands {
     hub_autoAimDistancesList.add(3.635341662);
     hub_autoAimDistancesList.add(4.33910244);
     hub_autoAimDistancesList.add(4.8904);
+    hub_autoAimDistancesList.add(5.222222675);
+    hub_autoAimDistancesList.add(4.86071509);
+    hub_autoAimDistancesList.add(4.330782946);
     hub_autoAimFlywheelVelsList.add(300.0);
     hub_autoAimFlywheelVelsList.add(280.0);
     hub_autoAimFlywheelVelsList.add(310.0);
@@ -184,6 +190,9 @@ public class ShooterCommands {
     hub_autoAimFlywheelVelsList.add(365.0);
     hub_autoAimFlywheelVelsList.add(387.0);
     hub_autoAimFlywheelVelsList.add(403.0);
+    hub_autoAimFlywheelVelsList.add(405.0);
+    hub_autoAimFlywheelVelsList.add(390.0);
+    hub_autoAimFlywheelVelsList.add(375.0);
     hub_autoAimHoodPosesList.add(0.000420749);
     hub_autoAimHoodPosesList.add(0.000420749);
     hub_autoAimHoodPosesList.add(0.128328668);
@@ -191,6 +200,9 @@ public class ShooterCommands {
     hub_autoAimHoodPosesList.add(0.21164);
     hub_autoAimHoodPosesList.add(0.2798);
     hub_autoAimHoodPosesList.add(0.29452);
+    hub_autoAimHoodPosesList.add(0.323975844);
+    hub_autoAimHoodPosesList.add(0.300414292);
+    hub_autoAimHoodPosesList.add(0.261706002);
     passing_autoAimUsedValuesList.add(false);
     passing_autoAimUsedValuesList.add(false);
     passing_autoAimUsedValuesList.add(true);
