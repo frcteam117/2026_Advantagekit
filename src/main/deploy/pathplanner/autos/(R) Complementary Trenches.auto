@@ -5,9 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "wait",
           "data": {
-            "name": "PivotDown"
+            "waitTime": 0.5
           }
         },
         {
@@ -23,10 +23,16 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Experimental FASTERshoot44shootoptLUNGE"
+                  "pathName": "(R) Complementary Trenches 1"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(R) Complementary Trenches 2"
           }
         },
         {
@@ -67,26 +73,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Experimental FASTERshoot44shootSWEEP"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "alignAndShoot"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 3.5
+                  "pathName": "(R) Complementary Trenches 3"
                 }
               }
             ]

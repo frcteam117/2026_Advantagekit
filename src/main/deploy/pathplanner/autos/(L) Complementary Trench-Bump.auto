@@ -5,6 +5,18 @@
     "data": {
       "commands": [
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(L) Complementary Trench-Bump 2"
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
@@ -27,12 +39,6 @@
           "type": "named",
           "data": {
             "name": "AutoOverBump"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "(L) Complementary Trench-Bump 2"
           }
         },
         {

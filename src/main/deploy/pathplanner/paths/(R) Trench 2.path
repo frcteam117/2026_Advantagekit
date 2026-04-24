@@ -48,16 +48,16 @@
     },
     {
       "anchor": {
-        "x": 5.623238434163702,
-        "y": 0.7157888493475684
+        "x": 5.63399762752076,
+        "y": 0.6404744958481603
       },
       "prevControl": {
-        "x": 6.817270644284466,
-        "y": 0.7559243858222157
+        "x": 6.828029837641524,
+        "y": 0.6806100323228076
       },
       "nextControl": {
-        "x": 4.342894424673785,
-        "y": 0.6727520759193362
+        "x": 4.353653618030843,
+        "y": 0.5974377224199281
       },
       "isLocked": false,
       "linkedName": null
@@ -90,12 +90,16 @@
       "rotationDegrees": 110.0
     },
     {
-      "waypointRelativePos": 2.4369449378330206,
-      "rotationDegrees": -90.0
+      "waypointRelativePos": 2.4937833037300137,
+      "rotationDegrees": -72.46525912417539
+    },
+    {
+      "waypointRelativePos": 2.6287744227353365,
+      "rotationDegrees": 0.0
     },
     {
       "waypointRelativePos": 3.758436944937832,
-      "rotationDegrees": -90.0
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [
@@ -104,8 +108,8 @@
       "minWaypointRelativePos": 1.3138357705286847,
       "maxWaypointRelativePos": 2.0427446569178898,
       "constraints": {
-        "maxVelocity": 1.7,
-        "maxAcceleration": 1.7,
+        "maxVelocity": 1.5,
+        "maxAcceleration": 1.5,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -114,17 +118,10 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "flywheel_acc_1",
-      "waypointRelativePos": 3.491563554555679,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.0,
-    "maxAcceleration": 5.0,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -132,7 +129,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -108.0
+    "rotation": -122.72968542059314
   },
   "reversed": false,
   "folder": null,
@@ -140,5 +137,5 @@
     "velocity": 0,
     "rotation": -108.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

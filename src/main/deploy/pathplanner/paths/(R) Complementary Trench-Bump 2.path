@@ -3,52 +3,59 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.4984204545454543,
-        "y": 5.127522727272727
+        "x": 3.3,
+        "y": 2.67
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.632409090909091,
-        "y": 6.4055681818181816
+        "x": 2.4111262435913607,
+        "y": 1.9208345114145802
       },
       "isLocked": false,
-      "linkedName": "Argos Depot End"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.921238636363636,
-        "y": 7.4465568181818185
+        "x": 1.2,
+        "y": 0.7700000000000005
       },
       "prevControl": {
-        "x": 1.3128977272727271,
-        "y": 6.817840909090909
+        "x": 2.1550999377160167,
+        "y": 1.71665434785566
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Argos Trench Setup"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "flywheel_acc_2",
+      "waypointRelativePos": 0.321709786276714,
+      "endWaypointRelativePos": 1.0,
+      "command": null
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 4.0,
+    "maxAcceleration": 4.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
-    "rotation": 180.0
+    "velocity": 0,
+    "rotation": -130.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 152.0
+    "rotation": -160.0
   },
   "useDefaultConstraints": true
 }
