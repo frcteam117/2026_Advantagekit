@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "PivotDown"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -23,7 +17,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Experimental FASTERshoot44shootoptLUNGE"
+                  "pathName": "(R) 3 Trench 1 Bump 1"
                 }
               }
             ]
@@ -42,7 +36,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.6
+                  "waitTime": 3.2
                 }
               }
             ]
@@ -67,10 +61,22 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Sketchy Sweep"
+                  "pathName": "(R) 3 Trench 1 Bump 2"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpWithFlywheelRev"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(R) Trench-Bump 4"
           }
         },
         {
@@ -86,7 +92,32 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.6
+                  "waitTime": 3.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "(R) Trench-Bump 5"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeDeploy"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "stopFlywheel"
                 }
               }
             ]

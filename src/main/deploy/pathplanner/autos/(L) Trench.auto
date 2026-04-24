@@ -23,7 +23,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Experimental FASTERshoot44shootoptLUNGE"
+                  "pathName": "(L) Trench 1"
                 }
               }
             ]
@@ -42,7 +42,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.5
+                  "waitTime": 5.0
                 }
               }
             ]
@@ -67,7 +67,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Experimental FASTERshoot44shootSWEEP"
+                  "pathName": "(L) Trench 2"
                 }
               }
             ]
@@ -86,7 +86,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.5
+                  "waitTime": 5.0
                 }
               }
             ]

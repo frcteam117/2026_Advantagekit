@@ -5,22 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "race",
+          "type": "wait",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "PivotDown"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 2.3
-                }
-              }
-            ]
+            "waitTime": 1.0
           }
         },
         {
@@ -28,15 +15,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "IntakeDeploy"
+                  "pathName": "(R) Complementary Trench-Bump 1"
                 }
               },
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "(L) Popcorn Auto 1"
+                  "name": "IntakeDeploy"
                 }
               }
             ]
@@ -51,7 +38,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "(L) Popcorn Auto 2"
+            "pathName": "(R) Complementary Trench-Bump 2"
           }
         },
         {
@@ -78,9 +65,9 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "stopFlywheel"
+                  "pathName": "(R) Complementary Trench-Bump 3"
                 }
               },
               {
@@ -90,9 +77,9 @@
                 }
               },
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "(L) Popcorn Auto 3"
+                  "name": "stopFlywheel"
                 }
               }
             ]

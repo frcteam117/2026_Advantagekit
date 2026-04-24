@@ -17,10 +17,22 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) 2338 1"
+                  "pathName": "(R) Trench-Bump 1"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpWithFlywheelRev"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(R) Trench-Bump 2"
           }
         },
         {
@@ -61,7 +73,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) 2338 2"
+                  "pathName": "(R) Trench-Bump 3"
                 }
               }
             ]
@@ -76,7 +88,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "(L) Trench-Bump 4"
+            "pathName": "(R) Trench-Bump 4"
           }
         },
         {
@@ -103,9 +115,9 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "(L) Trench-Bump"
+                  "name": "stopFlywheel"
                 }
               },
               {
@@ -115,9 +127,9 @@
                 }
               },
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "stopFlywheel"
+                  "pathName": "(R) Trench-Bump 5"
                 }
               }
             ]
