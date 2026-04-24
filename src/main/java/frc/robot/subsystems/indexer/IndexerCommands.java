@@ -35,7 +35,7 @@ public class IndexerCommands {
           indexer.setHopperSpeed(forwardSpeed.getAsDouble());
           indexer.setKickerSpeed(forwardSpeed.getAsDouble());
         })
-        .withTimeout(.3)
+        .withTimeout(.2)
         .andThen(indexer.run(() -> {
           if (shouldRun.getAsBoolean()) {
             if (runningBackwards) {
