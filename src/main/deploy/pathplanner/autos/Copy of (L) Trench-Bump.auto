@@ -5,50 +5,19 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "PivotDown"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "(Depot) (L) Complementary Bumps 1"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBump"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "(Depot) (L) Complementary Bumps 2"
-                }
-              },
               {
                 "type": "named",
                 "data": {
                   "name": "IntakeDeploy"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Copy of (L) Trench-Bump 1"
                 }
               }
             ]
@@ -63,7 +32,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "(Depot) (L) Complementary Bumps 3"
+            "pathName": "Copy of (L) Trench-Bump 2"
           }
         },
         {
@@ -79,7 +48,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.5
+                  "waitTime": 3.2
                 }
               }
             ]
@@ -90,9 +59,9 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "(Depot) (L) Complementary Bumps 4"
+                  "name": "stopFlywheel"
                 }
               },
               {
@@ -102,12 +71,24 @@
                 }
               },
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "stopFlywheel"
+                  "pathName": "Copy of (L) Trench-Bump 3"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoOverBumpWithFlywheelRev"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Copy of (L) Trench-Bump 4"
           }
         },
         {
@@ -123,7 +104,32 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.5
+                  "waitTime": 3.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "stopFlywheel"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeDeploy"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Copy of (L) Trench-Bump 5"
                 }
               }
             ]

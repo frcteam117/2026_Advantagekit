@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "(L) Complementary Trench-Bump 2"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -33,6 +27,12 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(L) Complementary Trench-Bump 2"
           }
         },
         {
