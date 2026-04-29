@@ -30,15 +30,15 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "(L) Complementary Trench-Bump 2"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "AutoOverBump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(L) Complementary Trench-Bump 2"
           }
         },
         {
