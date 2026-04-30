@@ -17,7 +17,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) 3 Trench 1 Bump 1"
+                  "pathName": "(R) 3 Trench 1 Bump 1"
                 }
               }
             ]
@@ -61,7 +61,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) 3 Trench 1 Bump 2"
+                  "pathName": "(R) 3 Trench 1 Bump 2"
                 }
               }
             ]
@@ -76,7 +76,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "(L) Trench-Bump 4"
+            "pathName": "(R) Trench-Bump 4"
           }
         },
         {
@@ -105,7 +105,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) Trench-Bump 5"
+                  "pathName": "Copy of (R) Trench-Bump 5"
                 }
               },
               {
