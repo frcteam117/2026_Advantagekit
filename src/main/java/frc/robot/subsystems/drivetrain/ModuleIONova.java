@@ -184,4 +184,10 @@ public class ModuleIONova implements ModuleIO {
     // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
     lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
   }
+
+  @Override
+  public void setBrakeMode(boolean enabled) {
+    driveNova.setBrakeMode(enabled);
+    azimuthNova.setBrakeMode(enabled);
+  }
 }

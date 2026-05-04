@@ -180,4 +180,9 @@ public class Module {
   public ModuleIOInputs getInputs() {
     return inputs;
   }
+
+  /** Sets the brake mode for the motors in this module. */
+  public void setBrakeMode(boolean enabled) {
+    io.setBrakeMode(enabled);
+  }
 }

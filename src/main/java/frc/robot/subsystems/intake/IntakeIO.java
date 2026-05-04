@@ -49,4 +49,7 @@ public interface IntakeIO {
 
   /** Set the roller speed with a value from -1 to 1. */
   public default void setRollerSpeed(double speed) {}
+
+  /** Sets the brake mode for the intake motors. */
+  public default void setBrakeMode(boolean enabled) {}
 }

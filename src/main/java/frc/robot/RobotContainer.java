@@ -484,4 +484,11 @@ public class RobotContainer {
   //       new Pose3d(-0.24286, 0, 0.58996, new Rotation3d(0, -shooter.getHoodState().pos(), 0))
   //     };
   //   }
+  public DrivetrainSubsystem getDrivetrain() {
+    return drivetrain;
+  }
+
+  public IntakeSubsystem getIntake() {
+    return intake;
+  }
 }

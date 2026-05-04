@@ -224,6 +224,6 @@ public class IntakeSubsystem extends SubsystemBase {
     return poses;
   }
   public void setBrakeMode(boolean enabled) {
-    
+    io.setBrakeMode(enabled);
   }
 }

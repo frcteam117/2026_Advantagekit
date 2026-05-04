@@ -162,4 +162,7 @@ public interface ModuleIO {
 
   /** Runs the azimuth motor at the next pidf voltage based on the given position and velocity. */
   public default void setNextAzimuthState(double position_rad, double velocity_radPs) {}
+
+  /** Sets the brake mode for the drive and azimuth motors. */
+  public default void setBrakeMode(boolean enabled) {}
 }
