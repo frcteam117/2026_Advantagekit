@@ -14,6 +14,7 @@ import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeCommands;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import java.util.Set;
@@ -208,4 +209,16 @@ public class RobotCommands {
     return target;
   }
   ;
+
+  /**
+   * Returns a command that can toggle the brake mode of the drivetrain and intake. 
+   */
+  public static Command setCoastModeCommand(DrivetrainSubsystem drivetrain, IntakeSubsystem intake, boolean brakeMode) {
+    return Commands.runOnce(
+      () -> {
+        drivetrain.setBrakeMode(brakeMode);
+        intake.setBrakeMode(brakeMode);
+          },
+          drivetrain, intake);
+  }
 }

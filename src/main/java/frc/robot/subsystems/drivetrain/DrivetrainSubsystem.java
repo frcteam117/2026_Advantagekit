@@ -390,4 +390,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
     }
     return values;
   }
+  public void setBrakeMode(boolean enabled) {
+    
+  }
 }
