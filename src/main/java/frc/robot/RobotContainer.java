@@ -162,6 +162,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
+    NamedCommands.registerCommand("set_robot_coast", RobotCommands.setCoastModeCommand(drivetrain, intake, false));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
