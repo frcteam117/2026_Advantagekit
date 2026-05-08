@@ -47,11 +47,12 @@ public class IntakeIOReal implements IntakeIO {
   public void setRollerSpeed(double speed) {
     roller_Spark.set(speed);
   }
-
+  /*
   @Override
   public void setBrakeMode(boolean enabled) {
     IdleMode mode = enabled ? IdleMode.kBrake : IdleMode.kCoast;
     roller_Spark.configure(new SparkFlexConfig().idleMode(mode), 
         ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
   }
+  */
 }

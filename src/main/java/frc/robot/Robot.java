@@ -15,6 +15,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.commands.RobotCommands;
@@ -40,6 +41,8 @@ import org.littletonrobotics.urcl.URCL;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
+  private final Timer disabledTimer = new Timer();
+  private boolean brakeModeSet = false;
 
   public Robot() {
     // Record metadata
@@ -125,22 +128,32 @@ public class Robot extends LoggedRobot {
   /** This function is called once when the robot becomes disabled. */
   @Override
   public void disabledInit() {
+    disabledTimer.reset();
+    disabledTimer.start();
+    brakeModeSet = false;
     robotContainer.resetSimulationField();
   }
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    if (!brakeModeSet && disabledTimer.hasElapsed(2.5)) {
+      robotContainer.getDrivetrain().setBrakeMode(true);
+      brakeModeSet = true;
+    }
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    /*
     CommandScheduler.getInstance()
         .schedule(
             RobotCommands.setCoastModeCommand(
                 robotContainer.getDrivetrain(), 
                 robotContainer.getIntake(), 
                 true));
+    */
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
@@ -160,10 +173,12 @@ public class Robot extends LoggedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+    /*
     CommandScheduler.getInstance()
         .schedule(
             RobotCommands.setCoastModeCommand(
                 robotContainer.getDrivetrain(), robotContainer.getIntake(), true));
+    */
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }

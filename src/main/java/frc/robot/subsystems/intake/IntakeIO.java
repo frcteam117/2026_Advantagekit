@@ -51,5 +51,7 @@ public interface IntakeIO {
   public default void setRollerSpeed(double speed) {}
 
   /** Sets the brake mode for the intake motors. */
+  /*
   public default void setBrakeMode(boolean enabled) {}
+  */
 }

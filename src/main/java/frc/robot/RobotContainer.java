@@ -154,6 +154,16 @@ public class RobotContainer {
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
                 () -> true)));
+    NamedCommands.registerCommand(
+        "shootWithoutAlign",
+        Commands.parallel(
+            IntakeCommands.defaultCommand(intake, () -> false),
+            RobotCommands.autoAimWithoutAlign(
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true)));
     NamedCommands.registerCommand("IntakeRollerOn", Commands.none());
     NamedCommands.registerCommand("IntakeRollerOff", Commands.none());
     NamedCommands.registerCommand(
@@ -162,7 +172,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
-    NamedCommands.registerCommand("set_robot_coast", RobotCommands.setCoastModeCommand(drivetrain, intake, false));
+    NamedCommands.registerCommand("set_robot_coast", RobotCommands.setCoastMode(drivetrain, false));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());

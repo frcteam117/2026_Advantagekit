@@ -1,0 +1,79 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.372,
+        "y": 0.83
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.785388888888889,
+        "y": 0.6589444444444439
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.700166666666666,
+        "y": 0.7294888888888897
+      },
+      "prevControl": {
+        "x": 4.927903853889217,
+        "y": 0.7294888888888899
+      },
+      "nextControl": {
+        "x": 6.13351111111111,
+        "y": 0.7294888888888897
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.697866666666666,
+        "y": 1.565944444444443
+      },
+      "prevControl": {
+        "x": 6.35522222222222,
+        "y": 0.7697999999999992
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.3,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 1.333333333333329,
+      "rotationDegrees": -90.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 3.0,
+    "rotation": -70.0
+  },
+  "reversed": false,
+  "folder": "Aura Farming Auto",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -110.0
+  },
+  "useDefaultConstraints": true
+}

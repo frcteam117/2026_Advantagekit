@@ -2,8 +2,13 @@
   "robotWidth": 0.879475,
   "robotLength": 0.777875,
   "holonomicMode": true,
-  "pathFolders": [],
-  "autoFolders": [],
+  "pathFolders": [
+    "Aura Farming Auto",
+    "Trench Double Dip"
+  ],
+  "autoFolders": [
+    "Post-worlds experiments"
+  ],
   "defaultMaxVel": 4.0,
   "defaultMaxAccel": 4.0,
   "defaultMaxAngVel": 540.0,
