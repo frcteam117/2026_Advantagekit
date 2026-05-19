@@ -605,6 +605,7 @@ public class DrivetrainCommands {
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
           // Convert to field relative speeds & send command
+          Logger.recordOutput("rotYSupplier", rotXSupplier.getAsDouble());
           ChassisSpeeds speeds = new ChassisSpeeds(
               linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
               linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
