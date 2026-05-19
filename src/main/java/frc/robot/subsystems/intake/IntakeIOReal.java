@@ -8,8 +8,6 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.intake.IntakeConstants.*;
@@ -51,7 +49,7 @@ public class IntakeIOReal implements IntakeIO {
   @Override
   public void setBrakeMode(boolean enabled) {
     IdleMode mode = enabled ? IdleMode.kBrake : IdleMode.kCoast;
-    roller_Spark.configure(new SparkFlexConfig().idleMode(mode), 
+    roller_Spark.configure(new SparkFlexConfig().idleMode(mode),
         ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
   }
   */

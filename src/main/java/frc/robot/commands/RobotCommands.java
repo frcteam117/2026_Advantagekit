@@ -14,7 +14,6 @@ import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeCommands;
-import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import java.util.Set;
@@ -246,12 +245,75 @@ public class RobotCommands {
   ;
 
   /**
-   * Returns a command that can toggle the brake mode of the drivetrain and intake. 
+   * Returns a command that can toggle the brake mode of the drivetrain and intake.
    */
   public static Command setCoastMode(DrivetrainSubsystem drivetrain, boolean brakeMode) {
     return Commands.runOnce(
-      () -> {
-        drivetrain.setBrakeMode(brakeMode);
-          }, drivetrain);
+        () -> {
+          drivetrain.setBrakeMode(brakeMode);
+        },
+        drivetrain);
+  }
+
+  public static Command pathPlannerShootOnTheMove( // wip
+      DrivetrainSubsystem drivetrain,
+      ShooterSubsystem shooter,
+      IndexerSubsystem indexer,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      BooleanSupplier shootWhenReady) {
+    return Commands.defer(
+        () -> {
+          boolean isBlueAlliance =
+              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+          boolean isPassing = isBlueAlliance
+              ? drivetrain.getPose().getX() > 4.6
+              : drivetrain.getPose().getX() < 11.9;
+          return Commands.parallel(
+                  ShooterCommands.autoAim(
+                      shooter,
+                      drivetrain::getPose,
+                      () -> getTarget(drivetrain.getPose())
+                          .minus(new Translation2d(
+                                  drivetrain.getChassisSpeeds().vxMetersPerSecond
+                                  // + -0.2 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond
+                                  ,
+                                  drivetrain.getChassisSpeeds().vyMetersPerSecond)
+                              .rotateBy(drivetrain.getPose().getRotation())
+                              .times(1.25)),
+                      () -> isPassing,
+                      () -> false),
+                  DrivetrainCommands.joystickDriveFacingTarget(
+                      drivetrain,
+                      xSupplier,
+                      ySupplier,
+                      () -> getTarget(drivetrain.getPose())
+                          .minus(new Translation2d(
+                                  drivetrain.getChassisSpeeds().vxMetersPerSecond
+                                      + -0.4 * drivetrain.getChassisSpeeds().omegaRadiansPerSecond,
+                                  drivetrain.getChassisSpeeds().vyMetersPerSecond)
+                              .rotateBy(drivetrain.getPose().getRotation())
+                              .times(1.25)),
+                      () -> new Translation2d(),
+                      () -> new Translation2d(-0, 0),
+                      () -> false),
+                  IndexerCommands.conditionalRunForward(
+                      indexer,
+                      () -> shootWhenReady.getAsBoolean() && ShooterCommands.isPassingReady(shooter)
+
+                      // && DrivetrainCommands.isAutoAimReady(drivetrain)
+                      ),
+                  Commands.run(
+                      () -> IntakeCommands.shooting =
+                          shootWhenReady.getAsBoolean() && ShooterCommands.isPassingReady(shooter)
+                      // && DrivetrainCommands.isAutoAimReady(drivetrain)
+                      ))
+              .beforeStarting(() -> isAutoShooting = true)
+              .finallyDo(() -> {
+                isAutoShooting = false;
+                IntakeCommands.shooting = false;
+              });
+        },
+        Set.of(drivetrain, shooter, indexer));
   }
 }

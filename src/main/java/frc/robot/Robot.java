@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.commands.RobotCommands;
 import frc.robot.util.logging.LogUtil;
 import java.util.HashMap;
 import java.util.Map;
@@ -150,8 +149,8 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance()
         .schedule(
             RobotCommands.setCoastModeCommand(
-                robotContainer.getDrivetrain(), 
-                robotContainer.getIntake(), 
+                robotContainer.getDrivetrain(),
+                robotContainer.getIntake(),
                 true));
     */
     autonomousCommand = robotContainer.getAutonomousCommand();
