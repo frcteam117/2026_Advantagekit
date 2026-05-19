@@ -28,6 +28,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -41,6 +42,7 @@ import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
 import frc.robot.subsystems.drivetrain.GyroIO.GyroIOInputs;
@@ -113,7 +115,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
         this::getPose,
         this::resetOdometry,
         this::getChassisSpeeds,
-        this::setGoalVelocity,
+        robotRelSpeeds -> setGoalVelocity(robotRelSpeeds, new Translation2d()),
         new PPHolonomicDriveController(
             new PIDConstants(4.5, 0.0, 0.4),
             new PIDConstants(5, 0, 0.55)), // 5.0, 0.0, 0.4, 6, 0, 0.55
@@ -198,40 +200,63 @@ public class DrivetrainSubsystem extends SubsystemBase {
    *
    * @param goalSpeeds_mps Target speeds in meters/sec
    */
-  public void setGoalVelocity(ChassisSpeeds goalSpeeds_mps) {
-    Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
-    // swerve setpoint generator
-    lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, goalSpeeds_mps, 0.02);
+  public void setGoalVelocity(ChassisSpeeds goalSpeeds_mps, Translation2d centerOfRotation) {
+    if (DrivetrainSubsystem.useSwerveSetpointGenerator()) {
+      Translation2d discretizedLinVelFromAngVel = centerOfRotation
+          .minus(centerOfRotation.rotateBy(Rotation2d.fromRadians(
+              goalSpeeds_mps.omegaRadiansPerSecond * RobotConstants.CODE_PERIOD_s)))
+          .div(RobotConstants.CODE_PERIOD_s);
+      goalSpeeds_mps.vxMetersPerSecond += discretizedLinVelFromAngVel.getX();
+      goalSpeeds_mps.vyMetersPerSecond += discretizedLinVelFromAngVel.getY();
+      Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
+      // swerve setpoint generator
+      lastSetpoint = swerveSetpointGenerator.generateSetpoint(lastSetpoint, goalSpeeds_mps, 0.02);
 
-    Logger.recordOutput(
-        DrivetrainConstants.NAME + "/2_Next/Chassis", lastSetpoint.robotRelativeSpeeds());
-    Logger.recordOutput(DrivetrainConstants.NAME + "/2_Next/Modules", lastSetpoint.moduleStates());
-    Logger.recordOutput(
-        DrivetrainConstants.NAME + "/2_Next/Acc_mPs2",
-        lastSetpoint.feedforwards().accelerationsMPSSq());
+      Logger.recordOutput(
+          DrivetrainConstants.NAME + "/2_Next/Chassis", lastSetpoint.robotRelativeSpeeds());
+      Logger.recordOutput(
+          DrivetrainConstants.NAME + "/2_Next/Modules", lastSetpoint.moduleStates());
+      Logger.recordOutput(
+          DrivetrainConstants.NAME + "/2_Next/Acc_mPs2",
+          lastSetpoint.feedforwards().accelerationsMPSSq());
 
-    // Send setpoints to modules
-    for (int i = 0; i < 4; i++) {
-      if (controllingHeadings
-          && lastSetpoint.moduleStates()[i].speedMetersPerSecond < 1e-6
-          && lastSetpoint.feedforwards().accelerationsMPSSq()[i] < 1e-6) {
-        // double headingError_rad = MathUtil.angleModulus(
-        //     goalHeadings[i].minus(lastSetpoint.moduleStates()[i].angle).getRadians());
-        // lastSetpoint.moduleStates()[i].angle = lastSetpoint.moduleStates()[i].angle.plus(
-        //     Rotation2d.fromRadians(Math.copySign(
-        //         Math.min(15 * RobotConstants.CODE_PERIOD_s, Math.abs(headingError_rad)),
-        //         headingError_rad)));
-        lastSetpoint.moduleStates()[i].angle = goalHeadings[i];
+      // Send setpoints to modules
+      for (int i = 0; i < 4; i++) {
+        if (controllingHeadings
+            && lastSetpoint.moduleStates()[i].speedMetersPerSecond < 1e-6
+            && lastSetpoint.feedforwards().accelerationsMPSSq()[i] < 1e-6) {
+          // double headingError_rad = MathUtil.angleModulus(
+          //     goalHeadings[i].minus(lastSetpoint.moduleStates()[i].angle).getRadians());
+          // lastSetpoint.moduleStates()[i].angle = lastSetpoint.moduleStates()[i].angle.plus(
+          //     Rotation2d.fromRadians(Math.copySign(
+          //         Math.min(15 * RobotConstants.CODE_PERIOD_s, Math.abs(headingError_rad)),
+          //         headingError_rad)));
+          lastSetpoint.moduleStates()[i].angle = goalHeadings[i];
+        }
+        modules[i].setNextState(
+            lastSetpoint.moduleStates()[i], lastSetpoint.feedforwards().accelerationsMPSSq()[i]);
       }
-      modules[i].setNextState(
-          lastSetpoint.moduleStates()[i], lastSetpoint.feedforwards().accelerationsMPSSq()[i]);
-    }
-    if (!controllingHeadings) {
-      SwerveModuleState[] goalModules = new SwerveModuleState[4];
-      Arrays.fill(goalModules, new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN)));
-      Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Modules", goalModules);
+      if (!controllingHeadings) {
+        SwerveModuleState[] goalModules = new SwerveModuleState[4];
+        Arrays.fill(goalModules, new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN)));
+        Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Modules", goalModules);
+      } else {
+        controllingHeadings = false;
+      }
     } else {
-      controllingHeadings = false;
+      Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
+      SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(
+          ChassisSpeeds.discretize(goalSpeeds_mps, 0.02), centerOfRotation);
+
+      // Send setpoints to modules
+      for (int i = 0; i < 4; i++) {
+        if (controllingHeadings && moduleStates[i].speedMetersPerSecond < 1e-6) {
+          moduleStates[i].angle = goalHeadings[i];
+        }
+        modules[i].setNextState(moduleStates[i], 0);
+      }
+      Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Modules", moduleStates);
+      if (controllingHeadings) controllingHeadings = false;
     }
 
     // DrivetrainCommands.resetAngleProfileFromSetpointGenerator(lastSetpoint);
@@ -259,7 +284,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
       }
       this.goalHeadings[i] = goalHeadings[i];
     }
-    setGoalVelocity(new ChassisSpeeds());
+    setGoalVelocity(new ChassisSpeeds(), new Translation2d());
   }
 
   // /** Runs the drive motors at the specified voltage while controlling the heading with pure
@@ -395,5 +420,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
     for (Module module : modules) {
       module.setBrakeMode(enabled);
     }
+  }
+
+  public static boolean useSwerveSetpointGenerator() {
+    // return DriverStation.isAutonomous();
+    return true;
   }
 }

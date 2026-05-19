@@ -18,9 +18,9 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -30,6 +30,8 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -37,7 +39,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.RobotConstants;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.SysIdUtil;
@@ -59,8 +60,9 @@ public class DrivetrainCommands {
   private static final BooleanSupplier TUNABLE =
       new TunableBoolean(TUNING_NT_KEY + "/.Tunable", true);
   private static final double JOYSTICK_DEADBAND = 0.04;
-  private static final PIDController anglePID =
-      new PIDController(6, 0, 0.55, RobotConstants.CODE_PERIOD_s);
+  private static final ProfiledPIDController angleProfiledPID =
+      new ProfiledPIDController(6, 0, 0.55, new Constraints(6, 12));
+  private static final PIDController anglePID = new PIDController(6, 0, 0.55);
   // private static final double ANGLE_KP = 0.5;
   // private static final double ANGLE_KD = 0;
   // private static final double ANGLE_MAX_VELOCITY = 4.0;
@@ -85,6 +87,10 @@ public class DrivetrainCommands {
   public static Rotation2d robotRotation2d[];
 
   static {
+    angleProfiledPID.enableContinuousInput(-Math.PI, Math.PI);
+    angleProfiledPID.setTolerance(0.05);
+    LogUtil.createTunableProfiledPID(
+        TUNING_NT_KEY + "/AngleProfiledPID", angleProfiledPID, TUNABLE);
     anglePID.enableContinuousInput(-Math.PI, Math.PI);
     anglePID.setTolerance(0.05);
     LogUtil.createTunablePID(TUNING_NT_KEY + "/AnglePID", anglePID, TUNABLE);
@@ -128,7 +134,10 @@ public class DrivetrainCommands {
     //     .equals(CommandScheduler.getInstance().requiring(drivetrain))) {
     //   return false;
     // }
-    return anglePID.atSetpoint();
+    if (DrivetrainSubsystem.useSwerveSetpointGenerator()) {
+      return anglePID.atSetpoint();
+    }
+    return angleProfiledPID.atSetpoint();
     // return MathUtil.isNear(
     // goalOrientation, drivetrain.getPose().getRotation().getRadians(), 0.02, -Math.PI, Math.PI);
   }
@@ -604,7 +613,7 @@ public class DrivetrainCommands {
                   angularVelFromAngleProfile(robotOrientation, pathOverBump_angleTarget));
 
               speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotOrientation);
-              drivetrain.setGoalVelocity(speeds);
+              drivetrain.setGoalVelocity(speeds, new Translation2d());
             })
         .onlyIf(() -> {
           double x = drivetrain.getPose().getX();
@@ -631,7 +640,7 @@ public class DrivetrainCommands {
             Commands.run(
                 () -> {
                   double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
-                  drive.setGoalVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                  drive.setGoalVelocity(new ChassisSpeeds(0.0, 0.0, speed), new Translation2d());
                 },
                 drive)),
 
@@ -682,7 +691,7 @@ public class DrivetrainCommands {
     Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 
     // Square magnitude for more precise control
-    linearMagnitude = linearMagnitude * linearMagnitude;
+    // linearMagnitude = linearMagnitude * linearMagnitude;
 
     // Return new linear velocity
     return new Pose2d(new Translation2d(), linearDirection)
@@ -692,6 +701,9 @@ public class DrivetrainCommands {
 
   private static void resetAngleController(DrivetrainSubsystem drivetrain) {
     anglePID.reset();
+    angleProfiledPID.reset(new State(
+        drivetrain.getPose().getRotation().getRadians(),
+        drivetrain.getChassisSpeeds().omegaRadiansPerSecond));
   }
 
   // private static final Translation2d[] driveAssistRobotCorners = new Translation2d[] {
@@ -742,12 +754,12 @@ public class DrivetrainCommands {
     //         < joystickDrive_velTolerance) {
     // drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
     // } else {
-    Translation2d discretizedLinVelFromAngVel = centerOfRotation
-        .minus(centerOfRotation.rotateBy(
-            Rotation2d.fromRadians(speeds.omegaRadiansPerSecond * RobotConstants.CODE_PERIOD_s)))
-        .div(RobotConstants.CODE_PERIOD_s);
-    speeds.vxMetersPerSecond += discretizedLinVelFromAngVel.getX();
-    speeds.vyMetersPerSecond += discretizedLinVelFromAngVel.getY();
+    // Translation2d discretizedLinVelFromAngVel = centerOfRotation
+    //     .minus(centerOfRotation.rotateBy(
+    //         Rotation2d.fromRadians(speeds.omegaRadiansPerSecond * RobotConstants.CODE_PERIOD_s)))
+    //     .div(RobotConstants.CODE_PERIOD_s);
+    // speeds.vxMetersPerSecond += discretizedLinVelFromAngVel.getX();
+    // speeds.vyMetersPerSecond += discretizedLinVelFromAngVel.getY();
     // if (driveAssist) {
     //   final Translation2d robotVelocity =
     //       new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
@@ -818,7 +830,7 @@ public class DrivetrainCommands {
     // speeds.times(1 / scaleFactor);
     final double tempPrevRobotOmega = speeds.omegaRadiansPerSecond;
     prevRobotOmega = tempPrevRobotOmega;
-    drivetrain.setGoalVelocity(speeds);
+    drivetrain.setGoalVelocity(speeds, centerOfRotation);
     // }
   }
 
@@ -892,36 +904,26 @@ public class DrivetrainCommands {
     //         DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble())
     //     + goalState.velocity;
     double output = MathUtil.clamp(
-            anglePID.calculate(robotOrientation.getRadians(), goalState.position),
-            -DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble(),
-            DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble())
-        + goalState.velocity;
-    Logger.recordOutput(DrivetrainConstants.NAME + "/AngleProfile/Error", anglePID.getError());
+        (DrivetrainSubsystem.useSwerveSetpointGenerator()
+            ? anglePID.calculate(robotOrientation.getRadians(), goalState.position)
+            : angleProfiledPID.calculate(robotOrientation.getRadians(), goalState.position)),
+        -DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble(),
+        DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble());
+    Logger.recordOutput(
+        DrivetrainConstants.NAME + "/AngleProfile/Error",
+        (DrivetrainSubsystem.useSwerveSetpointGenerator()
+            ? anglePID.getError()
+            : angleProfiledPID.getPositionError()));
     prevAngleSetpoints[0] = prevAngleSetpoints[1];
     prevAngleSetpoints[1] = prevAngleSetpoints[2];
     prevAngleSetpoints[2] = angleSetpoint.position;
-    return output;
+    return output
+        + (DrivetrainSubsystem.useSwerveSetpointGenerator()
+            ? goalState.velocity
+            : angleProfiledPID.getSetpoint().velocity);
   }
 
   private static TrapezoidProfile.State prevAngleState = new TrapezoidProfile.State();
 
-  public static void resetAngleProfileFromSetpointGenerator(SwerveSetpoint setpoint) {
-    // angleController.getSetpoint().position = prevAngleState.position
-    //     + (prevAngleState.velocity + setpoint.robotRelativeSpeeds().omegaRadiansPerSecond)
-    //         * RobotConstants.CODE_PERIOD_s
-    //         / 2;
-    // angleController.getSetpoint().velocity =
-    // setpoint.robotRelativeSpeeds().omegaRadiansPerSecond;
-    prevAngleState = new TrapezoidProfile.State(
-        prevAngleState.position
-            + (prevAngleState.velocity + setpoint.robotRelativeSpeeds().omegaRadiansPerSecond)
-                * RobotConstants.CODE_PERIOD_s
-                / 2,
-        setpoint.robotRelativeSpeeds().omegaRadiansPerSecond);
-    anglePID.reset();
-    Logger.recordOutput(DrivetrainConstants.NAME + "/SetpointGeneratorSetpoint", prevAngleState);
-    if (Math.abs(prevAngleState.velocity) < 1e-6) {
-      angleSetpoint.velocity = 0;
-    }
-  }
+  // public
 }
