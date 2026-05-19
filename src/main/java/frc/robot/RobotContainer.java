@@ -240,7 +240,7 @@ public class RobotContainer {
         currentPose -> Logger.recordOutput("PathPlanner/CurrentPose", currentPose));
     PathPlannerLogging.setLogTargetPoseCallback(
         targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
-    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
+    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngleRegularTurning(
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
