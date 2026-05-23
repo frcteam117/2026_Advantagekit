@@ -255,7 +255,7 @@ public class RobotCommands {
         drivetrain);
   }
 
-  public static Command pathPlannerShootOnTheMove( // wip
+  public static Command pathPlannerShootOnTheMove( // wip do not use
       DrivetrainSubsystem drivetrain,
       ShooterSubsystem shooter,
       IndexerSubsystem indexer,

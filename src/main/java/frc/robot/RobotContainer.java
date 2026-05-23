@@ -48,6 +48,7 @@ import frc.robot.util.SysIdUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -448,6 +449,17 @@ public class RobotContainer {
     controller2
         .touchpad()
         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+
+    controller
+        .povUp()
+        .onTrue(Commands.defer(
+            () -> AutoBuilder.followPath(new TeleopCustomPaths(drivetrain).enterNZ),
+            Set.of(drivetrain)));
+    controller
+        .povDown()
+        .onTrue(Commands.defer(
+            () -> AutoBuilder.followPath(new TeleopCustomPaths(drivetrain).enterAZ),
+            Set.of(drivetrain)));
   }
 
   /**
