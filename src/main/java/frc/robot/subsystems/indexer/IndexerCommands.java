@@ -65,6 +65,24 @@ public class IndexerCommands {
     });
   }
 
+  public static Command demoRunForwardCommand(
+      IndexerSubsystem indexer, BooleanSupplier isReady, Double divisor) {
+    return indexer.run(() -> {
+      if (isReady.getAsBoolean()) {
+        if (runningBackwards) {
+          indexer.setHopperSpeed(reverseSpeed.getAsDouble() / divisor);
+          indexer.setKickerSpeed(reverseSpeed.getAsDouble() / divisor);
+        } else {
+          indexer.setHopperSpeed(forwardSpeed.getAsDouble() / divisor);
+          indexer.setKickerSpeed(forwardSpeed.getAsDouble() / divisor);
+        }
+      } else {
+        indexer.setHopperSpeed(0.0);
+        indexer.setKickerSpeed(0.0);
+      }
+    });
+  }
+
   public static Command runBackwardCommand(IndexerSubsystem indexer) {
     return indexer.run(() -> {
       indexer.setHopperSpeed(reverseSpeed.getAsDouble());

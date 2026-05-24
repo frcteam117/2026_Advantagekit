@@ -153,6 +153,16 @@ public class RobotCommands {
         });
   }
 
+  // for outreach demonstrations:
+  public static Command demoIndexAndShoot(ShooterSubsystem shooter, IndexerSubsystem indexer) {
+    // to weaken / slow all procesxses by dividing all goal #s
+    double divisor = 3.0;
+    return Commands.parallel(
+        ShooterCommands.demoRunShootersAndHood(shooter, divisor),
+        IndexerCommands.demoRunForwardCommand(
+            indexer, () -> ShooterCommands.isDemoShootingReady(shooter, divisor), divisor));
+  }
+
   public static Command faceHubAndDrive(
       DrivetrainSubsystem drivetrain,
       DoubleSupplier xSupplier,

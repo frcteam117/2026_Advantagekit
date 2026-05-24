@@ -305,7 +305,10 @@ public class RobotContainer {
     } else {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
-    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
+    // changed for demonstrations from revpointandshoot vvv
+    /* */
+    controller.triangle().whileTrue(RobotCommands.demoIndexAndShoot(shooter, indexer));
+    /* */
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));

@@ -345,6 +345,27 @@ public class ShooterCommands {
             maxAllowableErrorRadPS.getAsDouble() * scalar));
   }
 
+  public static boolean isDemoShootingReady(ShooterSubsystem shooter, Double divisor) {
+    double batteryMult = 1 / (RobotController.getBatteryVoltage() / 13.0);
+    if (batteryMult > 1.35) {
+      batteryMult = 1.35;
+    }
+    ;
+    double scalar = 1.25 * batteryMult;
+    return isReadyDebouncer.calculate(MathUtil.isNear(
+            hood_goalPos.in(Radians),
+            shooter.getHoodPos().in(Radians),
+            maxAllowableErrorRad.getAsDouble())
+        && MathUtil.isNear(
+            flywheel_autoAimVel.in(RadiansPerSecond) / divisor,
+            shooter.getRIOFlywheelVel().in(RadiansPerSecond),
+            maxAllowableErrorRadPS.getAsDouble() * scalar)
+        && MathUtil.isNear(
+            flywheel_autoAimVel.in(RadiansPerSecond) / divisor,
+            shooter.getPDHFlywheelVel().in(RadiansPerSecond),
+            maxAllowableErrorRadPS.getAsDouble() * scalar));
+  }
+
   public static Command stopAndZeroHood(ShooterSubsystem shooter) {
     return shooter.run(() -> {
       shooter.setHoodGoalPos(Radians.zero());
@@ -370,6 +391,16 @@ public class ShooterCommands {
     return shooter.run(() -> {
       shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
       shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+    });
+  }
+
+  public static Command demoRunShootersAndHood(ShooterSubsystem shooter, Double divisor) {
+    return shooter.run(() -> {
+      // adjust / 3 when testing shot power
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble() / divisor));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble() / divisor));
+      hood_goalPos.mut_setMagnitude(Math.PI / 6); // 30 degree angle; tune
+      shooter.setHoodGoalPos(hood_goalPos);
     });
   }
 
