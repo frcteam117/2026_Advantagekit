@@ -244,7 +244,7 @@ public class RobotContainer {
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRawAxis(3),
+        () -> -controller.getRawAxis(2),
         () -> -controller.getRightX(),
         .2,
         controller.R3(),
