@@ -68,12 +68,6 @@
       "waypointRelativePos": 0.17,
       "endWaypointRelativePos": 0.25,
       "command": null
-    },
-    {
-      "name": "shootWithoutAlign",
-      "waypointRelativePos": 0.2569213732004416,
-      "endWaypointRelativePos": 1.0,
-      "command": null
     }
   ],
   "globalConstraints": {

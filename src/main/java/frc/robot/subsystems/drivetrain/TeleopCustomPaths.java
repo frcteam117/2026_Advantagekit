@@ -13,52 +13,53 @@
 
 package frc.robot.subsystems.drivetrain;
 
-import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import java.util.List;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj2.command.Command;
 
 public class TeleopCustomPaths {
+  public boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
   public PathPlannerPath enterNZ;
   public PathPlannerPath enterAZ;
+  public PathPlannerPath test;
+  public Command toAZ;
+  public Command toNZ;
 
-  private double CalculateMirror(double value, int LRFlip) {
-    if (LRFlip == 1) {
-      return value;
-    } else {
-      return 8.07 - value;
-    }
+  private final PathConstraints constraints =
+      new PathConstraints(3, 2.5, 3 * Math.PI, 4.95 * Math.PI);
+
+  private double CalculateYMirror(double y, int LRFlip) {
+    return (LRFlip == 1) ? 8.07 - y : y;
+  }
+
+  private double CalculateXMirror(double x) {
+    return isRed ? 16.54 - x : x;
   }
 
   public TeleopCustomPaths(DrivetrainSubsystem drivetrain) {
-    double x = drivetrain.getPose().getX();
     double y = drivetrain.getPose().getY();
-    Rotation2d rotation = drivetrain.getPose().getRotation();
-    int LRFlip = 1;
+    int LRFlip;
     if (y <= 4.035) {
+      LRFlip = 1;
+    } else {
       LRFlip = -1;
     }
-    List<Waypoint> waypointsEnterNZ = PathPlannerPath.waypointsFromPoses(
-        new Pose2d(x, y, rotation),
-        new Pose2d(3.343, CalculateMirror(7.457, LRFlip), Rotation2d.fromDegrees(0)),
-        new Pose2d(4.539, CalculateMirror(7.457, LRFlip), Rotation2d.fromDegrees(0)),
-        new Pose2d(5.652, CalculateMirror(7.457, LRFlip), Rotation2d.fromDegrees(0)));
-    List<Waypoint> waypointsEnterAZ = PathPlannerPath.waypointsFromPoses(
-        new Pose2d(x, y, rotation),
-        new Pose2d(6.092, CalculateMirror(7.508, LRFlip), Rotation2d.fromDegrees(0)),
-        new Pose2d(4.833, CalculateMirror(7.508, LRFlip), Rotation2d.fromDegrees(0)),
-        new Pose2d(3.473, CalculateMirror(7.381, LRFlip), Rotation2d.fromDegrees(0)),
-        new Pose2d(2.888, CalculateMirror(7.046, LRFlip), Rotation2d.fromDegrees(117 * LRFlip)));
-    PathConstraints constraints = new PathConstraints(5.0, 3.5, 3 * Math.PI, 4.95 * Math.PI);
-    enterNZ = new PathPlannerPath(
-        waypointsEnterNZ, constraints, null, new GoalEndState(3, Rotation2d.fromDegrees(0)));
-    enterAZ = new PathPlannerPath(
-        waypointsEnterAZ,
+
+    this.toAZ = AutoBuilder.pathfindToPose(
+        new Pose2d(
+            CalculateXMirror(3), CalculateYMirror(7.408, LRFlip), Rotation2d.fromDegrees(180)),
         constraints,
-        null,
-        new GoalEndState(0.0, Rotation2d.fromDegrees(117 * LRFlip)));
+        3.0);
+
+    this.toNZ = AutoBuilder.pathfindToPose(
+        new Pose2d(
+            CalculateXMirror(6), CalculateYMirror(7.408, LRFlip), Rotation2d.fromDegrees(180)),
+        constraints,
+        3.0);
   }
 }

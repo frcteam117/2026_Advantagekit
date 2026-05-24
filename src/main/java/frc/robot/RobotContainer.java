@@ -451,15 +451,15 @@ public class RobotContainer {
         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
 
     controller
-        .povUp()
-        .onTrue(Commands.defer(
-            () -> AutoBuilder.followPath(new TeleopCustomPaths(drivetrain).enterNZ),
-            Set.of(drivetrain)));
-    controller
         .povDown()
-        .onTrue(Commands.defer(
-            () -> AutoBuilder.followPath(new TeleopCustomPaths(drivetrain).enterAZ),
-            Set.of(drivetrain)));
+        .onTrue(Commands.defer(() -> new TeleopCustomPaths(drivetrain).toNZ, Set.of(drivetrain))
+            .andThen(new TeleopCustomPaths(drivetrain).toAZ));
+    controller
+        .povUp()
+        .onTrue(Commands.defer(() -> new TeleopCustomPaths(drivetrain).toAZ, Set.of(drivetrain))
+            .andThen(new TeleopCustomPaths(drivetrain).toNZ));
+    controller.povLeft().onTrue(Commands.runOnce(() -> {}, drivetrain));
+    controller.povRight().onTrue(Commands.runOnce(() -> {}, drivetrain));
   }
 
   /**
