@@ -156,7 +156,7 @@ public class RobotCommands {
   // for outreach demonstrations:
   public static Command demoIndexAndShoot(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     // to weaken / slow all procesxses by dividing all goal #s
-    double divisor = 1.75;
+    double divisor = 2.15;
     return Commands.parallel(
         ShooterCommands.demoRunShootersAndHood(shooter, divisor),
         IndexerCommands.demoRunForwardCommand(
