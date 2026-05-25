@@ -357,11 +357,11 @@ public class ShooterCommands {
             shooter.getHoodPos().in(Radians),
             maxAllowableErrorRad.getAsDouble())
         && MathUtil.isNear(
-            flywheel_autoAimVel.in(RadiansPerSecond) / divisor,
+            600 / divisor,
             shooter.getRIOFlywheelVel().in(RadiansPerSecond),
             maxAllowableErrorRadPS.getAsDouble() * scalar)
         && MathUtil.isNear(
-            flywheel_autoAimVel.in(RadiansPerSecond) / divisor,
+            600 / divisor,
             shooter.getPDHFlywheelVel().in(RadiansPerSecond),
             maxAllowableErrorRadPS.getAsDouble() * scalar));
   }
@@ -397,8 +397,8 @@ public class ShooterCommands {
   public static Command demoRunShootersAndHood(ShooterSubsystem shooter, Double divisor) {
     return shooter.run(() -> {
       // adjust / 3 when testing shot power
-      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble() / divisor));
-      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble() / divisor));
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(600 / divisor));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(600 / divisor));
       hood_goalPos.mut_setMagnitude(Math.PI / 6); // 30 degree angle; tune
       shooter.setHoodGoalPos(hood_goalPos);
     });
