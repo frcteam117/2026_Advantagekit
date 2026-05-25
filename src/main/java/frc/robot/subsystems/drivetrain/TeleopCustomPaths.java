@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 
 public class TeleopCustomPaths {
-  public boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
   public PathPlannerPath enterNZ;
   public PathPlannerPath enterAZ;
   public PathPlannerPath test;
@@ -37,12 +36,21 @@ public class TeleopCustomPaths {
     return (LRFlip == 1) ? 8.07 - y : y;
   }
 
-  private double CalculateXMirror(double x) {
-    return isRed ? 16.54 - x : x;
+  private double CalculateXMirror(double x, boolean x_flip) {
+    return (x_flip) ? 16.54 - x : x;
+  }
+
+  private double CalculateThetaMirror(boolean x_flip) {
+    return (x_flip) ? 180 : 0;
   }
 
   public TeleopCustomPaths(DrivetrainSubsystem drivetrain) {
     double y = drivetrain.getPose().getY();
+    boolean x_flip = false;
+    if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+      x_flip = true;
+    }
+
     int LRFlip;
     if (y <= 4.035) {
       LRFlip = 1;
@@ -51,14 +59,18 @@ public class TeleopCustomPaths {
     }
 
     this.toAZ = AutoBuilder.pathfindToPose(
-        new Pose2d(
-            CalculateXMirror(3), CalculateYMirror(7.408, LRFlip), Rotation2d.fromDegrees(180)),
+      new Pose2d(
+        CalculateXMirror(3.0, x_flip),
+        CalculateYMirror(7.408, LRFlip),
+        Rotation2d.fromDegrees(CalculateThetaMirror(x_flip))),
         constraints,
         3.0);
 
     this.toNZ = AutoBuilder.pathfindToPose(
-        new Pose2d(
-            CalculateXMirror(6), CalculateYMirror(7.408, LRFlip), Rotation2d.fromDegrees(180)),
+      new Pose2d(
+        CalculateXMirror(6.0, x_flip),
+        CalculateYMirror(7.408, LRFlip),
+        Rotation2d.fromDegrees(CalculateThetaMirror(x_flip))),
         constraints,
         3.0);
   }

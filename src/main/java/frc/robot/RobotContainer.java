@@ -452,14 +452,23 @@ public class RobotContainer {
 
     controller
         .povDown()
-        .onTrue(Commands.defer(() -> new TeleopCustomPaths(drivetrain).toNZ, Set.of(drivetrain))
-            .andThen(new TeleopCustomPaths(drivetrain).toAZ));
+        .onTrue(Commands.defer(
+            () -> {
+              TeleopCustomPaths paths = new TeleopCustomPaths(drivetrain);
+              return paths.toNZ.andThen(paths.toAZ);
+            },
+            Set.of(drivetrain)));
+
     controller
         .povUp()
-        .onTrue(Commands.defer(() -> new TeleopCustomPaths(drivetrain).toAZ, Set.of(drivetrain))
-            .andThen(new TeleopCustomPaths(drivetrain).toNZ));
-    controller.povLeft().onTrue(Commands.runOnce(() -> {}, drivetrain));
+        .onTrue(Commands.defer(
+            () -> {
+              TeleopCustomPaths paths = new TeleopCustomPaths(drivetrain);
+              return paths.toAZ.andThen(paths.toNZ);
+            },
+            Set.of(drivetrain)));
     controller.povRight().onTrue(Commands.runOnce(() -> {}, drivetrain));
+    controller.povLeft().onTrue(Commands.runOnce(() -> {}, drivetrain));
   }
 
   /**
