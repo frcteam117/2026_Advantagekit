@@ -21,7 +21,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -240,26 +239,26 @@ public class RobotContainer {
         currentPose -> Logger.recordOutput("PathPlanner/CurrentPose", currentPose));
     PathPlannerLogging.setLogTargetPoseCallback(
         targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
-    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngleRegularTurning(
+    /*drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngleRegularTurning(
+    drivetrain,
+    () -> -controller.getLeftY(),
+    () -> -controller.getLeftX(),
+    () -> -controller.getRawAxis(2),
+    () -> -controller.getRightX(),
+    .2,
+    controller.R3(),
+    controller.R1(),
+    () -> new Translation2d(),
+    () -> false));*/
+    // controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
+    /*controller
+    .cross()
+    .whileTrue(RobotCommands.faceHubAndDrive(
         drivetrain,
         () -> -controller.getLeftY(),
         () -> -controller.getLeftX(),
-        () -> -controller.getRawAxis(2),
-        () -> -controller.getRightX(),
-        .2,
-        controller.R3(),
-        controller.R1(),
-        () -> new Translation2d(),
-        () -> false));
-    controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
-    controller
-        .cross()
-        .whileTrue(RobotCommands.faceHubAndDrive(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            // () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())
-            () -> new Translation2d(-.2, 0)));
+        // () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())
+        () -> new Translation2d(-.2, 0)));*/
 
     // Intake
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
