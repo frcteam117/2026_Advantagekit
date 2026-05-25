@@ -30,7 +30,7 @@ public class TeleopCustomPaths {
   public Command toNZ;
 
   private final PathConstraints constraints =
-      new PathConstraints(3, 2.5, 3 * Math.PI, 4.95 * Math.PI);
+      new PathConstraints(4.5, 3.5, 2.5 * Math.PI, 3.5 * Math.PI); // 3, 2.5, 3, 4.95
 
   private double CalculateYMirror(double y, int LRFlip) {
     return (LRFlip == 1) ? 8.07 - y : y;
@@ -59,19 +59,19 @@ public class TeleopCustomPaths {
     }
 
     this.toAZ = AutoBuilder.pathfindToPose(
-      new Pose2d(
-        CalculateXMirror(3.0, x_flip),
-        CalculateYMirror(7.408, LRFlip),
-        Rotation2d.fromDegrees(CalculateThetaMirror(x_flip))),
+        new Pose2d(
+            CalculateXMirror(3.0, x_flip),
+            CalculateYMirror(7.408, LRFlip),
+            Rotation2d.fromDegrees(CalculateThetaMirror(x_flip))),
         constraints,
-        3.0);
+        3.5); // 3.0
 
     this.toNZ = AutoBuilder.pathfindToPose(
-      new Pose2d(
-        CalculateXMirror(6.0, x_flip),
-        CalculateYMirror(7.408, LRFlip),
-        Rotation2d.fromDegrees(CalculateThetaMirror(x_flip))),
+        new Pose2d(
+            CalculateXMirror(6.0, x_flip),
+            CalculateYMirror(7.408, LRFlip),
+            Rotation2d.fromDegrees(CalculateThetaMirror(x_flip))),
         constraints,
-        3.0);
+        4.5); // 3.0
   }
 }
