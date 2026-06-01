@@ -48,7 +48,6 @@ import frc.robot.util.SysIdUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -261,6 +260,8 @@ public class RobotContainer {
         .2,
         controller.R3(),
         controller.R1(),
+        controller.povDown(),
+        controller.povUp(),
         () -> new Translation2d(),
         () -> false));
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
@@ -449,7 +450,8 @@ public class RobotContainer {
     controller2
         .touchpad()
         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-
+    // Trench button attempt
+    /*
     controller
         .povDown()
         .onTrue(Commands.defer(
@@ -469,6 +471,7 @@ public class RobotContainer {
             Set.of(drivetrain)));
     controller.povRight().onTrue(Commands.runOnce(() -> {}, drivetrain));
     controller.povLeft().onTrue(Commands.runOnce(() -> {}, drivetrain));
+    */
   }
 
   /**

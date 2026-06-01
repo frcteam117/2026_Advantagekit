@@ -323,15 +323,13 @@ public class DrivetrainCommands {
       Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier driveAssistSupplier) {
 
-    // Construct command
     return drivetrain
         .run(() -> {
+          boolean isFlipped = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-
-          boolean isFlipped = DriverStation.getAlliance().isPresent()
-              && DriverStation.getAlliance().get() == Alliance.Red;
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(
@@ -448,6 +446,42 @@ public class DrivetrainCommands {
    * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
    * absolute rotation with a joystick.
    */
+  public static Pose2d getLeftTrenchPose() {
+    boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+    return new Pose2d(isRed ? 16.54 - 4.65 : 4.65, 7.4, Rotation2d.fromDegrees(isRed ? 180 : 0));
+  }
+
+  public static Pose2d getRightTrenchPose() {
+    boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+    return new Pose2d(isRed ? 16.54 - 4.65 : 4.65, 0.6, Rotation2d.fromDegrees(isRed ? 180 : 0));
+  }
+
+  public static char nearTrench(DrivetrainSubsystem drivetrain) {
+    Pose2d robotPose = drivetrain.getPose();
+
+    Pose2d leftTargetPose = getLeftTrenchPose();
+    double leftDistance = Math.pow(
+        Math.pow((robotPose.getX() - leftTargetPose.getX()), 2)
+            + Math.pow((robotPose.getY() - leftTargetPose.getY()), 2),
+        0.5);
+    double leftLateralDistance = Math.abs(robotPose.getY() - leftTargetPose.getY());
+
+    Pose2d rightTargetPose = getRightTrenchPose();
+    double rightDistance = Math.pow(
+        Math.pow((robotPose.getX() - rightTargetPose.getX()), 2)
+            + Math.pow((robotPose.getY() - rightTargetPose.getY()), 2),
+        0.5);
+    double rightLateralDistance = Math.abs(robotPose.getY() - rightTargetPose.getY());
+
+    if (leftDistance < 2 && leftLateralDistance < 2) {
+      return 'L';
+    } else if (rightDistance < 2 && rightLateralDistance < 2) {
+      return 'R';
+    } else {
+      return 'N';
+    }
+  }
+
   public static Command joystickDriveAtAngle(
       DrivetrainSubsystem drivetrain,
       DoubleSupplier xSupplier,
@@ -457,6 +491,8 @@ public class DrivetrainCommands {
       double deadband,
       BooleanSupplier snapToAngle1,
       BooleanSupplier snapToAngle2,
+      BooleanSupplier snapToAngle3,
+      BooleanSupplier snapToAngle4,
       Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier driveAssistSupplier) {
 
@@ -502,10 +538,43 @@ public class DrivetrainCommands {
                   isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
             }
           }
+          if (snapToAngle3.getAsBoolean()) {
+            joystickDriveAtAngle_rotTarget = Rotation2d.kZero;
+            joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
+                isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
+          } else if (snapToAngle4.getAsBoolean()) {
+            joystickDriveAtAngle_rotTarget = Rotation2d.k180deg;
+            joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
+                isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
+          }
+          double yValue = ySupplier.getAsDouble();
+          char trench = nearTrench(drivetrain);
+
+          if (trench == 'L') {
+            Pose2d robotPose = drivetrain.getPose();
+            Pose2d leftTargetPose = getLeftTrenchPose();
+            double leftDistance =
+                robotPose.getTranslation().getDistance(leftTargetPose.getTranslation());
+            double leftLateralDistance = leftTargetPose.getY() - robotPose.getY();
+            if (isFlipped) leftLateralDistance *= -1;
+            double strength =
+                MathUtil.clamp(0.4 + Math.abs(leftLateralDistance) * 1.5 - leftDistance / 3, 0, 1);
+            yValue = (yValue * (1 - strength)) + ((leftLateralDistance) * strength * 2);
+          } else if (trench == 'R') {
+            Pose2d robotPose = drivetrain.getPose();
+            Pose2d rightTargetPose = getRightTrenchPose();
+            double rightDistance =
+                robotPose.getTranslation().getDistance(rightTargetPose.getTranslation());
+            double rightLateralDistance = rightTargetPose.getY() - robotPose.getY();
+            if (isFlipped) rightLateralDistance *= -1;
+            double strength = MathUtil.clamp(
+                0.4 + Math.abs(rightLateralDistance) * 1.5 - rightDistance / 3, 0, 1);
+            yValue = (yValue * (1 - strength)) + ((rightLateralDistance) * strength * 2);
+          }
 
           // Get linear velocity
           Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), yValue);
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds = new ChassisSpeeds(

@@ -5,10 +5,12 @@
   "pathFolders": [
     "Aura Farming Auto",
     "Full Double Dip",
+    "Choreo",
     "Path on the fly testing",
     "Trench Double Dip"
   ],
   "autoFolders": [
+    "Choreo",
     "Post-worlds experiments"
   ],
   "defaultMaxVel": 4.0,
