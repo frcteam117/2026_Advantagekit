@@ -142,7 +142,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "AutoOverBumpWithFlywheelRev",
         DrivetrainCommands.pathOverBump(drivetrain)
-            .deadlineWith(ShooterCommands.runForward(shooter)));
+            .deadlineWith(ShooterCommands.runForward2(shooter)));
     // NamedCommands.registerCommand("ResetPose", DrivetrainSubsystem.resetPoseWithVision());
     NamedCommands.registerCommand(
         "alignAndShoot",
@@ -171,6 +171,8 @@ public class RobotContainer {
         Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stopAndZeroHood(shooter)));
     NamedCommands.registerCommand(
         "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
+    NamedCommands.registerCommand("preparefortrenchshot", ShooterCommands.runForward1(shooter));
+    NamedCommands.registerCommand("prepareforbumpshot", ShooterCommands.runForward1(shooter));
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
     NamedCommands.registerCommand("set_robot_coast", RobotCommands.setCoastMode(drivetrain, false));
 
@@ -190,6 +192,12 @@ public class RobotContainer {
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
                 () -> true)
             .withTimeout(10));
+    /*
+    autoChooser.addOption(
+        "Choreo 3t1b1 Auto",
+        AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("3t1b1")));
+    */
+
     // autoChooser.addOption(
     //     "Drive SysId (QuasistaticForward)",
     //     DrivetrainCommands.getLinearDriveSysId(drivetrain, SysIdType.QuasistaticForward));
@@ -262,6 +270,7 @@ public class RobotContainer {
         controller.R1(),
         controller.povDown(),
         controller.povUp(),
+        controller.L1(),
         () -> new Translation2d(),
         () -> false));
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));

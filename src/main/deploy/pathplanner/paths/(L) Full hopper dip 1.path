@@ -32,16 +32,16 @@
     },
     {
       "anchor": {
-        "x": 8.001020166073548,
-        "y": 5.3960379596678525
+        "x": 7.809927536231882,
+        "y": 5.837164887307236
       },
       "prevControl": {
-        "x": 8.038684974836407,
-        "y": 4.126445326419573
+        "x": 7.847592344994741,
+        "y": 4.567572254058956
       },
       "nextControl": {
-        "x": 7.955733960502729,
-        "y": 6.922530058498691
+        "x": 7.764641330661063,
+        "y": 7.363656986138075
       },
       "isLocked": false,
       "linkedName": null
@@ -68,8 +68,8 @@
         "y": 7.095990510083036
       },
       "prevControl": {
-        "x": 2.9872360616898415,
-        "y": 7.590913404502331
+        "x": 3.128311036789297,
+        "y": 7.508294314381271
       },
       "nextControl": null,
       "isLocked": false,
@@ -104,7 +104,7 @@
       "minWaypointRelativePos": 0.9448818897637783,
       "maxWaypointRelativePos": 1.2868391451068637,
       "constraints": {
-        "maxVelocity": 1.7,
+        "maxVelocity": 1.3,
         "maxAcceleration": 3.5,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 791.0,
@@ -129,7 +129,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "flywheel_acc_2",
+      "name": "preparefortrenchshot",
       "waypointRelativePos": 2.9966254218222503,
       "endWaypointRelativePos": 4.0,
       "command": null

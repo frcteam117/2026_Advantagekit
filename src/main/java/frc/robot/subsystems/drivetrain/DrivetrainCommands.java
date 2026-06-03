@@ -493,6 +493,7 @@ public class DrivetrainCommands {
       BooleanSupplier snapToAngle2,
       BooleanSupplier snapToAngle3,
       BooleanSupplier snapToAngle4,
+      BooleanSupplier overrideTrenchAssist,
       Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier driveAssistSupplier) {
 
@@ -540,12 +541,8 @@ public class DrivetrainCommands {
           }
           if (snapToAngle3.getAsBoolean()) {
             joystickDriveAtAngle_rotTarget = Rotation2d.kZero;
-            joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
-                isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
           } else if (snapToAngle4.getAsBoolean()) {
             joystickDriveAtAngle_rotTarget = Rotation2d.k180deg;
-            joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
-                isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
           }
           double yValue = ySupplier.getAsDouble();
           char trench = nearTrench(drivetrain);
@@ -559,7 +556,9 @@ public class DrivetrainCommands {
             if (isFlipped) leftLateralDistance *= -1;
             double strength =
                 MathUtil.clamp(0.4 + Math.abs(leftLateralDistance) * 1.5 - leftDistance / 3, 0, 1);
-            yValue = (yValue * (1 - strength)) + ((leftLateralDistance) * strength * 2);
+            if (!true /*overrideTrenchAssist.getAsBoolean()*/) {
+              yValue = (yValue * (1 - strength)) + ((leftLateralDistance) * strength * 2);
+            }
           } else if (trench == 'R') {
             Pose2d robotPose = drivetrain.getPose();
             Pose2d rightTargetPose = getRightTrenchPose();
@@ -569,7 +568,9 @@ public class DrivetrainCommands {
             if (isFlipped) rightLateralDistance *= -1;
             double strength = MathUtil.clamp(
                 0.4 + Math.abs(rightLateralDistance) * 1.5 - rightDistance / 3, 0, 1);
-            yValue = (yValue * (1 - strength)) + ((rightLateralDistance) * strength * 2);
+            if (!true /*overrideTrenchAssist.getAsBoolean()*/) {
+              yValue = (yValue * (1 - strength)) + ((rightLateralDistance) * strength * 2);
+            }
           }
 
           // Get linear velocity

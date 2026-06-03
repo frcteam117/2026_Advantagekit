@@ -1,0 +1,82 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "MVR but better"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeDeploy"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Ooo fancy"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Better depot auto trust"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeDeploy"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "We set up for trench"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "REEEEE"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeDeploy"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Post-worlds experiments",
+  "choreoAuto": false
+}

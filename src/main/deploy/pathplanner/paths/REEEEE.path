@@ -1,0 +1,97 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.274,
+        "y": 7.21
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.676833333333333,
+        "y": 7.360666666666666
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.526544444444443,
+        "y": 7.088566666666667
+      },
+      "prevControl": {
+        "x": 5.710658333333332,
+        "y": 7.869563194444444
+      },
+      "nextControl": {
+        "x": 7.342430555555555,
+        "y": 6.30757013888889
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.889344444444443,
+        "y": 4.8513
+      },
+      "prevControl": {
+        "x": 6.9095,
+        "y": 5.5164333333333335
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.38596491228070395,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 0.8771929824561384,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.2491228070175624,
+      "rotationDegrees": -105.00000000000001
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 1.1605758582502748,
+      "maxWaypointRelativePos": 2.0,
+      "constraints": {
+        "maxVelocity": 1.7,
+        "maxAcceleration": 3.5,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.0,
+    "maxAcceleration": 3.5,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -105.00000000000001
+  },
+  "reversed": false,
+  "folder": "Sotm depot",
+  "idealStartingState": {
+    "velocity": 0.0,
+    "rotation": 126.355
+  },
+  "useDefaultConstraints": false
+}

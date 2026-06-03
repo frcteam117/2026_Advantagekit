@@ -36,7 +36,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.2
+                  "waitTime": 4.1
                 }
               }
             ]
@@ -65,6 +65,31 @@
           "type": "named",
           "data": {
             "name": "AutoOverBumpWithFlywheelRev"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "(L) Full Hopper Dip 3"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "alignAndShoot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 0.5
+                }
+              }
+            ]
           }
         },
         {
