@@ -16,6 +16,8 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.*;
 
 import com.pathplanner.lib.config.RobotConfig;
+import com.revrobotics.spark.config.SignalsConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import com.thethriftybot.devices.ThriftyNova.CurrentType;
 import com.thethriftybot.devices.ThriftyNova.EncoderType;
 import com.thethriftybot.devices.ThriftyNova.ExternalEncoder;
@@ -130,6 +132,9 @@ public class DrivetrainConstants {
     public static final double max_mPs = Units.feetToMeters(15);
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
+    public static final SignalsConfig signalsConfig = new SignalsConfig();
+    public static final SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
+
     // Drive PID configuration
     public static final SimpleMotorFeedforward
         realFF = new SimpleMotorFeedforward(0.02, 0.011, 0.0008, RobotConstants.CODE_PERIOD_s),
@@ -158,6 +163,11 @@ public class DrivetrainConstants {
       config.inverted = false;
       config.encoderType = EncoderType.INTERNAL;
       config.maxOutput = 1.0;
+
+      signalsConfig.primaryEncoderPositionPeriodMs((int) (1 / Chassis.odometryFrequency_Hz) * 1000);
+      sparkMaxConfig.smartCurrentLimit(50);
+      sparkMaxConfig.voltageCompensation(RobotConstants.NOMINAL_V);
+      sparkMaxConfig.apply(signalsConfig);
 
       if (RobotBase.isReal()) {
         LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, realPID, tunable::get);
@@ -236,6 +246,7 @@ public class DrivetrainConstants {
 
     /** FL, FR, BL, BR. Negative rotation of each absolute encoder when the wheels face forward */
     public static final int[] zeroRotations_ticks =
-        new int[] {1837 - 2157 - 3897 - 842 - 363 - 189, -1529 - 1994 - 69, 2273 - 3930, 1339 - 1751};
+        new int[] {1837 - 2157 - 3897 - 842 - 363 - 189, -1529 - 1994 - 69, 2273 - 3930, 1339 - 1751
+        };
   }
 }
