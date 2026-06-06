@@ -16,6 +16,7 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.*;
 
 import com.pathplanner.lib.config.RobotConfig;
+import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SignalsConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.thethriftybot.devices.ThriftyNova.CurrentType;
@@ -133,6 +134,7 @@ public class DrivetrainConstants {
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
     public static final SignalsConfig signalsConfig = new SignalsConfig();
+    public static final EncoderConfig encoderConfig = new EncoderConfig();
     public static final SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
 
     // Drive PID configuration
@@ -164,9 +166,11 @@ public class DrivetrainConstants {
       config.encoderType = EncoderType.INTERNAL;
       config.maxOutput = 1.0;
 
-      signalsConfig.primaryEncoderPositionPeriodMs((int) (1 / Chassis.odometryFrequency_Hz) * 1000);
+      // signalsConfig.primaryEncoderPositionPeriodMs((int) (1 / Chassis.odometryFrequency_Hz) *
+      // 1000);
       sparkMaxConfig.smartCurrentLimit(50);
       sparkMaxConfig.voltageCompensation(RobotConstants.NOMINAL_V);
+      sparkMaxConfig.apply(encoderConfig);
       sparkMaxConfig.apply(signalsConfig);
 
       if (RobotBase.isReal()) {

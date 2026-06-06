@@ -43,6 +43,7 @@ public interface ModuleIO {
       public final MutVoltage outputVoltage = Volts.mutable(0);
       public final MutCurrent inputCurrent = Amps.mutable(0);
       public final MutCurrent outputCurrent = Amps.mutable(0);
+      public final MutVoltage commandVoltage = Volts.mutable(0);
       public Error[] errors = new Error[0];
     }
 
@@ -76,6 +77,7 @@ public interface ModuleIO {
       table.put("Drive/Velocity", drive.velocity.in(RadiansPerSecond), RadiansPerSecond.name());
       table.put("Drive/InputVoltage", drive.inputVoltage.in(Volts), Volts.name());
       table.put("Drive/OutputVoltage", drive.outputVoltage.in(Volts), Volts.name());
+      table.put("Drive/CommandVoltage", drive.commandVoltage);
       table.put("Drive/InputCurrent", drive.inputCurrent.in(Amps), Amps.name());
       table.put("Drive/OutputCurrent", drive.outputCurrent.in(Amps), Amps.name());
       table.put("Drive/Errors", drive.errors);
