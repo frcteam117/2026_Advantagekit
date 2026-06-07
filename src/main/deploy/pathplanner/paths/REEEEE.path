@@ -32,12 +32,12 @@
     },
     {
       "anchor": {
-        "x": 6.889344444444443,
-        "y": 4.8513
+        "x": 7.030433333333333,
+        "y": 4.6699
       },
       "prevControl": {
-        "x": 6.9095,
-        "y": 5.5164333333333335
+        "x": 7.05058888888889,
+        "y": 5.3350333333333335
       },
       "nextControl": null,
       "isLocked": false,
@@ -85,7 +85,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -105.00000000000001
+    "rotation": -75.0
   },
   "reversed": false,
   "folder": "Sotm depot",
