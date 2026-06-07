@@ -50,11 +50,11 @@ public class ModuleIONova implements ModuleIO {
     moduleIndex = module;
     driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
-
+    Boolean freespin = ((module == 0) || (module == 3)); // FL & BR are freespin
     // Configure drive motor
     System.out.println(
         "Configuring drive motor. Module: " + module + "  CAN Id: " + Drive.canIds[module]);
-    driveNova.applyConfig(Drive.config);
+    driveNova.applyConfig(freespin ? Drive.freespinConfig : Drive.config);
     System.out.println("Finished configuring drive motor. Module: " + module + "  CAN Id: "
         + Drive.canIds[module]);
 
@@ -62,7 +62,8 @@ public class ModuleIONova implements ModuleIO {
     System.out.println(
         "Configuring Azimuth motor. Module: " + module + "  CAN Id: " + Azimuth.canIds[module]);
     Azimuth.config.absOffset = AbsEncoder.zeroRotations_ticks[module];
-    azimuthNova.applyConfig(Azimuth.config);
+    Azimuth.freespinConfig.absOffset = AbsEncoder.zeroRotations_ticks[module];
+    azimuthNova.applyConfig(freespin ? Azimuth.freespinConfig : Azimuth.config);
     System.out.println("Finished configuring Azimuth motor. Module: " + module + "  CAN Id: "
         + Azimuth.canIds[module]);
 

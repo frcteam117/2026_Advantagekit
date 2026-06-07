@@ -38,6 +38,8 @@ public class ModuleIOSim implements ModuleIO {
       azimuthAppliedVolts = 0.0;
 
   public ModuleIOSim(SwerveModuleSimulation moduleSimulation) {
+    // TODO: add simulation changes here so you can see how swerve drives with 
+    // 2 modules in sim
     this.moduleSimulation = moduleSimulation;
     this.driveMotor = moduleSimulation
         .useGenericMotorControllerForDrive()

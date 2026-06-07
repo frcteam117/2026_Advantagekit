@@ -129,6 +129,7 @@ public class DrivetrainConstants {
     // software limits
     public static final double max_mPs = Units.feetToMeters(15);
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
+    public static final ThriftyNovaConfig freespinConfig = new ThriftyNovaConfig();
 
     // Drive PID configuration
     public static final SimpleMotorFeedforward
@@ -158,6 +159,26 @@ public class DrivetrainConstants {
       config.inverted = false;
       config.encoderType = EncoderType.INTERNAL;
       config.maxOutput = 1.0;
+      //
+      freespinConfig.brakeMode = false;
+      freespinConfig.voltageCompensation = RobotConstants.NOMINAL_V;
+      freespinConfig.currentType = CurrentType.STATOR;
+      freespinConfig.maxCurrent = 0.0;
+      freespinConfig.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
+      freespinConfig.canFreq.control = 0.02;
+      freespinConfig.canFreq.current = 0.02;
+      freespinConfig.canFreq.fault = 0.02;
+      freespinConfig.pidSlot = PIDSlot.SLOT0;
+      freespinConfig.pid0.p = 0.00;
+      freespinConfig.pid0.i = 0.0;
+      freespinConfig.pid0.d = 0.0;
+      freespinConfig.pid0.f = 0.00;
+      freespinConfig.pid0.allowableError = 0.0;
+      freespinConfig.pid0.iZone = 0.0;
+      freespinConfig.absoluteWrapping = false;
+      freespinConfig.inverted = false;
+      freespinConfig.encoderType = EncoderType.INTERNAL;
+      freespinConfig.maxOutput = 0.0;
 
       if (RobotBase.isReal()) {
         LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, realPID, tunable::get);
@@ -182,6 +203,7 @@ public class DrivetrainConstants {
 
     // software limits
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
+    public static final ThriftyNovaConfig freespinConfig = new ThriftyNovaConfig();
 
     public static final SimpleMotorFeedforward
         realFF = new SimpleMotorFeedforward(0.03, 0.04, 0.00, RobotConstants.CODE_PERIOD_s),
@@ -211,6 +233,26 @@ public class DrivetrainConstants {
       config.inverted = true;
       config.encoderType = EncoderType.ABS;
 
+      freespinConfig.brakeMode = false;
+      freespinConfig.voltageCompensation = null;
+      freespinConfig.currentType = CurrentType.STATOR;
+      freespinConfig.maxCurrent = 0.0;
+      freespinConfig.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
+      freespinConfig.canFreq.control = 0.02;
+      freespinConfig.canFreq.current = 0.02;
+      freespinConfig.canFreq.fault = 0.02;
+      freespinConfig.pidSlot = PIDSlot.SLOT0;
+      freespinConfig.pid0.p = 0.0;
+      freespinConfig.pid0.i = 0.0;
+      freespinConfig.pid0.d = 0.0;
+      freespinConfig.pid0.f = 0.0;
+      freespinConfig.pid0.allowableError = 0.0;
+      freespinConfig.pid0.iZone = 0.0;
+      freespinConfig.absoluteWrapping = true;
+      freespinConfig.externalEncoder = ExternalEncoder.THRIFTY_10_PIN_ENCODER;
+      freespinConfig.inverted = true;
+      freespinConfig.encoderType = EncoderType.ABS;
+
       realPID.enableContinuousInput(0, 2 * Math.PI);
       simPID.enableContinuousInput(0, 2 * Math.PI);
 
@@ -236,6 +278,7 @@ public class DrivetrainConstants {
 
     /** FL, FR, BL, BR. Negative rotation of each absolute encoder when the wheels face forward */
     public static final int[] zeroRotations_ticks =
-        new int[] {1837 - 2157 - 3897 - 842 - 363 - 189, -1529 - 1994 - 69, 2273 - 3930, 1339 - 1751};
+        new int[] {1837 - 2157 - 3897 - 842 - 363 - 189, -1529 - 1994 - 69, 2273 - 3930, 1339 - 1751
+        };
   }
 }
