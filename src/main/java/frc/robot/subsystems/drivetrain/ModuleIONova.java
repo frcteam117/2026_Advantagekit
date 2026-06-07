@@ -54,7 +54,7 @@ public class ModuleIONova implements ModuleIO {
   public ModuleIONova(int module) {
     moduleIndex = module;
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
-    if (module != 3) {
+    if ((module == 1) || (module == 2)) { // FR, BL are still novas
       driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
       driveSparkMax = null;
     } else {
