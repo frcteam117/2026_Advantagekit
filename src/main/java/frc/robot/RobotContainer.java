@@ -103,10 +103,13 @@ public class RobotContainer {
         // Sim robot, instantiate physics sim IO implementations
         drivetrain = new DrivetrainSubsystem(
             new GyroIOSim(driveSimulation.getGyroSimulation()),
-            new ModuleIOSim(driveSimulation.getModules()[0]),
-            new ModuleIOSim(driveSimulation.getModules()[1]),
-            new ModuleIOSim(driveSimulation.getModules()[2]),
-            new ModuleIOSim(driveSimulation.getModules()[3]),
+            new ModuleIOSim(driveSimulation.getModules()[0], 0),
+            new ModuleIOSim(
+                driveSimulation.getModules()[1],
+                1), // im too lazy to figure out another way to get the
+            // module nums leave me alone
+            new ModuleIOSim(driveSimulation.getModules()[2], 2),
+            new ModuleIOSim(driveSimulation.getModules()[3], 3),
             driveSimulation::setSimulationWorldPose);
         intake = new IntakeSubsystem(new IntakeIO() {});
         shooter = new ShooterSubsystem(new ShooterIO() {});
