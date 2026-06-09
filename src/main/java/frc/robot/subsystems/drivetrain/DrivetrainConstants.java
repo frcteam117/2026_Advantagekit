@@ -168,11 +168,7 @@ public class DrivetrainConstants {
 
       // signalsConfig.primaryEncoderPositionPeriodMs((int) (1 / Chassis.odometryFrequency_Hz) *
       // 1000);
-      sparkMaxConfig.closedLoop
-        .p(0.001)
-        .i(0.0)
-        .d(0.0)
-        .velocityFF(0.001);
+      sparkMaxConfig.closedLoop.p(0.001).i(0.0).d(0.0).velocityFF(0.001);
       sparkMaxConfig.smartCurrentLimit(50);
       sparkMaxConfig.voltageCompensation(RobotConstants.NOMINAL_V);
       sparkMaxConfig.apply(encoderConfig);

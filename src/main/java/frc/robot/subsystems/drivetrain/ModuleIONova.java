@@ -91,8 +91,8 @@ public class ModuleIONova implements ModuleIO {
               () -> UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction));
     } else {
       drivePositionQueue = NovaOdometryThread.getInstance()
-          .registerSignal(() -> UnitUtil.rotTorad(
-              driveSparkMax.getEncoder().getPosition() / Drive.reduction));
+          .registerSignal(
+              () -> UnitUtil.rotTorad(driveSparkMax.getEncoder().getPosition() / Drive.reduction));
     }
     azimuthPositionQueue =
         NovaOdometryThread.getInstance().registerSignal(() -> -azimuthNova.getPositionAbs());
