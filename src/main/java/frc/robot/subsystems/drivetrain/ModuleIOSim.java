@@ -37,14 +37,24 @@ public class ModuleIOSim implements ModuleIO {
       driveAppliedVolts = 0.0,
       azimuthAppliedVolts = 0.0;
 
-  public ModuleIOSim(SwerveModuleSimulation moduleSimulation) {
+  public ModuleIOSim(SwerveModuleSimulation moduleSimulation, int module) {
+    // TODO: see if there's a way to change the fact that the simulated physics arent working with freespin
+    Boolean freespin = ((module == 0) || (module == 3)); // FL & BR are freespin
+
     this.moduleSimulation = moduleSimulation;
-    this.driveMotor = moduleSimulation
-        .useGenericMotorControllerForDrive()
-        .withCurrentLimit(Amps.of(Drive.config.maxCurrent));
-    this.azimuthMotor = moduleSimulation
-        .useGenericControllerForSteer()
-        .withCurrentLimit(Amps.of(Azimuth.config.maxCurrent));
+    if (freespin) {
+      this.driveMotor =
+          moduleSimulation.useGenericMotorControllerForDrive().withCurrentLimit(Amps.of(0));
+      this.azimuthMotor =
+          moduleSimulation.useGenericControllerForSteer().withCurrentLimit(Amps.of(0));
+    } else {
+      this.driveMotor = moduleSimulation
+          .useGenericMotorControllerForDrive()
+          .withCurrentLimit(Amps.of(Drive.config.maxCurrent));
+      this.azimuthMotor = moduleSimulation
+          .useGenericControllerForSteer()
+          .withCurrentLimit(Amps.of(Azimuth.config.maxCurrent));
+    }
   }
 
   @Override
