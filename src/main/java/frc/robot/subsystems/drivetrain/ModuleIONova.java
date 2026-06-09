@@ -51,10 +51,12 @@ public class ModuleIONova implements ModuleIO {
   private double lastNextAzimuthVelocity_radPs = 0.0;
   private double currentAzimuthPosition_rad = 0.0;
 
+  private double commandVoltage;
+
   public ModuleIONova(int module) {
     moduleIndex = module;
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
-    if ((module == 2) || (module == 3)) { // BL, BR are still novas
+    if ((module == 0) || (module == 1)) { // FL, FR are still novas
       driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
       driveSparkMax = null;
     } else {
@@ -153,7 +155,7 @@ public class ModuleIONova implements ModuleIO {
       inputs.drive.position.mut_replace(
           UnitUtil.rotTorad(driveSparkMax.getEncoder().getPosition() / Drive.reduction), Radians);
       inputs.drive.velocity.mut_replace(
-          UnitUtil.rotTorad(driveSparkMax.getEncoder().getVelocity() / Drive.reduction),
+          UnitUtil.rotTorad(driveSparkMax.getEncoder().getVelocity() / Drive.reduction / 60),
           RadiansPerSecond);
       inputs.drive.outputVoltage.mut_replace(driveSparkMax.getAppliedOutput() * 12.0, Volts);
       // inputs.drive.inputVoltage.mut_replace(driveSparkMax.getVoltage(), Volts);
@@ -191,15 +193,18 @@ public class ModuleIONova implements ModuleIO {
     timestampQueue.clear();
     drivePositionQueue.clear();
     azimuthPositionQueue.clear();
+
+    inputs.drive.commandVoltage.mut_replace(commandVoltage, Volts);
   }
 
   @Override
   public void setDriveVoltage(double voltage_V) {
     if (driveNova == null) {
-      driveSparkMax.setVoltage(voltage_V);
+      driveSparkMax.setVoltage(voltage_V * 12.0);
     } else {
       driveNova.setVoltage(voltage_V);
     }
+    commandVoltage = voltage_V;
   }
 
   @Override
@@ -218,9 +223,11 @@ public class ModuleIONova implements ModuleIO {
     if (driveSparkMax == null) {
       driveNova.setVoltage(voltage);
     } else {
-      driveSparkMax.setVoltage(voltage);
+      driveSparkMax.setVoltage(voltage * 12.0);
     }
-  }
+    commandVoltage = voltage;
+    
+    }
 
   @Override
   public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
