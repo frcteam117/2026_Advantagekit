@@ -74,6 +74,7 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedDashboardChooser<Boolean> driveModeChooser;
 
   /** The container for the robot. Contains subsystems and commands. */
   public RobotContainer() {
@@ -166,6 +167,10 @@ public class RobotContainer {
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
+    driveModeChooser = new LoggedDashboardChooser<>("Drive Mode Selection");
+    driveModeChooser.addDefaultOption("Angle Drive (Max style)", true);
+    driveModeChooser.addOption("Regular Turning (MoSim style)", false);
+
     // Set up SysId routines
     autoChooser.addOption(
         "Drive Wheel Radius Characterization",
@@ -240,17 +245,29 @@ public class RobotContainer {
         currentPose -> Logger.recordOutput("PathPlanner/CurrentPose", currentPose));
     PathPlannerLogging.setLogTargetPoseCallback(
         targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
-    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngleRegularTurning(
-        drivetrain,
-        () -> -controller.getLeftY(),
-        () -> -controller.getLeftX(),
-        () -> -controller.getRawAxis(2),
-        () -> -controller.getRightX(),
-        .2,
-        controller.R3(),
-        controller.R1(),
-        () -> new Translation2d(),
-        () -> false));
+
+    drivetrain.setDefaultCommand(Commands.either(
+        DrivetrainCommands.joystickDriveAtAngle(
+            drivetrain,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> Rotation2d.fromRadians(
+                Math.atan2(-controller.getRightX(), -controller.getRightY())),
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+            () -> false),
+        DrivetrainCommands.joystickDriveAtAngleRegularTurning(
+            drivetrain,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRawAxis(2),
+            () -> -controller.getRightX(),
+            .2,
+            controller.R3(),
+            controller.R1(),
+            () -> new Translation2d(),
+            () -> false),
+        driveModeChooser::get));
+
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
     controller
         .cross()
