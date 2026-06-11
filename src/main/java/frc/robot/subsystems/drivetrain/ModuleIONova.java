@@ -226,8 +226,7 @@ public class ModuleIONova implements ModuleIO {
       driveSparkMax.setVoltage(voltage * 12.0);
     }
     commandVoltage = voltage;
-    
-    }
+  }
 
   @Override
   public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
