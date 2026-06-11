@@ -263,14 +263,14 @@ public class RobotContainer {
             () -> -controller.getRightX(),
             .2,
             controller.R3(),
-            controller.R1(),
+            () -> false, //controller.R1(),
             () -> new Translation2d(),
             () -> false),
         driveModeChooser::get));
 
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
     controller
-        .cross()
+        .R1()
         .whileTrue(RobotCommands.faceHubAndDrive(
             drivetrain,
             () -> -controller.getLeftY(),
@@ -279,6 +279,7 @@ public class RobotContainer {
             () -> new Translation2d(-.2, 0)));
 
     // Intake
+    /*
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
     controller
         .circle()
@@ -289,13 +290,24 @@ public class RobotContainer {
         .whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false))
         .whileTrue(IndexerCommands.intakingAgitation(indexer)
             .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
+    */
+    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, () -> false));
+    controller
+        .L1()
+        .whileTrue(IntakeCommands.outtakeFuel(intake, () -> false)
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+    controller
+        .L2()
+        .whileTrue(IntakeCommands.intakeFuel(intake, () -> false, () -> false))
+        .whileTrue(IndexerCommands.intakingAgitation(indexer)
+            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
     controller
         .button(10)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-1.5)), intake));
     controller
         .button(9)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-0.7)), intake));
-
+    
     // Indexer
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
     if (ShooterCommands.isTuning) {
