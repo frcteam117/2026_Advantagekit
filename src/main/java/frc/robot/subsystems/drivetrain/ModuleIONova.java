@@ -18,6 +18,10 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkLowLevel; // .MotorType;
+import com.revrobotics.spark.SparkMax;
 import com.thethriftybot.devices.ThriftyNova;
 import com.thethriftybot.devices.ThriftyNova.MotorType;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -34,6 +38,7 @@ import java.util.Queue;
 public class ModuleIONova implements ModuleIO {
   // Hardware objects
   private final ThriftyNova driveNova;
+  private final SparkMax driveSparkMax;
   private final ThriftyNova azimuthNova;
   private final int moduleIndex;
 
@@ -46,15 +51,29 @@ public class ModuleIONova implements ModuleIO {
   private double lastNextAzimuthVelocity_radPs = 0.0;
   private double currentAzimuthPosition_rad = 0.0;
 
+  private double commandVoltage;
+
   public ModuleIONova(int module) {
     moduleIndex = module;
-    driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
     azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
+    if ((module == 0) || (module == 1)) { // FL, FR are still novas
+      driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
+      driveSparkMax = null;
+    } else {
+      driveNova = null;
+      driveSparkMax = new SparkMax(Drive.canIds[module], SparkLowLevel.MotorType.kBrushless);
+    }
 
     // Configure drive motor
     System.out.println(
         "Configuring drive motor. Module: " + module + "  CAN Id: " + Drive.canIds[module]);
-    driveNova.applyConfig(Drive.config);
+    if (driveSparkMax == null) {
+      driveNova.applyConfig(Drive.config);
+    } else {
+      driveSparkMax.configure(
+          Drive.sparkMaxConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
     System.out.println("Finished configuring drive motor. Module: " + module + "  CAN Id: "
         + Drive.canIds[module]);
 
@@ -68,8 +87,15 @@ public class ModuleIONova implements ModuleIO {
 
     // Create odometry queues
     timestampQueue = NovaOdometryThread.getInstance().makeTimestampQueue();
-    drivePositionQueue = NovaOdometryThread.getInstance()
-        .registerSignal(() -> UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction));
+    if (driveSparkMax == null) {
+      drivePositionQueue = NovaOdometryThread.getInstance()
+          .registerSignal(
+              () -> UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction));
+    } else {
+      drivePositionQueue = NovaOdometryThread.getInstance()
+          .registerSignal(
+              () -> UnitUtil.rotTorad(driveSparkMax.getEncoder().getPosition() / Drive.reduction));
+    }
     azimuthPositionQueue =
         NovaOdometryThread.getInstance().registerSignal(() -> -azimuthNova.getPositionAbs());
     // new TunableDouble(
@@ -114,16 +140,30 @@ public class ModuleIONova implements ModuleIO {
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     // Update drive inputs
-    inputs.drive.position.mut_replace(
-        UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction), Radians);
-    inputs.drive.velocity.mut_replace(
-        UnitUtil.rotTorad(driveNova.getVelocityInternal() / Drive.reduction), RadiansPerSecond);
-    inputs.drive.outputVoltage.mut_replace(driveNova.getAppliedVoltage(), Volts);
-    inputs.drive.inputVoltage.mut_replace(driveNova.getVoltage(), Volts);
-    inputs.drive.outputCurrent.mut_replace(driveNova.getStatorCurrent(), Amps);
-    inputs.drive.inputCurrent.mut_replace(driveNova.getSupplyCurrent(), Amps);
-    inputs.drive.errors = driveNova.errors.toArray(ThriftyNova.Error[]::new);
-    inputs.drive.connected = true;
+    if (driveSparkMax == null) {
+      inputs.drive.position.mut_replace(
+          UnitUtil.rotTorad(driveNova.getPositionInternal() / Drive.reduction), Radians);
+      inputs.drive.velocity.mut_replace(
+          UnitUtil.rotTorad(driveNova.getVelocityInternal() / Drive.reduction), RadiansPerSecond);
+      inputs.drive.outputVoltage.mut_replace(driveNova.getAppliedVoltage(), Volts);
+      inputs.drive.inputVoltage.mut_replace(driveNova.getVoltage(), Volts);
+      inputs.drive.outputCurrent.mut_replace(driveNova.getStatorCurrent(), Amps);
+      inputs.drive.inputCurrent.mut_replace(driveNova.getSupplyCurrent(), Amps);
+      inputs.drive.errors = driveNova.errors.toArray(ThriftyNova.Error[]::new);
+      inputs.drive.connected = true;
+    } else {
+      inputs.drive.position.mut_replace(
+          UnitUtil.rotTorad(driveSparkMax.getEncoder().getPosition() / Drive.reduction), Radians);
+      inputs.drive.velocity.mut_replace(
+          UnitUtil.rotTorad(driveSparkMax.getEncoder().getVelocity() / Drive.reduction / 60),
+          RadiansPerSecond);
+      inputs.drive.outputVoltage.mut_replace(driveSparkMax.getAppliedOutput() * 12.0, Volts);
+      // inputs.drive.inputVoltage.mut_replace(driveSparkMax.getVoltage(), Volts);
+      // inputs.drive.outputCurrent.mut_replace(driveSparkMax.getStatorCurrent(), Amps);
+      // inputs.drive.inputCurrent.mut_replace(driveSparkMax.getSupplyCurrent(), Amps);
+      // inputs.drive.errors = driveSparkMax.errors.toArray(ThriftyNova.Error[]::new);
+      inputs.drive.connected = true;
+    }
 
     // Update azimuth inputs
     inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - azimuthNova.getPositionAbs());
@@ -153,11 +193,18 @@ public class ModuleIONova implements ModuleIO {
     timestampQueue.clear();
     drivePositionQueue.clear();
     azimuthPositionQueue.clear();
+
+    inputs.drive.commandVoltage.mut_replace(commandVoltage, Volts);
   }
 
   @Override
   public void setDriveVoltage(double voltage_V) {
-    driveNova.setVoltage(voltage_V);
+    if (driveNova == null) {
+      driveSparkMax.setVoltage(voltage_V * 12.0);
+    } else {
+      driveNova.setVoltage(voltage_V);
+    }
+    commandVoltage = voltage_V;
   }
 
   @Override
@@ -170,9 +217,15 @@ public class ModuleIONova implements ModuleIO {
     // driveNova.setVelocityInternal(
     //     nextVelocity_radPs * Drive.reduction / (2 * Math.PI),
     //     Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
-    driveNova.setVoltage(Drive.realPID.calculate(nextVelocity_radPs, lastNextDriveVelocity_radPs)
+    var voltage = (Drive.realPID.calculate(nextVelocity_radPs, lastNextDriveVelocity_radPs)
         + Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
     lastNextDriveVelocity_radPs = nextVelocity_radPs;
+    if (driveSparkMax == null) {
+      driveNova.setVoltage(voltage);
+    } else {
+      driveSparkMax.setVoltage(voltage * 12.0);
+    }
+    commandVoltage = voltage;
   }
 
   @Override
