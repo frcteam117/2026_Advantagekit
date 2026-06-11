@@ -165,9 +165,9 @@ public class RobotContainer {
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
 
     // Set up auto routines
+    driveModeChooser = new LoggedDashboardChooser<>("Drive Mode:");
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
-    driveModeChooser = new LoggedDashboardChooser<>("Drive Mode Selection");
+    
     driveModeChooser.addDefaultOption("Angle Drive (Max style)", true);
     driveModeChooser.addOption("Regular Turning (MoSim style)", false);
 
