@@ -167,7 +167,7 @@ public class RobotContainer {
     // Set up auto routines
     driveModeChooser = new LoggedDashboardChooser<>("Drive Mode:");
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-    
+
     driveModeChooser.addDefaultOption("Angle Drive (Max style)", true);
     driveModeChooser.addOption("Regular Turning (MoSim style)", false);
 
@@ -251,19 +251,22 @@ public class RobotContainer {
             drivetrain,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> Rotation2d.fromRadians(
-                Math.atan2(-controller.getRightX(), -controller.getRightY())),
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+            () -> -controller.getRightY(),
+            () -> -controller.getRightX(),
+            0.2,
+            controller.R3(),
+            controller.R1(),
+            () -> new Translation2d(),
             () -> false),
         DrivetrainCommands.joystickDriveAtAngleRegularTurning(
             drivetrain,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             () -> -controller.getRawAxis(2),
-            () -> -controller.getRightX(),
+            () -> -controller.getRightX() * 1.55,
             .2,
             controller.R3(),
-            () -> false, //controller.R1(),
+            () -> false, // controller.R1(),
             () -> new Translation2d(),
             () -> false),
         driveModeChooser::get));
@@ -307,7 +310,7 @@ public class RobotContainer {
     controller
         .button(9)
         .whileTrue(Commands.run(() -> intake.setPivotGoalPos(Radians.of(-0.7)), intake));
-    
+
     // Indexer
     indexer.setDefaultCommand(IndexerCommands.stop(indexer));
     if (ShooterCommands.isTuning) {
