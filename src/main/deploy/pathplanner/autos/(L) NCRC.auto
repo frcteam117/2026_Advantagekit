@@ -5,65 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "PivotDown"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "(R) Complementary Bumps 1"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBump"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "(R) Complementary Bumps 2"
-                }
-              },
               {
                 "type": "named",
                 "data": {
                   "name": "IntakeDeploy"
                 }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "(L) a"
+                }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBumpWithFlywheelRev"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "(R) Complementary Bumps 3"
           }
         },
         {
@@ -79,7 +36,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 6.0
+                  "waitTime": 4.0
                 }
               }
             ]
@@ -90,9 +47,9 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "(R) Complementary Bumps 4"
+                  "name": "stopFlywheel"
                 }
               },
               {
@@ -102,9 +59,28 @@
                 }
               },
               {
+                "type": "path",
+                "data": {
+                  "pathName": "(L) b"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
                 "type": "named",
                 "data": {
-                  "name": "stopFlywheel"
+                  "name": "alignAndShoot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.0
                 }
               }
             ]
