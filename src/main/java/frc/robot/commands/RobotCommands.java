@@ -14,6 +14,7 @@ import frc.robot.subsystems.drivetrain.DrivetrainSubsystem;
 import frc.robot.subsystems.indexer.IndexerCommands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeCommands;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import java.util.Set;
@@ -37,6 +38,7 @@ public class RobotCommands {
 
   public static Command autoAim(
       DrivetrainSubsystem drivetrain,
+      LEDSubsystem led,
       ShooterSubsystem shooter,
       IndexerSubsystem indexer,
       Supplier<Translation2d> centerOfRotationSupplier,
@@ -51,6 +53,7 @@ public class RobotCommands {
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter,
+                      led,
                       drivetrain::getPose,
                       () -> getTarget(drivetrain.getPose()),
                       () -> isPassing,
@@ -78,6 +81,7 @@ public class RobotCommands {
 
   public static Command shootOnTheMove(
       DrivetrainSubsystem drivetrain,
+      LEDSubsystem led,
       ShooterSubsystem shooter,
       IndexerSubsystem indexer,
       DoubleSupplier xSupplier,
@@ -93,6 +97,7 @@ public class RobotCommands {
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter,
+                      led,
                       drivetrain::getPose,
                       () -> getTarget(drivetrain.getPose())
                           .minus(new Translation2d(
@@ -138,10 +143,12 @@ public class RobotCommands {
         Set.of(drivetrain, shooter, indexer));
   }
 
-  public static Command setPointRevThenShoot(ShooterSubsystem shooter, IndexerSubsystem indexer) {
+  public static Command setPointRevThenShoot(
+      ShooterSubsystem shooter, IndexerSubsystem indexer, LEDSubsystem led) {
     Pose2d pose = new Pose2d(1.578, 4.008, Rotation2d.fromDegrees(180));
     return Commands.parallel(
-            ShooterCommands.autoAim(shooter, () -> pose, () -> blueHub, () -> false, () -> false),
+            ShooterCommands.autoAim(
+                shooter, led, () -> pose, () -> blueHub, () -> false, () -> false),
             IndexerCommands.conditionalRunForward(
                 indexer, () -> ShooterCommands.isAutoAimReady(shooter, false)),
             Commands.run(
@@ -179,9 +186,10 @@ public class RobotCommands {
   }
 
   public static Command autoAimRevFlywheels(
-      Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter) {
+      Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter, LEDSubsystem led) {
     return ShooterCommands.autoAim(
             shooter,
+            led,
             robotPoseSupplier,
             () -> getTarget(robotPoseSupplier.get()),
             () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue

@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
@@ -278,32 +279,36 @@ public class ShooterCommands {
 
   public static Command autoAim(
       ShooterSubsystem shooter,
+      LEDSubsystem led,
       Supplier<Pose2d> robotPoseSupplier,
       Supplier<Translation2d> targetSupplier,
       BooleanSupplier passing,
       BooleanSupplier trenchOverride) {
-    return shooter.run(() -> {
-      final double targetDistance =
-          robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get());
-      if (passing.getAsBoolean()) {
-        flywheel_autoAimVel.mut_setMagnitude(passing_metersToFywheelRadPerSec.get(targetDistance));
-        hood_goalPos.mut_setMagnitude(passing_metersToHoodRad.get(targetDistance));
-      } else {
-        flywheel_autoAimVel.mut_setMagnitude(hub_metersToFywheelRadPerSec.get(targetDistance));
-        hood_goalPos.mut_setMagnitude(hub_metersToHoodRad.get(targetDistance));
-      }
-      Logger.recordOutput("Commands/Shooter/targetDistance", targetDistance);
-      Logger.recordOutput("Commands/Shooter/autoAimFlywheelVel", flywheel_autoAimVel);
-      Logger.recordOutput("Commands/Shooter/autoAimHoodPos", hood_goalPos);
+    return shooter
+        .run(() -> {
+          final double targetDistance =
+              robotPoseSupplier.get().getTranslation().getDistance(targetSupplier.get());
+          if (passing.getAsBoolean()) {
+            flywheel_autoAimVel.mut_setMagnitude(
+                passing_metersToFywheelRadPerSec.get(targetDistance));
+            hood_goalPos.mut_setMagnitude(passing_metersToHoodRad.get(targetDistance));
+          } else {
+            flywheel_autoAimVel.mut_setMagnitude(hub_metersToFywheelRadPerSec.get(targetDistance));
+            hood_goalPos.mut_setMagnitude(hub_metersToHoodRad.get(targetDistance));
+          }
+          Logger.recordOutput("Commands/Shooter/targetDistance", targetDistance);
+          Logger.recordOutput("Commands/Shooter/autoAimFlywheelVel", flywheel_autoAimVel);
+          Logger.recordOutput("Commands/Shooter/autoAimHoodPos", hood_goalPos);
 
-      if (trenchOverride.getAsBoolean()) {
-        shooter.setHoodGoalPos(Radians.zero());
-      } else {
-        shooter.setHoodGoalPos(hood_goalPos);
-      }
-      shooter.setRIOFlywheelGoalVel(flywheel_autoAimVel);
-      shooter.setPDHFlywheelGoalVel(flywheel_autoAimVel);
-    });
+          if (trenchOverride.getAsBoolean()) {
+            shooter.setHoodGoalPos(Radians.zero());
+          } else {
+            shooter.setHoodGoalPos(hood_goalPos);
+          }
+          shooter.setRIOFlywheelGoalVel(flywheel_autoAimVel);
+          shooter.setPDHFlywheelGoalVel(flywheel_autoAimVel);
+        })
+        .alongWith(led.showREVCommand(shooter));
   }
 
   public static boolean isAutoAimReady(ShooterSubsystem shooter, boolean isPassing) {
