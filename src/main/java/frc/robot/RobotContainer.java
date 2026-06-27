@@ -304,7 +304,7 @@ public class RobotContainer {
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, () -> false));
     controller
         .L1()
-        .whileTrue(IntakeCommands.outtakeFuel(intake, () -> false)
+        .whileTrue(IntakeCommands.outtakeFuel(intake, led, () -> false)
             .alongWith(IndexerCommands.runBackwardCommand(indexer)));
     controller
         .L2()

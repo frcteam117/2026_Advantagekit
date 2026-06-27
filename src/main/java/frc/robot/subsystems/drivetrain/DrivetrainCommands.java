@@ -609,7 +609,7 @@ public class DrivetrainCommands {
           ChassisSpeeds speeds = new ChassisSpeeds(
               linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
               linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
-              rotXSupplier.getAsDouble() * DRIVE_MAX_VELOCITY.getAsDouble());
+              rotXSupplier.getAsDouble() * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble());
           speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
               speeds,
               isFlipped

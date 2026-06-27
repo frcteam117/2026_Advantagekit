@@ -15,6 +15,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import frc.robot.subsystems.led.LEDSubsystem;
+
 public class IntakeCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + NT_KEY + "/Commands";
   private static final BooleanSupplier PIVOT_WORKS =
@@ -123,7 +125,7 @@ public class IntakeCommands {
         intake);
   }
 
-  public static Command outtakeFuel(IntakeSubsystem intake, BooleanSupplier raisePivot) {
+  public static Command outtakeFuel(IntakeSubsystem intake, LEDSubsystem led, BooleanSupplier raisePivot) {
     return Commands.run(
         () -> {
           intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
@@ -142,7 +144,7 @@ public class IntakeCommands {
             }
           }
         },
-        intake);
+        intake).alongWith(led.showOuttakeCommand());
   }
 
   /** Lowers the pivot without running the roller. Ends when pivot is within a set error of its down position. */

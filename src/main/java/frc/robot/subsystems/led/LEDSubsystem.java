@@ -75,15 +75,23 @@ public class LEDSubsystem extends SubsystemBase {
               double rev = shooter.getRevPrecentage();
               if (rev >= 90) {
                 m_candle.setControl(m_slot0Animation);
-              } else if (rev >= 60) {
-                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 0, 1, 0)));
-              } else if (rev >= 30) {
-                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(13, 255, 1, 0)));
+              }  else if (rev >= 70) {
+                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(200, 0, 255, 20)));
+              } else if (rev >= 45) {
+                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 120, 0, 20)));
               } else {
-                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(0, 255, 255, 0)));
+                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(0, 100, 255, 20)));
               }
             })
         .ignoringDisable(true);
+  }
+
+  public Command showOuttakeCommand() {
+    return startRun(() -> {
+        m_candle.clearAllAnimations();
+    }, () -> {
+        m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 110, 180, 40)));
+    });
   }
 
   /**
