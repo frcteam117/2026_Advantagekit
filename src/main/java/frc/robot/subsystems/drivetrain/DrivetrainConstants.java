@@ -142,7 +142,7 @@ public class DrivetrainConstants {
         realFF = new SimpleMotorFeedforward(0.02, 0.011, 0.0008, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.036968, 0.15869, 0.034, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
-        realPID = new PIDController(0.001, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
+        realPID = new PIDController(0.00, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
         simPID = new PIDController(0.23931, 0.0, 0.0, RobotConstants.CODE_PERIOD_s);
 
     static {
