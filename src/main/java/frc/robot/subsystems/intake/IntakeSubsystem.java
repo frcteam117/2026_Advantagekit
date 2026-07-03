@@ -108,7 +108,15 @@ public class IntakeSubsystem extends SubsystemBase {
     return inputs.roller.velocity;
   }
 
+  public IntakeIOInputs getInputs() {
+    return inputs;
+  }
+
   // Pivot
+
+  public void resetPivotPosition(Angle position) {
+    io.resetPivotPosition(position);
+  }
 
   public void setPivotVoltage(Voltage voltage) {
     io.setPivotVoltage(voltage);

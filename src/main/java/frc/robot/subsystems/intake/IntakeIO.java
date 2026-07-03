@@ -1,10 +1,13 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutCurrent;
 import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -21,6 +24,7 @@ public interface IntakeIO {
     public class Pivot {
       public final MutAngle position = Radians.mutable(0);
       public final MutAngularVelocity velocity = RadiansPerSecond.mutable(0);
+      public final MutCurrent outputCurrent = Amps.mutable(0);
     }
     // public final MutAngle pivot_Pos = Radians.mutable(0);
     // public final MutAngularVelocity pivot_Vel = RadiansPerSecond.mutable(0);
@@ -30,6 +34,7 @@ public interface IntakeIO {
     public void toLog(LogTable table) {
       table.put("Pivot_Pos", pivot.position.in(Radians), Radians.name());
       table.put("Pivot_Vel", pivot.velocity.in(RadiansPerSecond), RadiansPerSecond.name());
+      table.put("Pivot_OutCurrent", pivot.outputCurrent.in(Amps), Amps.name());
       table.put("Roller_Vel", roller.velocity.in(RadiansPerSecond), RadiansPerSecond.name());
     }
 
@@ -38,6 +43,8 @@ public interface IntakeIO {
       pivot.position.mut_replace(table.get("Pivot_Pos", pivot.position.in(Radians)), Radians);
       pivot.velocity.mut_replace(
           table.get("Pivot_Vel", pivot.velocity.in(RadiansPerSecond)), RadiansPerSecond);
+      pivot.outputCurrent.mut_replace(
+          table.get("Pivot_OutCurrent", pivot.outputCurrent.in(Amps)), Amps);
       roller.velocity.mut_replace(
           table.get("Roller_Vel", roller.velocity.in(RadiansPerSecond)), RadiansPerSecond);
     }
@@ -46,6 +53,8 @@ public interface IntakeIO {
   public default void updateInputs(IntakeIOInputs inputs) {}
 
   public default void setPivotVoltage(Voltage voltage) {}
+
+  public default void resetPivotPosition(Angle position) {}
 
   /** Set the roller speed with a value from -1 to 1. */
   public default void setRollerSpeed(double speed) {}

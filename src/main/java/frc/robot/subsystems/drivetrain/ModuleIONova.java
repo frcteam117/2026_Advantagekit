@@ -48,6 +48,7 @@ public class ModuleIONova implements ModuleIO {
   private final Queue<Double> azimuthPositionQueue;
 
   private double lastNextDriveVelocity_radPs = 0.0;
+  private double currentDriveVelocity_radPs = 0.0;
   private double lastNextAzimuthVelocity_radPs = 0.0;
   private double currentAzimuthPosition_rad = 0.0;
 
@@ -157,13 +158,16 @@ public class ModuleIONova implements ModuleIO {
       inputs.drive.velocity.mut_replace(
           UnitUtil.rotTorad(driveSparkMax.getEncoder().getVelocity() / Drive.reduction / 60),
           RadiansPerSecond);
-      inputs.drive.outputVoltage.mut_replace(driveSparkMax.getAppliedOutput() * 12.0, Volts);
-      // inputs.drive.inputVoltage.mut_replace(driveSparkMax.getVoltage(), Volts);
-      // inputs.drive.outputCurrent.mut_replace(driveSparkMax.getStatorCurrent(), Amps);
-      // inputs.drive.inputCurrent.mut_replace(driveSparkMax.getSupplyCurrent(), Amps);
+      inputs.drive.outputVoltage.mut_replace(
+          driveSparkMax.getAppliedOutput() * driveSparkMax.getBusVoltage(), Volts);
+      inputs.drive.inputVoltage.mut_replace(driveSparkMax.getBusVoltage(), Volts);
+      inputs.drive.outputCurrent.mut_replace(driveSparkMax.getOutputCurrent(), Amps);
+      inputs.drive.inputCurrent.mut_replace(
+          driveSparkMax.getOutputCurrent() / driveSparkMax.getAppliedOutput(), Amps);
       // inputs.drive.errors = driveSparkMax.errors.toArray(ThriftyNova.Error[]::new);
       inputs.drive.connected = true;
     }
+    currentDriveVelocity_radPs = inputs.drive.velocity.in(RadiansPerSecond);
 
     // Update azimuth inputs
     inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - azimuthNova.getPositionAbs());
@@ -217,8 +221,9 @@ public class ModuleIONova implements ModuleIO {
     // driveNova.setVelocityInternal(
     //     nextVelocity_radPs * Drive.reduction / (2 * Math.PI),
     //     Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
-    var voltage = (Drive.realPID.calculate(nextVelocity_radPs, lastNextDriveVelocity_radPs)
-        + Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
+    double voltage =
+        (Drive.realPID.calculate(currentDriveVelocity_radPs, lastNextDriveVelocity_radPs)
+            + Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
     lastNextDriveVelocity_radPs = nextVelocity_radPs;
     if (driveSparkMax == null) {
       driveNova.setVoltage(voltage);

@@ -1,10 +1,13 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.intake.IntakeConstants.NT_KEY;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -231,5 +234,17 @@ public class IntakeCommands {
           // instance.setPivotGoal(new RadVel_State(0));
         },
         instance);
+  }
+
+  public static Command rezeroPivotCommand(IntakeSubsystem instance) {
+    Debouncer highCurrentDebouncer = new Debouncer(.2, DebounceType.kRising);
+    highCurrentDebouncer.calculate(false);
+    return instance
+        .run(() -> {
+          instance.setPivotVoltage(Volts.of(-2));
+        })
+        .until(() -> highCurrentDebouncer.calculate(
+            instance.getInputs().pivot.outputCurrent.in(Amps) > 60))
+        .andThen(instance.runOnce(() -> instance.resetPivotPosition(Radians.zero())));
   }
 }
