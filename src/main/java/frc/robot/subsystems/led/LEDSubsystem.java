@@ -4,16 +4,19 @@ package frc.robot.subsystems.led;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.controls.FireAnimation;
 import com.ctre.phoenix6.controls.RainbowAnimation;
 import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.AnimationDirectionValue;
 import com.ctre.phoenix6.signals.RGBWColor;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 /**
@@ -28,6 +31,8 @@ public class LEDSubsystem extends SubsystemBase {
       .withBrightness(1)
       .withDirection(AnimationDirectionValue.Forward)
       .withFrameRate(Hertz.of(100));
+
+  private final FireAnimation m_slot1Animation = new FireAnimation(0, 38);
 
   private final SolidColor m_green = new SolidColor(0, 38).withColor(new RGBWColor(13, 255, 1, 0));
   private final SolidColor m_red = new SolidColor(0, 38).withColor(new RGBWColor(255, 20, 20, 0));
@@ -49,11 +54,19 @@ public class LEDSubsystem extends SubsystemBase {
   public void periodic() {
     SmartDashboard.putBoolean("isCandleConnected", m_candle.isConnected());
   }
-
+  /*
   public Command rainbow() {
     return run(() -> {
           m_candle.clearAllAnimations();
           m_candle.setControl(m_slot0Animation);
+        })
+        .ignoringDisable(true);
+  }
+
+  public Command fire() {
+    return run(() -> {
+          m_candle.clearAllAnimations();
+          m_candle.setControl(m_slot1Animation);
         })
         .ignoringDisable(true);
   }
@@ -65,33 +78,39 @@ public class LEDSubsystem extends SubsystemBase {
         })
         .ignoringDisable(true);
   }
-
-  public Command showREVCommand(ShooterSubsystem shooter) {
+  */
+  public Command showREVCommand(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     return startRun(
             () -> {
               m_candle.clearAllAnimations();
             },
             () -> {
               double rev = shooter.getRevPrecentage();
-              if (rev >= 90) {
+              LinearVelocity shoot = indexer.getKickerSurfaceSpeed();
+              if (shoot.baseUnitMagnitude() > 1) { // GET THIS TO WORK WHEN SHOOTING.
                 m_candle.setControl(m_slot0Animation);
-              }  else if (rev >= 70) {
-                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(200, 0, 255, 20)));
-              } else if (rev >= 45) {
-                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 120, 0, 20)));
+              } else if (rev >= 75) {
+                m_candle.setControl(
+                    new SolidColor(0, 38).withColor(new RGBWColor(200, 0, 255, 20)));
+              } else if (rev >= 50) {
+                m_candle.setControl(
+                    new SolidColor(0, 38).withColor(new RGBWColor(255, 120, 0, 20)));
               } else {
-                m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(0, 100, 255, 20)));
+                m_candle.setControl(
+                    new SolidColor(0, 38).withColor(new RGBWColor(0, 100, 255, 20)));
               }
             })
         .ignoringDisable(true);
   }
 
   public Command showOuttakeCommand() {
-    return startRun(() -> {
-        m_candle.clearAllAnimations();
-    }, () -> {
-        m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 110, 180, 40)));
-    });
+    return startRun(
+        () -> {
+          m_candle.clearAllAnimations();
+        },
+        () -> {
+          m_candle.setControl(m_slot1Animation);
+        });
   }
 
   /**

@@ -9,13 +9,12 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.intake.IntakeConstants.Pivot;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
-import frc.robot.subsystems.led.LEDSubsystem;
 
 public class IntakeCommands {
   private static final String TUNING_NT_KEY = "Tuning/" + NT_KEY + "/Commands";
@@ -125,26 +124,28 @@ public class IntakeCommands {
         intake);
   }
 
-  public static Command outtakeFuel(IntakeSubsystem intake, LEDSubsystem led, BooleanSupplier raisePivot) {
+  public static Command outtakeFuel(
+      IntakeSubsystem intake, LEDSubsystem led, BooleanSupplier raisePivot) {
     return Commands.run(
-        () -> {
-          intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
-          if (PIVOT_WORKS.getAsBoolean()) {
-            if (raisePivot.getAsBoolean()) {
-              intake.setPivotGoalPos(DISLODGING_POS.get());
-            } else {
-              intake.setPivotGoalPos(DOWN_POS.get());
-            }
-          } else {
-            if (PIVOT_KINDA_WORKS.getAsBoolean()
-                && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
-              intake.setPivotGoalPos(DOWN_POS.get());
-            } else {
-              intake.setPivotVoltage(Volts.zero());
-            }
-          }
-        },
-        intake).alongWith(led.showOuttakeCommand());
+            () -> {
+              intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
+              if (PIVOT_WORKS.getAsBoolean()) {
+                if (raisePivot.getAsBoolean()) {
+                  intake.setPivotGoalPos(DISLODGING_POS.get());
+                } else {
+                  intake.setPivotGoalPos(DOWN_POS.get());
+                }
+              } else {
+                if (PIVOT_KINDA_WORKS.getAsBoolean()
+                    && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
+                  intake.setPivotGoalPos(DOWN_POS.get());
+                } else {
+                  intake.setPivotVoltage(Volts.zero());
+                }
+              }
+            },
+            intake)
+        .alongWith(led.showOuttakeCommand());
   }
 
   /** Lowers the pivot without running the roller. Ends when pivot is within a set error of its down position. */

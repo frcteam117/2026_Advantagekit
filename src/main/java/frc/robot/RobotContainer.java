@@ -167,7 +167,8 @@ public class RobotContainer {
         "stopFlywheel",
         Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stopAndZeroHood(shooter)));
     NamedCommands.registerCommand(
-        "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, led));
+        "flywheel_acc_1",
+        RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer, led));
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
 
     // Set up auto routines
@@ -352,7 +353,7 @@ public class RobotContainer {
     // new button bindings:
     controller2
         .L1()
-        .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, led));
+        .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer, led));
     // should this be whileTrue? vvv
     controller
         .R2()

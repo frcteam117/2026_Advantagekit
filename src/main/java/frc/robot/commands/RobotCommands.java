@@ -53,6 +53,7 @@ public class RobotCommands {
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter,
+                      indexer,
                       led,
                       drivetrain::getPose,
                       () -> getTarget(drivetrain.getPose()),
@@ -97,6 +98,7 @@ public class RobotCommands {
           return Commands.parallel(
                   ShooterCommands.autoAim(
                       shooter,
+                      indexer,
                       led,
                       drivetrain::getPose,
                       () -> getTarget(drivetrain.getPose())
@@ -148,7 +150,7 @@ public class RobotCommands {
     Pose2d pose = new Pose2d(1.578, 4.008, Rotation2d.fromDegrees(180));
     return Commands.parallel(
             ShooterCommands.autoAim(
-                shooter, led, () -> pose, () -> blueHub, () -> false, () -> false),
+                shooter, indexer, led, () -> pose, () -> blueHub, () -> false, () -> false),
             IndexerCommands.conditionalRunForward(
                 indexer, () -> ShooterCommands.isAutoAimReady(shooter, false)),
             Commands.run(
@@ -186,9 +188,13 @@ public class RobotCommands {
   }
 
   public static Command autoAimRevFlywheels(
-      Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter, LEDSubsystem led) {
+      Supplier<Pose2d> robotPoseSupplier,
+      ShooterSubsystem shooter,
+      IndexerSubsystem indexer,
+      LEDSubsystem led) {
     return ShooterCommands.autoAim(
             shooter,
+            indexer,
             led,
             robotPoseSupplier,
             () -> getTarget(robotPoseSupplier.get()),
