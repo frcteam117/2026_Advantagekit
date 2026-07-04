@@ -23,37 +23,60 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
  * Subsystem that controls an addressable LED strip using a CANdle.
  */
 public class LEDSubsystem extends SubsystemBase {
-  private final CANdle m_candle = new CANdle(18, CANBus.roboRIO());
-  Trigger brownoutTrigger = new Trigger(RobotController::isBrownedOut);
-
-  private final RainbowAnimation m_slot0Animation = new RainbowAnimation(0, 38)
-      .withSlot(0)
-      .withBrightness(1)
-      .withDirection(AnimationDirectionValue.Forward)
-      .withFrameRate(Hertz.of(100));
-
-  private final FireAnimation m_slot1Animation = new FireAnimation(0, 38);
-
-  private final SolidColor m_green = new SolidColor(0, 38).withColor(new RGBWColor(13, 255, 1, 0));
-  private final SolidColor m_red = new SolidColor(0, 38).withColor(new RGBWColor(255, 20, 20, 0));
-
-  public LEDSubsystem() {
-    setDefaultCommand(updateLEDs());
-    m_candle.clearAllAnimations();
-    brownoutTrigger.whileTrue(startRun(
-            () -> {
-              m_candle.clearAllAnimations();
-            },
-            () -> {
-              m_candle.setControl(m_red);
-            })
-        .ignoringDisable(true));
+  private final static CANdle m_candle = new CANdle(18, CANBus.roboRIO());
+    Trigger brownoutTrigger = new Trigger(RobotController::isBrownedOut);
+  
+    private final RainbowAnimation m_slot0Animation = new RainbowAnimation(0, 38)
+        .withSlot(0)
+        .withBrightness(1)
+        .withDirection(AnimationDirectionValue.Forward)
+        .withFrameRate(Hertz.of(100));
+  
+    private final FireAnimation m_slot1Animation = new FireAnimation(0, 38);
+  
+    private final SolidColor m_green = new SolidColor(0, 38).withColor(new RGBWColor(13, 255, 1, 0));
+    private final SolidColor m_red = new SolidColor(0, 38).withColor(new RGBWColor(255, 20, 20, 0));
+  
+    public LEDSubsystem() {
+      setDefaultCommand(updateLEDs());
+      m_candle.clearAllAnimations();
+      brownoutTrigger.whileTrue(startRun(
+              () -> {
+                m_candle.clearAllAnimations();
+              },
+              () -> {
+                m_candle.setControl(m_red);
+              })
+          .ignoringDisable(true));
+    }
+  
+    @Override
+    public void periodic() {
+      SmartDashboard.putBoolean("isCandleConnected", m_candle.isConnected());
+    }
+  
+    public static Command countdownCommand(int seconds) {
+      m_candle.clearAllAnimations();
+      if (seconds == 3) {
+        m_candle.setControl(new SolidColor(0, 4).withColor(new RGBWColor(10, 255, 10, 30)));
+        m_candle.setControl(new SolidColor(5, 35).withColor(new RGBWColor(0, 0, 0, 0)));
+      m_candle.setControl(new SolidColor(34, 38).withColor(new RGBWColor(10, 255, 10, 30)));     
+    }
+    else if (seconds == 2) {
+      m_candle.setControl(new SolidColor(0, 10).withColor(new RGBWColor(10, 255, 10, 30)));
+      m_candle.setControl(new SolidColor(11, 27).withColor(new RGBWColor(0, 0, 0, 0)));
+      m_candle.setControl(new SolidColor(28, 38).withColor(new RGBWColor(10, 255, 10, 30)));     
+    }
+    else if (seconds == 1) {
+      m_candle.setControl(new SolidColor(0, 15).withColor(new RGBWColor(10, 255, 10, 30)));
+      m_candle.setControl(new SolidColor(16, 22).withColor(new RGBWColor(0, 0, 0, 0)));
+      m_candle.setControl(new SolidColor(23, 38).withColor(new RGBWColor(10, 255, 10, 30)));     
+    }
+    else {
+      m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(0, 0, 0, 0)));
+    }
   }
 
-  @Override
-  public void periodic() {
-    SmartDashboard.putBoolean("isCandleConnected", m_candle.isConnected());
-  }
   /*
   public Command rainbow() {
     return run(() -> {
