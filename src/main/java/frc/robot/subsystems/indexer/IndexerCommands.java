@@ -34,10 +34,12 @@ public class IndexerCommands {
         .run(() -> {
           indexer.setHopperSpeed(forwardSpeed.getAsDouble());
           indexer.setKickerSpeed(forwardSpeed.getAsDouble());
+          indexer.isPreloading = true;
         })
         .withTimeout(.2)
         .andThen(indexer.run(() -> {
           if (shouldRun.getAsBoolean()) {
+            indexer.isPreloading = false;
             if (runningBackwards) {
               indexer.setHopperSpeed(reverseSpeed.getAsDouble());
               indexer.setKickerSpeed(reverseSpeed.getAsDouble());

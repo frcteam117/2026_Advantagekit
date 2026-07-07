@@ -22,6 +22,7 @@ public class IndexerSubsystem extends SubsystemBase {
   private final RelativeEncoder kickerEncoder = kickerSpark.getEncoder();
   private final MutLinearVelocity hopperSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
   private final MutLinearVelocity kickerSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
+  public Boolean isPreloading = false;
 
   public IndexerSubsystem() {
     hopperSpark.configure(

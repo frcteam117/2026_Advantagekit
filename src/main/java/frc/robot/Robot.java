@@ -15,10 +15,8 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.util.logging.LogUtil;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,8 +39,6 @@ import org.littletonrobotics.urcl.URCL;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
-  private Timer countdownTimer;
-  private int countdownTracker;
 
   public Robot() {
     // Record metadata
@@ -127,23 +123,11 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot becomes disabled. */
   @Override
-  public void disabledInit() {
-    robotContainer.resetSimulationField();
-    countdownTracker = 3;
-    LEDSubsystem.countdownCommand(countdownTracker);
-    countdownTimer.restart();
-  }
+  public void disabledInit() {}
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {
-    double t = countdownTimer.get();
-    if (t > 1) {
-      countdownTimer.restart();
-      countdownTracker--;
-      LEDSubsystem.countdownCommand(countdownTracker);
-    }
-  }
+  public void disabledPeriodic() {}
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
@@ -167,10 +151,6 @@ public class Robot extends LoggedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    countdownTimer.stop();
-    if (autonomousCommand != null) {
-      autonomousCommand.cancel();
-    }
   }
 
   /** This function is called periodically during operator control. */
