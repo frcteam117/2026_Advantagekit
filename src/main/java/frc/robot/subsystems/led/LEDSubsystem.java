@@ -26,6 +26,7 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 public class LEDSubsystem extends SubsystemBase {
   private static final CANdle m_candle = new CANdle(18, CANBus.roboRIO());
   Trigger brownoutTrigger = new Trigger(RobotController::isBrownedOut);
+  private boolean alreadyRainbow = false;
 
   private final RainbowAnimation m_slot0Animation = new RainbowAnimation(0, 38)
       .withSlot(0)
@@ -50,6 +51,7 @@ public class LEDSubsystem extends SubsystemBase {
               m_candle.clearAllAnimations();
             },
             () -> {
+              m_candle.clearAllAnimations();
               m_candle.setControl(m_red);
             })
         .ignoringDisable(true));
@@ -118,13 +120,17 @@ public class LEDSubsystem extends SubsystemBase {
     return startRun(
             () -> {
               m_candle.clearAllAnimations();
+              alreadyRainbow = false;
             },
             () -> {
               double rev = shooter.getRevPrecentage();
               LinearVelocity shoot = indexer.getKickerSurfaceSpeed();
-              if (shoot.baseUnitMagnitude() > 1
+              if (shoot.baseUnitMagnitude() > 0.2
                   && !indexer.isPreloading) { // GET THIS TO WORK WHEN SHOOTING.
-                m_candle.setControl(m_slot0Animation);
+                if (true) {
+                  m_candle.setControl(m_slot0Animation);
+                  alreadyRainbow = true;
+                }
               } else if (rev >= 75) {
                 m_candle.clearAllAnimations();
                 m_candle.setControl(
@@ -164,6 +170,7 @@ public class LEDSubsystem extends SubsystemBase {
               m_candle.clearAllAnimations();
             },
             () -> {
+              m_candle.clearAllAnimations();
               m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(10, 255, 10, 30)));
             })
         .ignoringDisable(true);
