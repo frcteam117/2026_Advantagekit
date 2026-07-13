@@ -79,6 +79,7 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardChooser<Boolean> driveModeChooser;
+  private final LoggedDashboardChooser<Boolean> leftRightChooser;
 
   /** The container for the robot. Contains subsystems and commands. */
   public RobotContainer() {
@@ -175,10 +176,13 @@ public class RobotContainer {
 
     // Set up auto routines
     driveModeChooser = new LoggedDashboardChooser<>("Drive Mode:");
+    leftRightChooser = new LoggedDashboardChooser<>("Auto Side:");
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     driveModeChooser.addDefaultOption("Angle Drive (Max style)", true);
     driveModeChooser.addOption("Regular Turning (MoSim style)", false);
+    leftRightChooser.addDefaultOption("Left (Depot)", false);
+    leftRightChooser.addOption("Right (Outpost)", true);
 
     // Set up SysId routines
     autoChooser.addOption(
