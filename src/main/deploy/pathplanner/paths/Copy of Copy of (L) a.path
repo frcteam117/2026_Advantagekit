@@ -33,31 +33,31 @@
     {
       "anchor": {
         "x": 7.828873072360619,
-        "y": 5.271818181818182
+        "y": 5.374886363636364
       },
       "prevControl": {
         "x": 7.949352759807861,
-        "y": 5.490872158985033
+        "y": 5.593940340803214
       },
       "nextControl": {
         "x": 7.541516550478697,
-        "y": 4.74935177842025
+        "y": 4.852419960238431
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.601720047449585,
-        "y": 7.519
+        "x": 5.631454545454545,
+        "y": 7.41876631079478
       },
       "prevControl": {
-        "x": 7.189130997298617,
-        "y": 7.5605563576055905
+        "x": 7.21751858891405,
+        "y": 7.315402674431143
       },
       "nextControl": {
-        "x": 4.259983986330413,
-        "y": 7.483875092002176
+        "x": 4.292099984396739,
+        "y": 7.5060519146656
       },
       "isLocked": false,
       "linkedName": null
@@ -101,13 +101,26 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.9,
-      "maxWaypointRelativePos": 2.1417322834645525,
+      "minWaypointRelativePos": 0.8904847396768404,
+      "maxWaypointRelativePos": 1.4865350089766625,
       "constraints": {
-        "maxVelocity": 1.35,
+        "maxVelocity": 1.5,
         "maxAcceleration": 3.5,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 891.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    },
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 1.5,
+      "maxWaypointRelativePos": 1.9892280071813282,
+      "constraints": {
+        "maxVelocity": 1.3,
+        "maxAcceleration": 3.5,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 500.0,
         "nominalVoltage": 12.0,
         "unlimited": false
       }
@@ -131,7 +144,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
+    "velocity": 1.0,
     "rotation": 117.0
   },
   "reversed": false,

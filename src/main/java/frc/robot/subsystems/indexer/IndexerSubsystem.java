@@ -22,6 +22,7 @@ public class IndexerSubsystem extends SubsystemBase {
   private final RelativeEncoder kickerEncoder = kickerSpark.getEncoder();
   private final MutLinearVelocity hopperSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
   private final MutLinearVelocity kickerSurfaceVel = new MutLinearVelocity(0, 0, MetersPerSecond);
+  private boolean kickerRunningForward = false;
   public Boolean isPreloading = false;
 
   public IndexerSubsystem() {
@@ -70,10 +71,20 @@ public class IndexerSubsystem extends SubsystemBase {
 
   public void setKickerSpeed(double speed) {
     kickerSpark.set(speed);
+    if (speed > 0.2) {
+      kickerRunningForward = true;
+    }
+    else {
+      kickerRunningForward = false;
+    }
     Logger.recordOutput(Kicker.NT_KEY + "/GoalSpeed", speed);
   }
 
   public LinearVelocity getKickerSurfaceSpeed() {
     return kickerSurfaceVel;
+  }
+
+  public boolean isKickerRunningForward() {
+    return kickerRunningForward;
   }
 }

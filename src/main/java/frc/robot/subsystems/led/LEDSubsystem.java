@@ -124,8 +124,8 @@ public class LEDSubsystem extends SubsystemBase {
             },
             () -> {
               double rev = shooter.getRevPrecentage();
-              LinearVelocity shoot = indexer.getKickerSurfaceSpeed();
-              if (shoot.baseUnitMagnitude() > 0.2
+              boolean shoot = indexer.isKickerRunningForward();
+              if (shoot
                   && !indexer.isPreloading) { // GET THIS TO WORK WHEN SHOOTING.
                 if (true) {
                   m_candle.setControl(m_slot0Animation);

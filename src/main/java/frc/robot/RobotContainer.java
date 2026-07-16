@@ -278,7 +278,7 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRawAxis(2),
             () -> -controller.getRightX(),
-            .2,
+            .3,
             () -> false, // controller.R3(),
             controller.R3(), // controller.R1(),
             () -> new Translation2d(),
