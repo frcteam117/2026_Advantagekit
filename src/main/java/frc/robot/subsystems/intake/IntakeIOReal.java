@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -9,6 +10,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.intake.IntakeConstants.*;
 
@@ -32,6 +34,7 @@ public class IntakeIOReal implements IntakeIO {
         pivot_Encoder.getPosition() * 2 * Math.PI / Pivot.REDUCTION, Radians);
     inputs.pivot.velocity.mut_replace(
         pivot_Encoder.getVelocity() * 2 * Math.PI / (Pivot.REDUCTION * 60), RadiansPerSecond);
+    inputs.pivot.outputCurrent.mut_replace(pivot_Spark.getOutputCurrent(), Amps);
     inputs.roller.velocity.mut_replace(
         roller_Encoder.getVelocity() * 2 * Math.PI / (Roller.REDUCTION * 60), RadiansPerSecond);
   }
@@ -39,6 +42,11 @@ public class IntakeIOReal implements IntakeIO {
   @Override
   public void setPivotVoltage(Voltage voltage) {
     pivot_Spark.setVoltage(voltage);
+  }
+
+  @Override
+  public void resetPivotPosition(Angle position) {
+    pivot_Encoder.setPosition(position.in(Radians));
   }
 
   @Override

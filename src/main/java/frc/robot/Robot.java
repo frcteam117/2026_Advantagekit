@@ -123,9 +123,7 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot becomes disabled. */
   @Override
-  public void disabledInit() {
-    robotContainer.resetSimulationField();
-  }
+  public void disabledInit() {}
 
   /** This function is called periodically when disabled. */
   @Override
@@ -153,9 +151,6 @@ public class Robot extends LoggedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    if (autonomousCommand != null) {
-      autonomousCommand.cancel();
-    }
   }
 
   /** This function is called periodically during operator control. */

@@ -1,14 +1,18 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.intake.IntakeConstants.NT_KEY;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.intake.IntakeConstants.Pivot;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.util.function.BooleanSupplier;
@@ -123,26 +127,28 @@ public class IntakeCommands {
         intake);
   }
 
-  public static Command outtakeFuel(IntakeSubsystem intake, BooleanSupplier raisePivot) {
+  public static Command outtakeFuel(
+      IntakeSubsystem intake, LEDSubsystem led, BooleanSupplier raisePivot) {
     return Commands.run(
-        () -> {
-          intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
-          if (PIVOT_WORKS.getAsBoolean()) {
-            if (raisePivot.getAsBoolean()) {
-              intake.setPivotGoalPos(DISLODGING_POS.get());
-            } else {
-              intake.setPivotGoalPos(DOWN_POS.get());
-            }
-          } else {
-            if (PIVOT_KINDA_WORKS.getAsBoolean()
-                && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
-              intake.setPivotGoalPos(DOWN_POS.get());
-            } else {
-              intake.setPivotVoltage(Volts.zero());
-            }
-          }
-        },
-        intake);
+            () -> {
+              intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
+              if (PIVOT_WORKS.getAsBoolean()) {
+                if (raisePivot.getAsBoolean()) {
+                  intake.setPivotGoalPos(DISLODGING_POS.get());
+                } else {
+                  intake.setPivotGoalPos(DOWN_POS.get());
+                }
+              } else {
+                if (PIVOT_KINDA_WORKS.getAsBoolean()
+                    && intake.getPivotPos().in(Radians) > PIVOT_LOWER_THRESHOLD.getAsDouble()) {
+                  intake.setPivotGoalPos(DOWN_POS.get());
+                } else {
+                  intake.setPivotVoltage(Volts.zero());
+                }
+              }
+            },
+            intake)
+        .alongWith(led.showOuttakeCommand());
   }
 
   /** Lowers the pivot without running the roller. Ends when pivot is within a set error of its down position. */
@@ -228,5 +234,17 @@ public class IntakeCommands {
           // instance.setPivotGoal(new RadVel_State(0));
         },
         instance);
+  }
+
+  public static Command rezeroPivotCommand(IntakeSubsystem instance) {
+    Debouncer highCurrentDebouncer = new Debouncer(.2, DebounceType.kRising);
+    highCurrentDebouncer.calculate(false);
+    return instance
+        .run(() -> {
+          instance.setPivotVoltage(Volts.of(-2));
+        })
+        .until(() -> highCurrentDebouncer.calculate(
+            instance.getInputs().pivot.outputCurrent.in(Amps) > 60))
+        .andThen(instance.runOnce(() -> instance.resetPivotPosition(Radians.zero())));
   }
 }

@@ -22,12 +22,14 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.RobotCommands;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerCommands;
@@ -36,6 +38,7 @@ import frc.robot.subsystems.intake.IntakeCommands;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.shooter.ShooterCommands;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -63,6 +66,7 @@ public class RobotContainer {
   // Subsystems
   private final DrivetrainSubsystem drivetrain;
   private final VisionSubsystem vision;
+  private final LEDSubsystem led;
   private final IntakeSubsystem intake;
   private final IndexerSubsystem indexer;
   public final ShooterSubsystem shooter;
@@ -74,12 +78,15 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedDashboardChooser<Boolean> driveModeChooser;
+  private final LoggedDashboardChooser<Boolean> leftRightChooser;
 
   /** The container for the robot. Contains subsystems and commands. */
   public RobotContainer() {
     switch (RobotConstants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
+        led = new LEDSubsystem();
         drivetrain = new DrivetrainSubsystem(
             new GyroIONavX(),
             new ModuleIONova(0),
@@ -94,6 +101,7 @@ public class RobotContainer {
             drivetrain::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
         break;
       case SIM:
+        led = new LEDSubsystem();
         // create a maple-sim swerve drive simulation instance
         this.driveSimulation = new SwerveDriveSimulation(
             DrivetrainConstants.Chassis.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
@@ -117,6 +125,7 @@ public class RobotContainer {
             new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
+        led = new LEDSubsystem();
         // Replayed robot, disable IO implementations
         drivetrain = new DrivetrainSubsystem(
             new GyroIO() {},
@@ -150,6 +159,7 @@ public class RobotContainer {
             IntakeCommands.defaultCommand(intake, () -> false),
             RobotCommands.autoAim(
                 drivetrain,
+                led,
                 shooter,
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
@@ -160,11 +170,19 @@ public class RobotContainer {
         "stopFlywheel",
         Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stopAndZeroHood(shooter)));
     NamedCommands.registerCommand(
-        "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
+        "flywheel_acc_1",
+        RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer, led));
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
 
     // Set up auto routines
+    driveModeChooser = new LoggedDashboardChooser<>("Drive Mode:");
+    leftRightChooser = new LoggedDashboardChooser<>("Auto Side:");
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+    driveModeChooser.addDefaultOption("Angle Drive (Max style)", true);
+    driveModeChooser.addOption("Regular Turning (MoSim style)", false);
+    leftRightChooser.addDefaultOption("Left (Depot)", false);
+    leftRightChooser.addOption("Right (Outpost)", true);
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -174,6 +192,7 @@ public class RobotContainer {
         "Stationary Preload",
         RobotCommands.autoAim(
                 drivetrain,
+                led,
                 shooter,
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
@@ -240,20 +259,35 @@ public class RobotContainer {
         currentPose -> Logger.recordOutput("PathPlanner/CurrentPose", currentPose));
     PathPlannerLogging.setLogTargetPoseCallback(
         targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
-    drivetrain.setDefaultCommand(DrivetrainCommands.joystickDriveAtAngle(
-        drivetrain,
-        () -> -controller.getLeftY(),
-        () -> -controller.getLeftX(),
-        () -> -controller.getRightY(),
-        () -> -controller.getRightX(),
-        .2,
-        controller.R3(),
-        controller.R1(),
-        () -> new Translation2d(),
-        () -> false));
+
+    drivetrain.setDefaultCommand(Commands.either(
+        DrivetrainCommands.joystickDriveAtAngle(
+            drivetrain,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightY(),
+            () -> -controller.getRightX(),
+            0.2,
+            controller.R3(),
+            controller.R1(),
+            () -> new Translation2d(),
+            () -> false),
+        DrivetrainCommands.joystickDriveAtAngleRegularTurning(
+            drivetrain,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRawAxis(2),
+            () -> -controller.getRightX() / 1.1,
+            .4,
+            () -> false, // controller.R3(),
+            controller.R3(), // controller.R1(),
+            () -> new Translation2d(),
+            () -> false),
+        driveModeChooser::get));
+
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
     controller
-        .cross()
+        .R1()
         .whileTrue(RobotCommands.faceHubAndDrive(
             drivetrain,
             () -> -controller.getLeftY(),
@@ -262,6 +296,7 @@ public class RobotContainer {
             () -> new Translation2d(-.2, 0)));
 
     // Intake
+    /*
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
     controller
         .circle()
@@ -270,6 +305,17 @@ public class RobotContainer {
     controller
         .L2()
         .whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false))
+        .whileTrue(IndexerCommands.intakingAgitation(indexer)
+            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
+    */
+    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, () -> false));
+    controller
+        .L1()
+        .whileTrue(IntakeCommands.outtakeFuel(intake, led, () -> false)
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+    controller
+        .L2()
+        .whileTrue(IntakeCommands.intakeFuel(intake, () -> false, () -> false))
         .whileTrue(IndexerCommands.intakingAgitation(indexer)
             .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
     controller
@@ -305,19 +351,22 @@ public class RobotContainer {
     } else {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
-    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
+    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer, led));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
 
     // new button bindings:
-    controller2.L1().whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter));
+    controller2
+        .L1()
+        .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer, led));
     // should this be whileTrue? vvv
     controller
         .R2()
         .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
             .andThen(RobotCommands.autoAim(
                 drivetrain,
+                led,
                 shooter,
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
@@ -437,6 +486,8 @@ public class RobotContainer {
     controller2
         .touchpad()
         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+
+    new Trigger(DriverStation::isDisabled).onTrue(led.countdownCommand());
   }
 
   /**

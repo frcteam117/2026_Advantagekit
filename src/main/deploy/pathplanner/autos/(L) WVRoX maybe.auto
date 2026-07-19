@@ -17,22 +17,10 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Copy of (L) Trench-Bump 1"
+                  "pathName": "Copy of Copy of (L) a"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBumpWithFlywheelRev"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Copy of (L) Trench-Bump 2"
           }
         },
         {
@@ -48,7 +36,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.2
+                  "waitTime": 3.85
                 }
               }
             ]
@@ -73,22 +61,10 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Copy of (L) Trench-Bump 3"
+                  "pathName": "Copy of Copy of (L) b"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoOverBumpWithFlywheelRev"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Copy of (L) Trench-Bump 4"
           }
         },
         {
@@ -104,32 +80,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.0
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "stopFlywheel"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeDeploy"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Copy of (L) Trench-Bump 5"
+                  "waitTime": 4.0
                 }
               }
             ]

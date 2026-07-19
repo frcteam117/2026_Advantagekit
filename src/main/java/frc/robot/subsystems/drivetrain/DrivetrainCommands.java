@@ -544,6 +544,81 @@ public class DrivetrainCommands {
           }
         });
   }
+  // TODO: ask max about tuning rot PID
+  public static Command joystickDriveAtAngleRegularTurning(
+      DrivetrainSubsystem drivetrain,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier rotXSupplier,
+      DoubleSupplier rotYSupplier,
+      double deadband,
+      BooleanSupplier snapToAngle1,
+      BooleanSupplier snapToAngle2,
+      Supplier<Translation2d> centerOfRotationSupplier,
+      BooleanSupplier driveAssistSupplier) {
+
+    // Construct command
+    return drivetrain.run(() -> {
+      boolean isFlipped = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+      if (Math.hypot(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()) > deadband) {
+        joystickDriveAtAngle_rotTarget = Rotation2d.fromRadians(
+            Math.atan2(rotYSupplier.getAsDouble(), rotXSupplier.getAsDouble()));
+        if (snapToAngle2.getAsBoolean()) {
+          double snapToAngleJoystickTarget_deg =
+              MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
+          for (int i = 0; i < snapToAngle2targetBorders_deg.length; i++) {
+            if (snapToAngleJoystickTarget_deg < snapToAngle2targetBorders_deg[i]) {
+              joystickDriveAtAngle_rotTarget = Rotation2d.fromDegrees(snapToAngle2Targets_deg[i]);
+              break;
+            }
+          }
+        } else if (snapToAngle1.getAsBoolean()) {
+          double snapToAngleJoystickTarget_deg =
+              MathUtil.inputModulus(joystickDriveAtAngle_rotTarget.getDegrees(), 0, 360);
+          for (int i = 0; i < snapToAngle1targetBorders_deg.length; i++) {
+            if (snapToAngleJoystickTarget_deg < snapToAngle1targetBorders_deg[i]) {
+              joystickDriveAtAngle_rotTarget = Rotation2d.fromDegrees(snapToAngle1Targets_deg[i]);
+              break;
+            }
+          }
+        }
+      } else {
+        if (snapToAngle1.getAsBoolean()) {
+          joystickDriveAtAngle_rotTarget = MathUtil.isNear(
+                  0,
+                  drivetrain.getPose().getRotation().getRadians(),
+                  Math.PI / 2,
+                  -Math.PI,
+                  Math.PI)
+              ? Rotation2d.kZero
+              : Rotation2d.k180deg;
+          joystickDriveAtAngle_rotTarget = joystickDriveAtAngle_rotTarget.plus(
+              isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
+        }
+      }
+
+      // Get linear velocity
+      Translation2d linearVelocity =
+          getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+      // Convert to field relative speeds & send command
+      Logger.recordOutput("rotYSupplier", rotXSupplier.getAsDouble());
+      double turningSpeed = rotXSupplier.getAsDouble() * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble();
+      turningSpeed = MathUtil.applyDeadband(turningSpeed, deadband);
+      ChassisSpeeds speeds = new ChassisSpeeds(
+          linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+          linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+          turningSpeed);
+      speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+          speeds,
+          isFlipped
+              ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+              : drivetrain.getPose().getRotation());
+      setGoalVelocity(
+          drivetrain, speeds, centerOfRotationSupplier.get(), driveAssistSupplier.getAsBoolean());
+    });
+  }
+  ;
 
   private Translation2d shootWhileMoving_shooterVelocity = new Translation2d();
 

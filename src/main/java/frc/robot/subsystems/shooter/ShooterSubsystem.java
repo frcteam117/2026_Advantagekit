@@ -124,6 +124,10 @@ public class ShooterSubsystem extends SubsystemBase {
     return inputs.hood_Vel;
   }
 
+  public double getRevPrecentage() {
+    return inputs.rioFlywheel_Vel.in(RadiansPerSecond) / rioFlywheel_PID.getSetpoint() * 100;
+  }
+
   public AngularVelocity getRIOFlywheelVel() {
     return inputs.rioFlywheel_Vel;
   }

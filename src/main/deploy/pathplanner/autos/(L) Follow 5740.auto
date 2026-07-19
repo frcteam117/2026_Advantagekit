@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.76
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
@@ -17,7 +23,32 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "a"
+                  "pathName": "(L) Follow 5740 1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeDeploy"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "(L) Follow 5740 2"
                 }
               }
             ]
@@ -36,51 +67,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.0
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "stopFlywheel"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeDeploy"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "b"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "alignAndShoot"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 4.0
+                  "waitTime": 7.0
                 }
               }
             ]
@@ -90,6 +77,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Post-worlds experiments",
+  "folder": null,
   "choreoAuto": false
 }

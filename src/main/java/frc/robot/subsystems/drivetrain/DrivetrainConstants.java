@@ -16,8 +16,7 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.*;
 
 import com.pathplanner.lib.config.RobotConfig;
-import com.revrobotics.spark.config.EncoderConfig;
-import com.revrobotics.spark.config.SignalsConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.thethriftybot.devices.ThriftyNova.CurrentType;
 import com.thethriftybot.devices.ThriftyNova.EncoderType;
@@ -133,8 +132,6 @@ public class DrivetrainConstants {
     public static final double max_mPs = Units.feetToMeters(15);
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
-    public static final SignalsConfig signalsConfig = new SignalsConfig();
-    public static final EncoderConfig encoderConfig = new EncoderConfig();
     public static final SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
 
     // Drive PID configuration
@@ -142,7 +139,7 @@ public class DrivetrainConstants {
         realFF = new SimpleMotorFeedforward(0.02, 0.011, 0.0008, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.036968, 0.15869, 0.034, RobotConstants.CODE_PERIOD_s);
     public static final PIDController
-        realPID = new PIDController(0.001, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
+        realPID = new PIDController(0.00, 0.0, 0.0, RobotConstants.CODE_PERIOD_s),
         simPID = new PIDController(0.23931, 0.0, 0.0, RobotConstants.CODE_PERIOD_s);
 
     static {
@@ -169,10 +166,10 @@ public class DrivetrainConstants {
       // signalsConfig.primaryEncoderPositionPeriodMs((int) (1 / Chassis.odometryFrequency_Hz) *
       // 1000);
       // sparkMaxConfig.closedLoop.p(0.0).i(0.00000).d(0.0).velocityFF(0.0);
-      sparkMaxConfig.smartCurrentLimit(50);
-      sparkMaxConfig.voltageCompensation(RobotConstants.NOMINAL_V);
-      sparkMaxConfig.apply(encoderConfig);
-      sparkMaxConfig.apply(signalsConfig);
+      sparkMaxConfig.smartCurrentLimit(50).disableVoltageCompensation().idleMode(IdleMode.kBrake);
+      sparkMaxConfig.encoder.quadratureMeasurementPeriod(10).quadratureAverageDepth(4);
+      sparkMaxConfig.signals.primaryEncoderVelocityPeriodMs(
+          (int) (1000 / Chassis.odometryFrequency_Hz));
 
       if (RobotBase.isReal()) {
         LogUtil.createTunablePID(RobotConstants.TUNING_PREFIX + name, realPID, tunable::get);

@@ -17,7 +17,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(Depot) (L) Safe Center 1"
+                  "pathName": "(R) a"
                 }
               }
             ]
@@ -36,7 +36,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 6.5
+                  "waitTime": 4.0
                 }
               }
             ]
@@ -61,7 +61,26 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Copy of (Depot) (L) Safe Center 2"
+                  "pathName": "(R) b"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "alignAndShoot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.0
                 }
               }
             ]
