@@ -73,8 +73,7 @@ public class IndexerSubsystem extends SubsystemBase {
     kickerSpark.set(speed);
     if (speed > 0.2) {
       kickerRunningForward = true;
-    }
-    else {
+    } else {
       kickerRunningForward = false;
     }
     Logger.recordOutput(Kicker.NT_KEY + "/GoalSpeed", speed);

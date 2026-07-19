@@ -10,7 +10,6 @@ import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.AnimationDirectionValue;
 import com.ctre.phoenix6.signals.RGBWColor;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -125,8 +124,7 @@ public class LEDSubsystem extends SubsystemBase {
             () -> {
               double rev = shooter.getRevPrecentage();
               boolean shoot = indexer.isKickerRunningForward();
-              if (shoot
-                  && !indexer.isPreloading) { // GET THIS TO WORK WHEN SHOOTING.
+              if (shoot && !indexer.isPreloading) { // GET THIS TO WORK WHEN SHOOTING.
                 if (true) {
                   m_candle.setControl(m_slot0Animation);
                   alreadyRainbow = true;
