@@ -22,14 +22,12 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.RobotCommands;
 import frc.robot.subsystems.drivetrain.*;
 import frc.robot.subsystems.indexer.IndexerCommands;
@@ -486,8 +484,6 @@ public class RobotContainer {
     controller2
         .touchpad()
         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-
-    new Trigger(DriverStation::isDisabled).onTrue(led.countdownCommand());
   }
 
   /**

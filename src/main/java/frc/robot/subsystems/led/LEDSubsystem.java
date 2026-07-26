@@ -13,7 +13,6 @@ import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
@@ -23,154 +22,107 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
  * Subsystem that controls an addressable LED strip using a CANdle.
  */
 public class LEDSubsystem extends SubsystemBase {
-  private static final CANdle m_candle = new CANdle(18, CANBus.roboRIO());
-  Trigger brownoutTrigger = new Trigger(RobotController::isBrownedOut);
-  private boolean alreadyRainbow = false;
+  private static final CANdle candle = new CANdle(18, CANBus.roboRIO());
+  private final Trigger brownoutTrigger = new Trigger(RobotController::isBrownedOut);
 
-  private final RainbowAnimation m_slot0Animation = new RainbowAnimation(0, 38)
+  private enum LEDState {
+    NONE,
+    DEFAULT_GREEN,
+    REV_LOW,
+    REV_MID,
+    REV_HIGH,
+    SHOOTING_RAINBOW,
+    OUTTAKE_FIRE,
+    BROWNOUT
+  }
+
+  private LEDState currentState = LEDState.NONE;
+
+  private final RainbowAnimation rainbowAnimation = new RainbowAnimation(0, 38)
       .withSlot(0)
       .withBrightness(1)
       .withDirection(AnimationDirectionValue.Forward)
-      .withFrameRate(Hertz.of(100));
+      .withFrameRate(Hertz.of(150));
 
   private final FireAnimation leftFireAnimation =
-      new FireAnimation(8, 23).withDirection(AnimationDirectionValue.Backward);
+      new FireAnimation(8, 23).withSlot(1).withDirection(AnimationDirectionValue.Backward).withFrameRate(Hertz.of(200));
 
   private final FireAnimation rightFireAnimation =
-      new FireAnimation(24, 38).withSlot(1).withDirection(AnimationDirectionValue.Forward);
-
-  private final SolidColor m_green = new SolidColor(0, 38).withColor(new RGBWColor(13, 255, 1, 0));
-  private final SolidColor m_red = new SolidColor(0, 38).withColor(new RGBWColor(255, 20, 20, 0));
+      new FireAnimation(24, 38).withSlot(2).withDirection(AnimationDirectionValue.Forward).withFrameRate(Hertz.of(200));
 
   public LEDSubsystem() {
     setDefaultCommand(updateLEDs());
 
-    brownoutTrigger.whileTrue(startRun(
-            () -> {
-              m_candle.clearAllAnimations();
-            },
-            () -> {
-              m_candle.clearAllAnimations();
-              m_candle.setControl(m_red);
-            })
-        .ignoringDisable(true));
+    brownoutTrigger.whileTrue(
+        startRun(() -> setLEDState(LEDState.BROWNOUT), () -> {}).ignoringDisable(true));
   }
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("isCandleConnected", m_candle.isConnected());
+    SmartDashboard.putBoolean("isCandleConnected", candle.isConnected());
   }
 
-  public Command countdownCommand() {
-    return runOnce(() -> {
-          m_candle.clearAllAnimations();
-          m_candle.setControl(new SolidColor(8, 12).withColor(new RGBWColor(10, 255, 10, 30)));
-          m_candle.setControl(new SolidColor(13, 33).withColor(new RGBWColor(0, 0, 0, 0)));
-          m_candle.setControl(new SolidColor(34, 38).withColor(new RGBWColor(10, 255, 10, 30)));
-        })
-        .andThen(Commands.waitSeconds(1))
-        .andThen(runOnce(() -> {
-          m_candle.clearAllAnimations();
-          m_candle.setControl(new SolidColor(8, 15).withColor(new RGBWColor(10, 255, 10, 30)));
-          m_candle.setControl(new SolidColor(16, 30).withColor(new RGBWColor(0, 0, 0, 0)));
-          m_candle.setControl(new SolidColor(31, 38).withColor(new RGBWColor(10, 255, 10, 30)));
-        }))
-        .andThen(Commands.waitSeconds(1))
-        .andThen(runOnce(() -> {
-          m_candle.clearAllAnimations();
-          m_candle.setControl(new SolidColor(8, 18).withColor(new RGBWColor(10, 255, 10, 30)));
-          m_candle.setControl(new SolidColor(19, 27).withColor(new RGBWColor(0, 0, 0, 0)));
-          m_candle.setControl(new SolidColor(28, 38).withColor(new RGBWColor(10, 255, 10, 30)));
-        }))
-        .andThen(Commands.waitSeconds(1))
-        .andThen(runOnce(() -> {
-          m_candle.clearAllAnimations();
-          m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(0, 0, 0, 0)));
-        }))
-        .ignoringDisable(true);
+  private void setLEDState(LEDState newState) {
+    if (currentState == newState) {
+      return;
+    }
+    currentState = newState;
+    candle.clearAllAnimations();
+
+    switch (newState) {
+      case DEFAULT_GREEN:
+        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(10, 255, 10, 30)));
+        break;
+      case REV_LOW:
+        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(0, 100, 255, 20)));
+        break;
+      case REV_MID:
+        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 120, 0, 20)));
+        break;
+      case REV_HIGH:
+        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(200, 0, 255, 20)));
+        break;
+      case SHOOTING_RAINBOW:
+        candle.setControl(rainbowAnimation);
+        break;
+      case OUTTAKE_FIRE:
+        candle.setControl(leftFireAnimation);
+        candle.setControl(rightFireAnimation);
+        break;
+      case BROWNOUT:
+        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 20, 20, 0)));
+        break;
+      case NONE:
+      default:
+        break;
+    }
   }
 
-  /*
-  public Command rainbow() {
-    return run(() -> {
-          m_candle.clearAllAnimations();
-          m_candle.setControl(m_slot0Animation);
-        })
-        .ignoringDisable(true);
-  }
-
-  public Command fire() {
-    return run(() -> {
-          m_candle.clearAllAnimations();
-          m_candle.setControl(m_slot1Animation);
-        })
-        .ignoringDisable(true);
-  }
-
-  public Command green() {
-    return run(() -> {
-          m_candle.clearAllAnimations();
-          m_candle.setControl(m_green);
-        })
-        .ignoringDisable(true);
-  }
-  */
   public Command showREVCommand(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     return startRun(
             () -> {
-              m_candle.clearAllAnimations();
-              alreadyRainbow = false;
+              currentState = LEDState.NONE;
             },
             () -> {
               double rev = shooter.getRevPrecentage();
               boolean shoot = indexer.isKickerRunningForward();
-              if (shoot && !indexer.isPreloading) { // GET THIS TO WORK WHEN SHOOTING.
-                if (true) {
-                  m_candle.setControl(m_slot0Animation);
-                  alreadyRainbow = true;
-                }
+              if (shoot && !indexer.isPreloading) {
+                setLEDState(LEDState.SHOOTING_RAINBOW);
               } else if (rev >= 75) {
-                m_candle.clearAllAnimations();
-                m_candle.setControl(
-                    new SolidColor(0, 38).withColor(new RGBWColor(200, 0, 255, 20)));
+                setLEDState(LEDState.REV_HIGH);
               } else if (rev >= 32) {
-                m_candle.clearAllAnimations();
-                m_candle.setControl(
-                    new SolidColor(0, 38).withColor(new RGBWColor(255, 120, 0, 20)));
+                setLEDState(LEDState.REV_MID);
               } else {
-                m_candle.clearAllAnimations();
-                m_candle.setControl(
-                    new SolidColor(0, 38).withColor(new RGBWColor(0, 100, 255, 20)));
+                setLEDState(LEDState.REV_LOW);
               }
-            })
-        .ignoringDisable(true);
+            });
   }
 
   public Command showOuttakeCommand() {
-    return startRun(
-        () -> {
-          m_candle.clearAllAnimations();
-        },
-        () -> {
-          m_candle.setControl(leftFireAnimation);
-          m_candle.setControl(rightFireAnimation);
-        });
+    return startRun(() -> setLEDState(LEDState.OUTTAKE_FIRE), () -> {});
   }
 
-  /**
-   * Updates the animations and LEDs of the CANdle.
-   *
-   * @return Command to run
-   */
   public Command updateLEDs() {
-    return startRun(
-            () -> {
-              m_candle.clearAllAnimations();
-            },
-            () -> {
-              m_candle.clearAllAnimations();
-              m_candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(10, 255, 10, 30)));
-            })
-        .ignoringDisable(true);
+    return startRun(() -> setLEDState(LEDState.DEFAULT_GREEN), () -> {}).ignoringDisable(true);
   }
 }
