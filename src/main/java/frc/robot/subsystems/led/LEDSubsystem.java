@@ -44,11 +44,15 @@ public class LEDSubsystem extends SubsystemBase {
       .withDirection(AnimationDirectionValue.Forward)
       .withFrameRate(Hertz.of(150));
 
-  private final FireAnimation leftFireAnimation =
-      new FireAnimation(8, 23).withSlot(1).withDirection(AnimationDirectionValue.Backward).withFrameRate(Hertz.of(200));
+  private final FireAnimation leftFireAnimation = new FireAnimation(8, 23)
+      .withSlot(1)
+      .withDirection(AnimationDirectionValue.Backward)
+      .withFrameRate(Hertz.of(200));
 
-  private final FireAnimation rightFireAnimation =
-      new FireAnimation(24, 38).withSlot(2).withDirection(AnimationDirectionValue.Forward).withFrameRate(Hertz.of(200));
+  private final FireAnimation rightFireAnimation = new FireAnimation(24, 38)
+      .withSlot(2)
+      .withDirection(AnimationDirectionValue.Forward)
+      .withFrameRate(Hertz.of(200));
 
   public LEDSubsystem() {
     setDefaultCommand(updateLEDs());
@@ -100,22 +104,22 @@ public class LEDSubsystem extends SubsystemBase {
 
   public Command showREVCommand(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     return startRun(
-            () -> {
-              currentState = LEDState.NONE;
-            },
-            () -> {
-              double rev = shooter.getRevPrecentage();
-              boolean shoot = indexer.isKickerRunningForward();
-              if (shoot && !indexer.isPreloading) {
-                setLEDState(LEDState.SHOOTING_RAINBOW);
-              } else if (rev >= 75) {
-                setLEDState(LEDState.REV_HIGH);
-              } else if (rev >= 32) {
-                setLEDState(LEDState.REV_MID);
-              } else {
-                setLEDState(LEDState.REV_LOW);
-              }
-            });
+        () -> {
+          currentState = LEDState.NONE;
+        },
+        () -> {
+          double rev = shooter.getRevPrecentage();
+          boolean shoot = indexer.isKickerRunningForward();
+          if (shoot && !indexer.isPreloading) {
+            setLEDState(LEDState.SHOOTING_RAINBOW);
+          } else if (rev >= 75) {
+            setLEDState(LEDState.REV_HIGH);
+          } else if (rev >= 32) {
+            setLEDState(LEDState.REV_MID);
+          } else {
+            setLEDState(LEDState.REV_LOW);
+          }
+        });
   }
 
   public Command showOuttakeCommand() {
