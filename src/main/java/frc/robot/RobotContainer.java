@@ -270,11 +270,15 @@ public class RobotContainer {
             controller.R1(),
             () -> new Translation2d(),
             () -> false),
-        DrivetrainCommands.joystickNormalTurning(
+        DrivetrainCommands.joystickDriveAtAngleRegularTurning(
             drivetrain,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> -controller.getRightX(),
+            () -> -controller.getRawAxis(2),
+            () -> -controller.getRightX() / 1.1,
+            .4,
+            () -> false, // controller.R3(),
+            controller.R3(), // controller.R1(),
             () -> new Translation2d(),
             () -> false),
         driveModeChooser::get));
