@@ -85,6 +85,7 @@ public class DrivetrainCommands {
   };
   public static Rotation2d targetTagRotation2d;
   public static Rotation2d robotRotation2d[];
+  public static Rotation2d intendedDirection = new Rotation2d();
 
   static {
     angleProfiledPID.enableContinuousInput(-Math.PI, Math.PI);
@@ -121,8 +122,10 @@ public class DrivetrainCommands {
                       .getAngle()
                       .plus(Rotation2d.k180deg)));
           if (isAutoAimReady(drivetrain)) {
+            intendedDirection = drivetrain.getPose().getRotation();
             drivetrain.stopWithHeadings(X_MODULE_HEADINGS);
           } else {
+            intendedDirection = drivetrain.getPose().getRotation();
             setGoalVelocity(drivetrain, speeds, centerOfRotationSupplier.get(), false);
           }
         });
@@ -355,6 +358,73 @@ public class DrivetrainCommands {
         })
         // Reset PID controller when command starts
         .beforeStarting(() -> resetAngleController(drivetrain));
+  }
+
+  public static Command joystickNormalTurning(
+      DrivetrainSubsystem drivetrain,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier rotationSupplier,
+      Supplier<Translation2d> centerOfRotationSupplier,
+      BooleanSupplier driveAssistSupplier) {
+
+    return drivetrain
+        .run(() -> {
+          // Apply deadband and power curve to rotation input
+          double omegaInput =
+              MathUtil.applyDeadband(rotationSupplier.getAsDouble(), JOYSTICK_DEADBAND);
+          omegaInput = MathUtil.copyDirectionPow(omegaInput, 2);
+
+          // Calculate desired feedforward angular velocity in rad/s
+          double omegaFeedforward = omegaInput * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble();
+
+          // Integrate target position step using loop period (0.02s)
+          intendedDirection = intendedDirection.plus(new Rotation2d(omegaFeedforward * 0.02));
+
+          Translation2d linearVelocity =
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+          boolean isFlipped = DriverStation.getAlliance().isPresent()
+              && DriverStation.getAlliance().get() == Alliance.Red;
+
+          // Pass BOTH target position (intendedDirection) AND feedforward velocity (omegaFeedforward)
+          // into angularVelFromAngleProfile via TrapezoidProfile.State
+          double angularVelocity = angularVelFromAngleProfile(
+              drivetrain.getPose().getRotation(),
+              new TrapezoidProfile.State(intendedDirection.getRadians(), omegaFeedforward));
+
+          ChassisSpeeds speeds = new ChassisSpeeds(
+              linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+              angularVelocity);
+
+          speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+              speeds,
+              isFlipped
+                  ? drivetrain.getPose().getRotation().plus(Rotation2d.k180deg)
+                  : drivetrain.getPose().getRotation());
+
+          setGoalVelocity(
+              drivetrain,
+              speeds,
+              centerOfRotationSupplier.get(),
+              driveAssistSupplier.getAsBoolean());
+        })
+        .beforeStarting(() -> {
+          resetAngleController(drivetrain);
+          intendedDirection = drivetrain.getPose().getRotation(); // Synchronize heading on start
+        });
+  }
+
+  public static Command joystickNormallTurning(
+      DrivetrainSubsystem drivetrain,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier rotationSupplier,
+      Supplier<Translation2d> centerOfRotationSupplier,
+      BooleanSupplier driveAssistSupplier) {
+    return joystickNormalTurning(
+        drivetrain, xSupplier, ySupplier, rotationSupplier, centerOfRotationSupplier, driveAssistSupplier);
   }
 
   /**

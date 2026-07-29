@@ -211,6 +211,7 @@ public class DrivetrainConstants {
       config.canFreq.control = 0.02;
       config.canFreq.current = 0.02;
       config.canFreq.fault = 0.02;
+      config.canFreq.quadSensor = 1 / Chassis.odometryFrequency_Hz;
       config.pidSlot = PIDSlot.SLOT0;
       config.pid0.p = .005;
       config.pid0.i = 0.0;

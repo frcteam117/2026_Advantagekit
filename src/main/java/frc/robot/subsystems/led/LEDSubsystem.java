@@ -58,7 +58,8 @@ public class LEDSubsystem extends SubsystemBase {
     setDefaultCommand(updateLEDs());
 
     brownoutTrigger.whileTrue(
-        startRun(() -> setLEDState(LEDState.BROWNOUT), () -> {}).ignoringDisable(true));
+        startRun(() -> setLEDState(LEDState.BROWNOUT), () -> setLEDState(LEDState.BROWNOUT))
+            .ignoringDisable(true));
   }
 
   @Override
@@ -104,26 +105,27 @@ public class LEDSubsystem extends SubsystemBase {
 
   public Command showREVCommand(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     return startRun(
-        () -> {
-          currentState = LEDState.NONE;
-        },
-        () -> {
-          double rev = shooter.getRevPrecentage();
-          boolean shoot = indexer.isKickerRunningForward();
-          if (shoot && !indexer.isPreloading) {
-            setLEDState(LEDState.SHOOTING_RAINBOW);
-          } else if (rev >= 75) {
-            setLEDState(LEDState.REV_HIGH);
-          } else if (rev >= 32) {
-            setLEDState(LEDState.REV_MID);
-          } else {
-            setLEDState(LEDState.REV_LOW);
-          }
-        });
+            () -> {
+              currentState = LEDState.NONE;
+            },
+            () -> {
+              double rev = shooter.getRevPrecentage();
+              boolean shoot = indexer.isKickerRunningForward();
+              if (shoot && !indexer.isPreloading) {
+                setLEDState(LEDState.SHOOTING_RAINBOW);
+              } else if (rev >= 75) {
+                setLEDState(LEDState.REV_HIGH);
+              } else if (rev >= 32) {
+                setLEDState(LEDState.REV_MID);
+              } else {
+                setLEDState(LEDState.REV_LOW);
+              }
+            })
+        .andThen(updateLEDs());
   }
 
   public Command showOuttakeCommand() {
-    return startRun(() -> setLEDState(LEDState.OUTTAKE_FIRE), () -> {});
+    return startRun(() -> setLEDState(LEDState.OUTTAKE_FIRE), () -> {}).andThen(updateLEDs());
   }
 
   public Command updateLEDs() {
