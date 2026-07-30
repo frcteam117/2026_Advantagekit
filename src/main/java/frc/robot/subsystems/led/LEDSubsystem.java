@@ -3,8 +3,6 @@ package frc.robot.subsystems.led;
 
 import static edu.wpi.first.units.Units.*;
 
-import java.util.function.Supplier;
-
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.controls.FireAnimation;
 import com.ctre.phoenix6.controls.RainbowAnimation;
@@ -110,20 +108,19 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public Command showREVCommand(ShooterSubsystem shooter, IndexerSubsystem indexer) {
-    return run(
-            () -> {
-              double rev = shooter.getRevPrecentage();
-              boolean shoot = indexer.isKickerRunningForward();
-              if (shoot && !indexer.isPreloading) {
-                setLEDState(LEDState.SHOOTING_RAINBOW);
-              } else if (rev >= 75) {
-                setLEDState(LEDState.REV_HIGH);
-              } else if (rev >= 32) {
-                setLEDState(LEDState.REV_MID);
-              } else {
-                setLEDState(LEDState.REV_LOW);
-              }
-            });
+    return run(() -> {
+      double rev = shooter.getRevPrecentage();
+      boolean shoot = indexer.isKickerRunningForward();
+      if (shoot && !indexer.isPreloading) {
+        setLEDState(LEDState.SHOOTING_RAINBOW);
+      } else if (rev >= 75) {
+        setLEDState(LEDState.REV_HIGH);
+      } else if (rev >= 32) {
+        setLEDState(LEDState.REV_MID);
+      } else {
+        setLEDState(LEDState.REV_LOW);
+      }
+    });
   }
 
   public Command showOuttakeCommand() {
@@ -135,7 +132,8 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public Command updateLEDs(Trigger align) {
-    return run(() -> setLEDState(align.getAsBoolean() ? LEDState.ALIGN_PINK : LEDState.DEFAULT_GREEN))
+    return run(() ->
+            setLEDState(align.getAsBoolean() ? LEDState.ALIGN_PINK : LEDState.DEFAULT_GREEN))
         .ignoringDisable(true);
   }
 }

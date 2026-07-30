@@ -259,29 +259,31 @@ public class RobotContainer {
         targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
 
     drivetrain.setDefaultCommand(Commands.either(
-        DrivetrainCommands.joystickDriveAtAngle(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightY(),
-            () -> -controller.getRightX(),
-            0.2,
-            controller.R3(),
-            controller.R1(),
-            () -> new Translation2d(),
-            () -> false).alongWith(led.updateLEDs(controller.R3())),
-        DrivetrainCommands.joystickDriveAtAngleRegularTurning(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRawAxis(2),
-            () -> -controller.getRightX() * Math.abs(controller.getRightX()),
-            .4,
-            () -> false, // controller.R3(),
-            controller.R1(), // controller.R1(),
-            () -> new Translation2d(),
-            () -> false),
-        driveModeChooser::get).alongWith(led.updateLEDs(controller.R1())));
+            DrivetrainCommands.joystickDriveAtAngle(
+                    drivetrain,
+                    () -> -controller.getLeftY(),
+                    () -> -controller.getLeftX(),
+                    () -> -controller.getRightY(),
+                    () -> -controller.getRightX(),
+                    0.2,
+                    controller.R3(),
+                    controller.R1(),
+                    () -> new Translation2d(),
+                    () -> false)
+                .alongWith(led.updateLEDs(controller.R3())),
+            DrivetrainCommands.joystickDriveAtAngleRegularTurning(
+                drivetrain,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRawAxis(2),
+                () -> -controller.getRightX() * Math.abs(controller.getRightX()),
+                .4,
+                () -> false, // controller.R3(),
+                controller.R1(), // controller.R1(),
+                () -> new Translation2d(),
+                () -> false),
+            driveModeChooser::get)
+        .alongWith(led.updateLEDs(controller.R1())));
 
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
     /*
