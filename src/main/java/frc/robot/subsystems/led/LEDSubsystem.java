@@ -3,6 +3,8 @@ package frc.robot.subsystems.led;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.controls.FireAnimation;
 import com.ctre.phoenix6.controls.RainbowAnimation;
@@ -33,6 +35,7 @@ public class LEDSubsystem extends SubsystemBase {
     REV_HIGH,
     SHOOTING_RAINBOW,
     OUTTAKE_FIRE,
+    ALIGN_PINK,
     BROWNOUT
   }
 
@@ -97,6 +100,9 @@ public class LEDSubsystem extends SubsystemBase {
       case BROWNOUT:
         candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 20, 20, 0)));
         break;
+      case ALIGN_PINK:
+        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 182, 193, 20)));
+        break;
       case NONE:
       default:
         break;
@@ -104,10 +110,7 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public Command showREVCommand(ShooterSubsystem shooter, IndexerSubsystem indexer) {
-    return startRun(
-            () -> {
-              currentState = LEDState.NONE;
-            },
+    return run(
             () -> {
               double rev = shooter.getRevPrecentage();
               boolean shoot = indexer.isKickerRunningForward();
@@ -120,15 +123,19 @@ public class LEDSubsystem extends SubsystemBase {
               } else {
                 setLEDState(LEDState.REV_LOW);
               }
-            })
-        .andThen(updateLEDs());
+            });
   }
 
   public Command showOuttakeCommand() {
-    return startRun(() -> setLEDState(LEDState.OUTTAKE_FIRE), () -> {}).andThen(updateLEDs());
+    return run(() -> setLEDState(LEDState.OUTTAKE_FIRE));
   }
 
   public Command updateLEDs() {
-    return startRun(() -> setLEDState(LEDState.DEFAULT_GREEN), () -> {}).ignoringDisable(true);
+    return run(() -> setLEDState(LEDState.DEFAULT_GREEN)).ignoringDisable(true);
+  }
+
+  public Command updateLEDs(Trigger align) {
+    return run(() -> setLEDState(align.getAsBoolean() ? LEDState.ALIGN_PINK : LEDState.DEFAULT_GREEN))
+        .ignoringDisable(true);
   }
 }

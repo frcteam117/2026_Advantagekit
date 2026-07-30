@@ -387,7 +387,8 @@ public class DrivetrainCommands {
           boolean isFlipped = DriverStation.getAlliance().isPresent()
               && DriverStation.getAlliance().get() == Alliance.Red;
 
-          // Pass BOTH target position (intendedDirection) AND feedforward velocity (omegaFeedforward)
+          // Pass BOTH target position (intendedDirection) AND feedforward velocity
+          // (omegaFeedforward)
           // into angularVelFromAngleProfile via TrapezoidProfile.State
           double angularVelocity = angularVelFromAngleProfile(
               drivetrain.getPose().getRotation(),
@@ -424,7 +425,12 @@ public class DrivetrainCommands {
       Supplier<Translation2d> centerOfRotationSupplier,
       BooleanSupplier driveAssistSupplier) {
     return joystickNormalTurning(
-        drivetrain, xSupplier, ySupplier, rotationSupplier, centerOfRotationSupplier, driveAssistSupplier);
+        drivetrain,
+        xSupplier,
+        ySupplier,
+        rotationSupplier,
+        centerOfRotationSupplier,
+        driveAssistSupplier);
   }
 
   /**
@@ -673,8 +679,21 @@ public class DrivetrainCommands {
 
       // Convert to field relative speeds & send command
       Logger.recordOutput("rotYSupplier", rotXSupplier.getAsDouble());
-      double turningSpeed = rotXSupplier.getAsDouble() * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble();
+      double turningSpeed =
+          rotXSupplier.getAsDouble() * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble() * 0.3;
       turningSpeed = MathUtil.applyDeadband(turningSpeed, deadband);
+      if (snapToAngle2.getAsBoolean()) {
+        Rotation2d currentRot = drivetrain.getPose().getRotation();
+        Rotation2d allianceRot = currentRot.plus(isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
+        Rotation2d targetAllianceRot = (Math.abs(allianceRot.getRadians()) <= Math.PI / 2)
+            ? Rotation2d.kZero
+            : Rotation2d.k180deg;
+        Rotation2d targetRot =
+            targetAllianceRot.plus(isFlipped ? Rotation2d.k180deg : Rotation2d.kZero);
+        turningSpeed = angularVelFromAngleProfile(currentRot, targetRot);
+      } else {
+        turningSpeed -= (drivetrain.getChassisSpeeds().omegaRadiansPerSecond - turningSpeed);
+      }
       ChassisSpeeds speeds = new ChassisSpeeds(
           linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
           linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),

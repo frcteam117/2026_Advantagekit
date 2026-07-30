@@ -269,21 +269,22 @@ public class RobotContainer {
             controller.R3(),
             controller.R1(),
             () -> new Translation2d(),
-            () -> false),
+            () -> false).alongWith(led.updateLEDs(controller.R3())),
         DrivetrainCommands.joystickDriveAtAngleRegularTurning(
             drivetrain,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             () -> -controller.getRawAxis(2),
-            () -> -controller.getRightX() / 1.1,
+            () -> -controller.getRightX() * Math.abs(controller.getRightX()),
             .4,
             () -> false, // controller.R3(),
-            controller.R3(), // controller.R1(),
+            controller.R1(), // controller.R1(),
             () -> new Translation2d(),
             () -> false),
-        driveModeChooser::get));
+        driveModeChooser::get).alongWith(led.updateLEDs(controller.R1())));
 
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
+    /*
     controller
         .R1()
         .whileTrue(RobotCommands.faceHubAndDrive(
@@ -292,7 +293,7 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             // () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())
             () -> new Translation2d(-.2, 0)));
-
+    */
     // Intake
     /*
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
