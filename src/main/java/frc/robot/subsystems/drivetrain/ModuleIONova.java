@@ -20,6 +20,7 @@ import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkLowLevel; // .MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.thethriftybot.devices.ThriftyNova;
@@ -40,6 +41,8 @@ public class ModuleIONova implements ModuleIO {
   private final ThriftyNova driveNova;
   private final SparkMax driveSparkMax;
   private final ThriftyNova azimuthNova;
+  private final SparkMax azimuthSparkMax;
+
   private final int moduleIndex;
 
   // Queue inputs from odometry thread
@@ -55,13 +58,22 @@ public class ModuleIONova implements ModuleIO {
 
   public ModuleIONova(int module) {
     moduleIndex = module;
-    azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
+       //azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
     if ((module == 0) || (module == 1)) { // FL, FR are still novas
       driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
       driveSparkMax = null;
     } else {
       driveNova = null;
       driveSparkMax = new SparkMax(Drive.canIds[module], SparkLowLevel.MotorType.kBrushless);
+    }
+
+    if (module == 2) { // BL Azimuth is also a sparkmax
+      azimuthNova = null;
+      azimuthSparkMax = new SparkMax(Azimuth.canIds[module], SparkLowLevel.MotorType.kBrushless);
+    }
+    else {
+      azimuthSparkMax = null;
+      azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
     }
 
     // Configure drive motor
@@ -81,7 +93,12 @@ public class ModuleIONova implements ModuleIO {
     System.out.println(
         "Configuring Azimuth motor. Module: " + module + "  CAN Id: " + Azimuth.canIds[module]);
     Azimuth.config.absOffset = AbsEncoder.zeroRotations_ticks[module];
-    azimuthNova.applyConfig(Azimuth.config);
+    if (azimuthSparkMax == null) {
+          azimuthNova.applyConfig(Azimuth.config);
+    } else {
+      azimuthSparkMax.configure(
+          Azimuth.sparkMaxConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
     System.out.println("Finished configuring Azimuth motor. Module: " + module + "  CAN Id: "
         + Azimuth.canIds[module]);
 
@@ -96,8 +113,15 @@ public class ModuleIONova implements ModuleIO {
           .registerSignal(
               () -> UnitUtil.rotTorad(driveSparkMax.getEncoder().getPosition() / Drive.reduction));
     }
-    azimuthPositionQueue =
+    
+    
+    if (azimuthSparkMax == null) {
+      azimuthPositionQueue =
         NovaOdometryThread.getInstance().registerSignal(() -> -azimuthNova.getPositionAbs());
+    } else {
+      azimuthPositionQueue =
+        NovaOdometryThread.getInstance().registerSignal(() -> -azimuthSparkMax.getAbsoluteEncoder().getPosition());
+    }
     // new TunableDouble(
     //     "Tuning/Drive/1 P", Drive.config.pid0.p, () -> true, p -> driveNova.pid0.setP(p));
     // new TunableDouble(
@@ -134,7 +158,12 @@ public class ModuleIONova implements ModuleIO {
     //     Azimuth.config.pid0.iZone,
     //     () -> true,
     //     cap -> azimuthNova.pid0.setAccumulatorCap(cap));
-    currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - azimuthNova.getPositionAbs());
+    if (azimuthSparkMax == null) {
+      currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - azimuthNova.getPositionAbs());
+    }
+    else {
+      currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - azimuthSparkMax.getAbsoluteEncoder().getPosition());
+    }
   }
 
   @Override
@@ -166,21 +195,38 @@ public class ModuleIONova implements ModuleIO {
     }
 
     // Update azimuth inputs
-    inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - azimuthNova.getPositionAbs());
-    currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - azimuthNova.getPositionAbs());
-    inputs.absoluteEncoder.connected = true;
+    if (azimuthSparkMax == null)  { // normal
+      inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - azimuthNova.getPositionAbs());
+      currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - azimuthNova.getPositionAbs());
+      inputs.absoluteEncoder.connected = true;
 
-    inputs.azimuth.position.mut_replace(
-        UnitUtil.rotTorad(azimuthNova.getPositionInternal() / Azimuth.reduction), Radians);
-    inputs.azimuth.velocity.mut_replace(
-        UnitUtil.rotTorad(azimuthNova.getVelocityInternal() / Azimuth.reduction), RadiansPerSecond);
-    inputs.azimuth.outputVoltage.mut_replace(azimuthNova.getAppliedVoltage(), Volts);
-    inputs.azimuth.inputVoltage.mut_replace(azimuthNova.getVoltage(), Volts);
-    inputs.azimuth.outputCurrent.mut_replace(azimuthNova.getStatorCurrent(), Amps);
-    inputs.azimuth.inputCurrent.mut_replace(azimuthNova.getSupplyCurrent(), Amps);
-    inputs.azimuth.errors = azimuthNova.errors.toArray(ThriftyNova.Error[]::new);
-    inputs.azimuth.connected = true;
+      inputs.azimuth.position.mut_replace(
+          UnitUtil.rotTorad(azimuthNova.getPositionInternal() / Azimuth.reduction), Radians);
+      inputs.azimuth.velocity.mut_replace(
+          UnitUtil.rotTorad(azimuthNova.getVelocityInternal() / Azimuth.reduction), RadiansPerSecond);
+      inputs.azimuth.outputVoltage.mut_replace(azimuthNova.getAppliedVoltage(), Volts);
+      inputs.azimuth.inputVoltage.mut_replace(azimuthNova.getVoltage(), Volts);
+      inputs.azimuth.outputCurrent.mut_replace(azimuthNova.getStatorCurrent(), Amps);
+      inputs.azimuth.inputCurrent.mut_replace(azimuthNova.getSupplyCurrent(), Amps);
+      inputs.azimuth.errors = azimuthNova.errors.toArray(ThriftyNova.Error[]::new);
+      inputs.azimuth.connected = true;
+    }
+    else {
+      inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - azimuthSparkMax.getAbsoluteEncoder().getPosition());
+      currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - azimuthSparkMax.getAbsoluteEncoder().getPosition());
+      inputs.absoluteEncoder.connected = true;
 
+      inputs.azimuth.position.mut_replace(
+          UnitUtil.rotTorad(azimuthSparkMax.getEncoder().getPosition() / Azimuth.reduction), Radians);
+      inputs.azimuth.velocity.mut_replace(
+          UnitUtil.rotTorad(azimuthSparkMax.getEncoder().getVelocity() / Azimuth.reduction), RadiansPerSecond);
+      inputs.azimuth.outputVoltage.mut_replace(azimuthNova.getAppliedVoltage(), Volts);
+      // inputs.azimuth.inputVoltage.mut_replace(azimuthNova.getVoltage(), Volts);
+      // inputs.azimuth.outputCurrent.mut_replace(azimuthNova.getStatorCurrent(), Amps);
+      // inputs.azimuth.inputCurrent.mut_replace(azimuthNova.getSupplyCurrent(), Amps);
+      // inputs.azimuth.errors = azimuthNova.errors.toArray(ThriftyNova.Error[]::new);
+      inputs.azimuth.connected = true;
+    }
     // Update odometry inputs
     inputs.odometry.timestamps =
         timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
@@ -190,6 +236,8 @@ public class ModuleIONova implements ModuleIO {
     inputs.odometry.azimuthPositions_rad = azimuthPositionQueue.stream()
         .mapToDouble((Double value) -> UnitUtil.rotTorad(value)) // - zeroRotation_rad)
         .toArray();
+
+
     timestampQueue.clear();
     drivePositionQueue.clear();
     azimuthPositionQueue.clear();
@@ -199,6 +247,7 @@ public class ModuleIONova implements ModuleIO {
 
   @Override
   public void setDriveVoltage(double voltage_V) {
+    // TODO: make sane conversion method for this
     if (driveNova == null) {
       driveSparkMax.setVoltage(voltage_V * 12.0);
     } else {
@@ -209,7 +258,11 @@ public class ModuleIONova implements ModuleIO {
 
   @Override
   public void setAzimuthVoltage(double voltage_V) {
-    azimuthNova.setVoltage(voltage_V);
+    if (azimuthNova == null) {
+      azimuthSparkMax.setVoltage(voltage_V * 12.0);
+    } else {
+      azimuthNova.setVoltage(voltage_V);
+    }
   }
 
   @Override
@@ -231,10 +284,20 @@ public class ModuleIONova implements ModuleIO {
   @Override
   public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
     // azimuthNova.setPositionAbs(UnitUtil.radTorot(-nextPosition_rad), .1);
-    azimuthNova.setVoltage(-Azimuth.realPID.calculate(currentAzimuthPosition_rad, nextPosition_rad)
-        - Azimuth.realFF.calculateWithVelocities(
-            lastNextAzimuthVelocity_radPs, nextVelocity_radPs));
-    // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
-    lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+    if (azimuthSparkMax == null){
+      azimuthNova.setVoltage(-Azimuth.realPID.calculate(currentAzimuthPosition_rad, nextPosition_rad)
+          - Azimuth.realFF.calculateWithVelocities(
+              lastNextAzimuthVelocity_radPs, nextVelocity_radPs));
+      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+    }
+    else {
+      double v = -Azimuth.realPID.calculate(currentAzimuthPosition_rad, nextPosition_rad)
+          - Azimuth.realFF.calculateWithVelocities(
+              lastNextAzimuthVelocity_radPs, nextVelocity_radPs);
+      azimuthSparkMax.setVoltage(v * 12);
+      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+    }
   }
 }
