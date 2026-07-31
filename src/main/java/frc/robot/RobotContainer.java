@@ -24,6 +24,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -48,7 +49,9 @@ import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -76,6 +79,7 @@ public class RobotContainer {
   private final CommandPS5Controller controller2 = new CommandPS5Controller(1);
 
   // Dashboard inputs
+  private final Map<String, Pose2d> pathplannerStartingPoses = new HashMap<>();
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardChooser<Boolean> driveModeChooser;
   private final LoggedDashboardChooser<Boolean> leftRightChooser;
@@ -176,7 +180,11 @@ public class RobotContainer {
     // Set up auto routines
     driveModeChooser = new LoggedDashboardChooser<>("Drive Mode:");
     leftRightChooser = new LoggedDashboardChooser<>("Auto Side:");
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    autoChooser = new LoggedDashboardChooser<>(
+        "Auto Choices", AutoBuilder.buildAutoChooserWithOptionsModifier(pathplannerAutos -> {
+          return pathplannerAutos.peek(
+              auto -> pathplannerStartingPoses.put(auto.getName(), auto.getStartingPose()));
+        }));
 
     driveModeChooser.addDefaultOption("Angle Drive (Max style)", true);
     driveModeChooser.addOption("Regular Turning (MoSim style)", false);
@@ -502,6 +510,9 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
+    if (pathplannerStartingPoses.containsKey(autoChooser.get().getName())) {
+      drivetrain.resetOdometry(pathplannerStartingPoses.get(autoChooser.get().getName()));
+    }
     return autoChooser.get();
     // try {
     //   return AutoBuilder.followPath(PathPlannerPath.fromPathFile("Example Path"));
