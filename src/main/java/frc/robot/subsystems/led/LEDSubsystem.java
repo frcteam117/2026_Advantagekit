@@ -10,7 +10,6 @@ import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.AnimationDirectionValue;
 import com.ctre.phoenix6.signals.RGBWColor;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,7 +22,7 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
  */
 public class LEDSubsystem extends SubsystemBase {
   private static final CANdle candle = new CANdle(18, CANBus.roboRIO());
-  private final Trigger brownoutTrigger = new Trigger(RobotController::isBrownedOut);
+  // private final Trigger brownoutTrigger = new Trigger(RobotController::isBrownedOut);
 
   private enum LEDState {
     NONE,
@@ -58,9 +57,9 @@ public class LEDSubsystem extends SubsystemBase {
   public LEDSubsystem() {
     setDefaultCommand(updateLEDs());
 
-    brownoutTrigger.whileTrue(
-        startRun(() -> setLEDState(LEDState.BROWNOUT), () -> setLEDState(LEDState.BROWNOUT))
-            .ignoringDisable(true));
+    // brownoutTrigger.whileTrue(
+    //    startRun(() -> setLEDState(LEDState.BROWNOUT), () -> setLEDState(LEDState.BROWNOUT))
+    //        .ignoringDisable(true));
   }
 
   @Override
@@ -124,7 +123,7 @@ public class LEDSubsystem extends SubsystemBase {
   }
 
   public Command showOuttakeCommand() {
-    return run(() -> setLEDState(LEDState.OUTTAKE_FIRE));
+    return startRun(() -> setLEDState(LEDState.OUTTAKE_FIRE), () -> {});
   }
 
   public Command updateLEDs() {

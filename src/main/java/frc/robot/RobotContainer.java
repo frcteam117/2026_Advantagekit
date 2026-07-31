@@ -49,6 +49,7 @@ import frc.robot.util.SysIdUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -251,6 +252,11 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    final BooleanSupplier raiseIntakeSupplier = () -> (controller.cross().getAsBoolean()
+        || (driveModeChooser.get() == null
+            ? false
+            : (driveModeChooser.get() && controller.R1().getAsBoolean())));
+
     PathPlannerLogging.setLogActivePathCallback(activePath ->
         Logger.recordOutput("PathPlanner/ActivePath", activePath.stream().toArray(Pose2d[]::new)));
     PathPlannerLogging.setLogCurrentPoseCallback(
@@ -267,7 +273,7 @@ public class RobotContainer {
                 () -> -controller.getRightX(),
                 0.2,
                 controller.R3(),
-                controller.R1(),
+                controller.R3(),
                 () -> new Translation2d(),
                 () -> false)
             .alongWith(led.updateLEDs(controller.R3())),
@@ -309,14 +315,15 @@ public class RobotContainer {
         .whileTrue(IndexerCommands.intakingAgitation(indexer)
             .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
     */
-    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, () -> false));
+    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, raiseIntakeSupplier));
+    controller2.button(9).whileTrue(IntakeCommands.rezeroPivotCommand(intake));
     controller
         .L1()
-        .whileTrue(IntakeCommands.outtakeFuel(intake, led, () -> false)
+        .whileTrue(IntakeCommands.outtakeFuel(intake, led, raiseIntakeSupplier)
             .alongWith(IndexerCommands.runBackwardCommand(indexer)));
     controller
         .L2()
-        .whileTrue(IntakeCommands.intakeFuel(intake, () -> false, () -> false))
+        .whileTrue(IntakeCommands.intakeFuel(intake, raiseIntakeSupplier, () -> false))
         .whileTrue(IndexerCommands.intakingAgitation(indexer)
             .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
     controller

@@ -16,6 +16,7 @@ package frc.robot.subsystems.drivetrain;
 import static edu.wpi.first.units.Units.*;
 
 import com.pathplanner.lib.config.RobotConfig;
+import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SignalsConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -199,6 +200,7 @@ public class DrivetrainConstants {
 
     public static final SignalsConfig signalsConfig = new SignalsConfig();
     public static final EncoderConfig encoderConfig = new EncoderConfig();
+    public static final AbsoluteEncoderConfig absoluteEncoderConfig = new AbsoluteEncoderConfig();
     public static final SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
 
     public static final SimpleMotorFeedforward
@@ -230,10 +232,13 @@ public class DrivetrainConstants {
       config.inverted = true;
       config.encoderType = EncoderType.ABS;
 
+      absoluteEncoderConfig.zeroOffset((3.68 - 1.08) / (2 * Math.PI)).inverted(true);
       sparkMaxConfig.smartCurrentLimit(50);
       sparkMaxConfig.voltageCompensation(RobotConstants.NOMINAL_V);
+      sparkMaxConfig.apply(absoluteEncoderConfig);
       sparkMaxConfig.apply(encoderConfig);
       sparkMaxConfig.apply(signalsConfig);
+      sparkMaxConfig.inverted(true);
 
       realPID.enableContinuousInput(0, 2 * Math.PI);
       simPID.enableContinuousInput(0, 2 * Math.PI);

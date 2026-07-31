@@ -47,7 +47,7 @@ public class IndexerConstants {
       SPARK_MAX_CONFIG
           .disableVoltageCompensation()
           .idleMode(IdleMode.kBrake)
-          .smartCurrentLimit(40)
+          .smartCurrentLimit(50)
           .openLoopRampRate(.05)
           .encoder
           .quadratureMeasurementPeriod(10)
