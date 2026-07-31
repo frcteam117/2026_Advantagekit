@@ -31,11 +31,11 @@ public class ModuleIOSim implements ModuleIO {
   private final SimulatedMotorController.GenericMotorController driveMotor, azimuthMotor;
   private final PIDController drivePID = Drive.simPID, azimuthPID = Azimuth.simPID;
   private boolean driveClosedLoop = false, azimuthClosedLoop = false;
-  private double lastNextDriveVelocity_radPs = 0.0,
-      lastNextAzimuthVelocity_radPs = 0.0,
-      lastNextAzimuthPosition_rad = 0.0,
-      driveAppliedVolts = 0.0,
-      azimuthAppliedVolts = 0.0;
+  private double lastNextDriveVelocity_radPs = 0.0;
+  private double lastNextAzimuthVelocity_radPs = 0.0;
+  private double lastNextAzimuthPosition_rad = 0.0;
+  private double driveAppliedVolts = 0.0;
+  private double azimuthAppliedVolts = 0.0;
 
   public ModuleIOSim(SwerveModuleSimulation moduleSimulation) { // , int module) {
     // TODO: see if there's a way to change the fact that the simulated physics arent working with
@@ -105,6 +105,9 @@ public class ModuleIOSim implements ModuleIO {
             moduleSimulation.getCachedSteerAbsolutePositions())
         .mapToDouble((rotation) -> rotation.getRadians())
         .toArray();
+
+    inputs.drive.commandedVoltage.mut_replace(driveAppliedVolts, Volts);
+    inputs.azimuth.commandedVoltage.mut_replace(azimuthAppliedVolts, Volts);
   }
 
   @Override

@@ -54,7 +54,8 @@ public class ModuleIONova implements ModuleIO {
   private double lastNextAzimuthVelocity_radPs = 0.0;
   private double currentAzimuthPosition_rad = 0.0;
 
-  private double commandVoltage;
+  private double driveCommandedVoltage = 0.0;
+  private double azimuthCommandedVoltage = 0.0;
 
   public ModuleIONova(int module) {
     moduleIndex = module;
@@ -248,7 +249,8 @@ public class ModuleIONova implements ModuleIO {
     drivePositionQueue.clear();
     azimuthPositionQueue.clear();
 
-    inputs.drive.commandVoltage.mut_replace(commandVoltage, Volts);
+    inputs.drive.commandedVoltage.mut_replace(driveCommandedVoltage, Volts);
+    inputs.azimuth.commandedVoltage.mut_replace(azimuthCommandedVoltage, Volts);
   }
 
   @Override
@@ -259,7 +261,7 @@ public class ModuleIONova implements ModuleIO {
     } else {
       driveNova.setVoltage(voltage_V);
     }
-    commandVoltage = voltage_V;
+    driveCommandedVoltage = voltage_V;
   }
 
   @Override
@@ -269,6 +271,7 @@ public class ModuleIONova implements ModuleIO {
     } else {
       azimuthNova.setVoltage(voltage_V);
     }
+    azimuthCommandedVoltage = voltage_V;
   }
 
   @Override
@@ -276,33 +279,29 @@ public class ModuleIONova implements ModuleIO {
     // driveNova.setVelocityInternal(
     //     nextVelocity_radPs * Drive.reduction / (2 * Math.PI),
     //     Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
-    double voltage =
+    double driveCommandedVoltage =
         (Drive.realPID.calculate(currentDriveVelocity_radPs, lastNextDriveVelocity_radPs)
             + Drive.realFF.calculate(nextVelocity_radPs, nextAcceleration_radPs2));
     lastNextDriveVelocity_radPs = nextVelocity_radPs;
     if (driveSparkMax == null) {
-      driveNova.setVoltage(voltage);
+      driveNova.setVoltage(driveCommandedVoltage);
     } else {
-      driveSparkMax.setVoltage(voltage * 12.0);
+      driveSparkMax.setVoltage(driveCommandedVoltage * 12.0);
     }
-    commandVoltage = voltage;
   }
 
   @Override
   public void setNextAzimuthState(double nextPosition_rad, double nextVelocity_radPs) {
     // azimuthNova.setPositionAbs(UnitUtil.radTorot(-nextPosition_rad), .1);
+    azimuthCommandedVoltage = -Azimuth.realPID.calculate(
+            currentAzimuthPosition_rad, nextPosition_rad)
+        - Azimuth.realFF.calculateWithVelocities(lastNextAzimuthVelocity_radPs, nextVelocity_radPs);
     if (azimuthSparkMax == null) {
-      azimuthNova.setVoltage(
-          -Azimuth.realPID.calculate(currentAzimuthPosition_rad, nextPosition_rad)
-              - Azimuth.realFF.calculateWithVelocities(
-                  lastNextAzimuthVelocity_radPs, nextVelocity_radPs));
+      azimuthNova.setVoltage(azimuthCommandedVoltage);
       // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
       lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
     } else {
-      double v = -Azimuth.realPID.calculate(currentAzimuthPosition_rad, nextPosition_rad)
-          - Azimuth.realFF.calculateWithVelocities(
-              lastNextAzimuthVelocity_radPs, nextVelocity_radPs);
-      azimuthSparkMax.setVoltage(v * 12);
+      azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
       // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
       lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
     }

@@ -43,7 +43,7 @@ public interface ModuleIO {
       public final MutVoltage outputVoltage = Volts.mutable(0);
       public final MutCurrent inputCurrent = Amps.mutable(0);
       public final MutCurrent outputCurrent = Amps.mutable(0);
-      public final MutVoltage commandVoltage = Volts.mutable(0);
+      public final MutVoltage commandedVoltage = Volts.mutable(0);
       public Error[] errors = new Error[0];
     }
 
@@ -60,6 +60,7 @@ public interface ModuleIO {
       public final MutVoltage outputVoltage = Volts.mutable(0);
       public final MutCurrent inputCurrent = Amps.mutable(0);
       public final MutCurrent outputCurrent = Amps.mutable(0);
+      public final MutVoltage commandedVoltage = Volts.mutable(0);
       public Error[] errors = new Error[0];
     }
 
@@ -77,9 +78,9 @@ public interface ModuleIO {
       table.put("Drive/Velocity", drive.velocity.in(RadiansPerSecond), RadiansPerSecond.name());
       table.put("Drive/InputVoltage", drive.inputVoltage.in(Volts), Volts.name());
       table.put("Drive/OutputVoltage", drive.outputVoltage.in(Volts), Volts.name());
-      table.put("Drive/CommandVoltage", drive.commandVoltage);
       table.put("Drive/InputCurrent", drive.inputCurrent.in(Amps), Amps.name());
       table.put("Drive/OutputCurrent", drive.outputCurrent.in(Amps), Amps.name());
+      table.put("Drive/CommandedVoltage", drive.commandedVoltage.in(Volts), Volts.name());
       table.put("Drive/Errors", drive.errors);
       // Absolute Encoder
       table.put("AbsoluteEncoder/.Connected", absoluteEncoder.connected);
@@ -92,6 +93,7 @@ public interface ModuleIO {
       table.put("Azimuth/OutputVoltage", azimuth.outputVoltage.in(Volts), Volts.name());
       table.put("Azimuth/InputCurrent", azimuth.inputCurrent.in(Amps), Amps.name());
       table.put("Azimuth/OutputCurrent", azimuth.outputCurrent.in(Amps), Amps.name());
+      table.put("Azimuth/CommandedVoltage", azimuth.commandedVoltage.in(Volts), Volts.name());
       table.put("Azimuth/Errors", azimuth.errors);
       // Odometry
       table.put("Odometry/Timestamps", odometry.timestamps);
@@ -114,6 +116,8 @@ public interface ModuleIO {
           table.get("Drive/InputCurrent", drive.inputCurrent.in(Amps)), Amps);
       drive.outputCurrent.mut_replace(
           table.get("Drive/OutputCurrent", drive.outputCurrent.in(Amps)), Amps);
+      drive.commandedVoltage.mut_replace(
+          table.get("Drive/CommandedVoltage", drive.commandedVoltage.in(Volts)), Volts);
       drive.errors = table.get("Drive/Errors", drive.errors);
 
       // Absolute Encoder
@@ -136,6 +140,8 @@ public interface ModuleIO {
           table.get("Azimuth/InputCurrent", azimuth.inputCurrent.in(Amps)), Amps);
       azimuth.outputCurrent.mut_replace(
           table.get("Azimuth/OutputCurrent", azimuth.outputCurrent.in(Amps)), Amps);
+      azimuth.commandedVoltage.mut_replace(
+          table.get("Azimuth/CommandedVoltage", azimuth.commandedVoltage.in(Volts)), Volts);
       azimuth.errors = table.get("Azimuth/Errors", azimuth.errors);
       // Odometry
       odometry.timestamps = table.get("Odometry/Timestamps", odometry.timestamps);
