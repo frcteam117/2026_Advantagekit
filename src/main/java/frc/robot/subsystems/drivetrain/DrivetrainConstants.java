@@ -195,6 +195,10 @@ public class DrivetrainConstants {
     // software limits
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
 
+    public static final SignalsConfig signalsConfig = new SignalsConfig();
+    public static final EncoderConfig encoderConfig = new EncoderConfig();
+    public static final SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
+
     public static final SimpleMotorFeedforward
         realFF = new SimpleMotorFeedforward(0.03, 0.04, 0.00, RobotConstants.CODE_PERIOD_s),
         simFF = new SimpleMotorFeedforward(0.004, 0.4960674, 0.006, RobotConstants.CODE_PERIOD_s);
@@ -223,6 +227,11 @@ public class DrivetrainConstants {
       config.externalEncoder = ExternalEncoder.THRIFTY_10_PIN_ENCODER;
       config.inverted = true;
       config.encoderType = EncoderType.ABS;
+
+      sparkMaxConfig.smartCurrentLimit(50);
+      sparkMaxConfig.voltageCompensation(RobotConstants.NOMINAL_V);
+      sparkMaxConfig.apply(encoderConfig);
+      sparkMaxConfig.apply(signalsConfig);
 
       realPID.enableContinuousInput(0, 2 * Math.PI);
       simPID.enableContinuousInput(0, 2 * Math.PI);
