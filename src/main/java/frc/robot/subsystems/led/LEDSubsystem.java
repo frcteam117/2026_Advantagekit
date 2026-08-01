@@ -96,7 +96,7 @@ public class LEDSubsystem extends SubsystemBase {
         candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 20, 20, 0)));
         break;
       case ALIGN_PINK:
-        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 100, 100, 20)));
+        candle.setControl(new SolidColor(0, 38).withColor(new RGBWColor(255, 28, 153, 20)));
         break;
       case NONE:
       default:
