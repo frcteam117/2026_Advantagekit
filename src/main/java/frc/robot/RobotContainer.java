@@ -24,7 +24,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -162,7 +161,6 @@ public class RobotContainer {
             IntakeCommands.defaultCommand(intake, () -> false),
             RobotCommands.autoAim(
                 drivetrain,
-                led,
                 shooter,
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
@@ -173,8 +171,7 @@ public class RobotContainer {
         "stopFlywheel",
         Commands.parallel(IndexerCommands.stop(indexer), ShooterCommands.stopAndZeroHood(shooter)));
     NamedCommands.registerCommand(
-        "flywheel_acc_1",
-        RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer, led));
+        "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer));
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
 
     // Set up auto routines
@@ -199,7 +196,6 @@ public class RobotContainer {
         "Stationary Preload",
         RobotCommands.autoAim(
                 drivetrain,
-                led,
                 shooter,
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
@@ -327,7 +323,7 @@ public class RobotContainer {
     controller2.button(9).whileTrue(IntakeCommands.rezeroPivotCommand(intake));
     controller
         .L1()
-        .whileTrue(IntakeCommands.outtakeFuel(intake, led, raiseIntakeSupplier)
+        .whileTrue(IntakeCommands.outtakeFuel(intake, raiseIntakeSupplier)
             .alongWith(IndexerCommands.runBackwardCommand(indexer)));
     controller
         .L2()
@@ -367,7 +363,7 @@ public class RobotContainer {
     } else {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
-    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer, led));
+    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
@@ -375,14 +371,13 @@ public class RobotContainer {
     // new button bindings:
     controller2
         .L1()
-        .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer, led));
+        .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer));
     // should this be whileTrue? vvv
     controller
         .R2()
         .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
             .andThen(RobotCommands.autoAim(
                 drivetrain,
-                led,
                 shooter,
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
