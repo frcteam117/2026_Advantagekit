@@ -55,8 +55,6 @@ public class LEDSubsystem extends SubsystemBase {
       .withFrameRate(Hertz.of(200));
 
   public LEDSubsystem() {
-    setDefaultCommand(updateLEDs());
-
     // brownoutTrigger.whileTrue(
     //    startRun(() -> setLEDState(LEDState.BROWNOUT), () -> setLEDState(LEDState.BROWNOUT))
     //        .ignoringDisable(true));
