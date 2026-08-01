@@ -325,6 +325,7 @@ public class RobotContainer {
         .L1()
         .whileTrue(IntakeCommands.outtakeFuel(intake, raiseIntakeSupplier)
             .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+    controller.L1().whileTrue(led.showOuttakeCommand());
     controller
         .L2()
         .whileTrue(IntakeCommands.intakeFuel(intake, raiseIntakeSupplier, () -> false))
@@ -364,6 +365,7 @@ public class RobotContainer {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
     controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
+    controller.triangle().whileTrue(led.showREVCommand(shooter, indexer));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
@@ -372,6 +374,7 @@ public class RobotContainer {
     controller2
         .L1()
         .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer));
+    controller2.L1().whileTrue(led.showREVCommand(shooter, indexer));
     // should this be whileTrue? vvv
     controller
         .R2()
@@ -383,6 +386,7 @@ public class RobotContainer {
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
                 () -> true))
             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+    controller.R2().whileTrue(led.showREVCommand(shooter, indexer));
     if (ShooterCommands.isTuning) {
       controller2
           .R2()
