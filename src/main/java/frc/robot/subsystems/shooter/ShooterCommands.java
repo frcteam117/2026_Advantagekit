@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
-import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.text.DecimalFormat;
@@ -281,7 +280,6 @@ public class ShooterCommands {
   public static Command autoAim(
       ShooterSubsystem shooter,
       IndexerSubsystem indexer,
-      LEDSubsystem led,
       Supplier<Pose2d> robotPoseSupplier,
       Supplier<Translation2d> targetSupplier,
       BooleanSupplier passing,
@@ -308,7 +306,6 @@ public class ShooterCommands {
       shooter.setRIOFlywheelGoalVel(flywheel_autoAimVel);
       shooter.setPDHFlywheelGoalVel(flywheel_autoAimVel);
     });
-    // .alongWith(led.showREVCommand(shooter, indexer));
   }
 
   public static boolean isAutoAimReady(ShooterSubsystem shooter, boolean isPassing) {

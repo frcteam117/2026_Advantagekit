@@ -12,7 +12,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.intake.IntakeConstants.Pivot;
-import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.util.function.BooleanSupplier;
@@ -127,8 +126,7 @@ public class IntakeCommands {
         intake);
   }
 
-  public static Command outtakeFuel(
-      IntakeSubsystem intake, LEDSubsystem led, BooleanSupplier raisePivot) {
+  public static Command outtakeFuel(IntakeSubsystem intake, BooleanSupplier raisePivot) {
     return Commands.run(
         () -> {
           intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
