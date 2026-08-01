@@ -44,6 +44,7 @@ public class DrivetrainConstants {
   public static final String NAME = "1_Drivetrain";
   public static final LoggedNetworkBoolean tunable =
       new LoggedNetworkBoolean(RobotConstants.TUNING_PREFIX + NAME + "/.Tunable", false);
+  public static final int PigeonCanId = 13;
 
   public static final class Chassis {
     public static final String name = DrivetrainConstants.NAME + "/Chassis";

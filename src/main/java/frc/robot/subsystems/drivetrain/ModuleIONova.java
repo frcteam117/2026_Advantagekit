@@ -190,7 +190,7 @@ public class ModuleIONova implements ModuleIO {
       inputs.drive.inputVoltage.mut_replace(driveSparkMax.getBusVoltage(), Volts);
       inputs.drive.outputCurrent.mut_replace(driveSparkMax.getOutputCurrent(), Amps);
       inputs.drive.inputCurrent.mut_replace(
-          driveSparkMax.getOutputCurrent() / driveSparkMax.getAppliedOutput(), Amps);
+          Math.abs(driveSparkMax.getOutputCurrent() * driveSparkMax.getAppliedOutput()), Amps);
       // inputs.drive.errors = driveSparkMax.errors.toArray(ThriftyNova.Error[]::new);
       inputs.drive.connected = true;
     }
@@ -231,7 +231,7 @@ public class ModuleIONova implements ModuleIO {
       inputs.azimuth.inputVoltage.mut_replace(azimuthSparkMax.getBusVoltage(), Volts);
       inputs.azimuth.outputCurrent.mut_replace(azimuthSparkMax.getOutputCurrent(), Amps);
       inputs.azimuth.inputCurrent.mut_replace(
-          azimuthSparkMax.getOutputCurrent() / azimuthSparkMax.getAppliedOutput(), Amps);
+          Math.abs(azimuthSparkMax.getOutputCurrent() * azimuthSparkMax.getAppliedOutput()), Amps);
       // inputs.azimuth.errors = azimuthSparkMax.errors.toArray(ThriftyNova.Error[]::new);
       inputs.azimuth.connected = true;
     }
