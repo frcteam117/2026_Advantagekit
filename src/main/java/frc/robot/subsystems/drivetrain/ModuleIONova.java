@@ -69,8 +69,15 @@ public class ModuleIONova implements ModuleIO {
     }
 
     if (module == 2) { // BL Azimuth is also a sparkmax
+
       azimuthNova = null;
+
       azimuthSparkMax = new SparkMax(Azimuth.canIds[module], SparkLowLevel.MotorType.kBrushless);
+      azimuthSparkMax.configure(
+          Azimuth.coastAzimuthConfig,
+          ResetMode.kResetSafeParameters,
+          PersistMode.kPersistParameters);
+
     } else {
       azimuthSparkMax = null;
       azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
@@ -82,6 +89,7 @@ public class ModuleIONova implements ModuleIO {
     if (driveSparkMax == null) {
       driveNova.applyConfig(Drive.config);
     } else {
+
       driveSparkMax.configure(
           Drive.sparkMaxConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
@@ -296,14 +304,18 @@ public class ModuleIONova implements ModuleIO {
     azimuthCommandedVoltage = -Azimuth.realPID.calculate(
             currentAzimuthPosition_rad, nextPosition_rad)
         - Azimuth.realFF.calculateWithVelocities(lastNextAzimuthVelocity_radPs, nextVelocity_radPs);
-    if (azimuthSparkMax == null) {
-      azimuthNova.setVoltage(azimuthCommandedVoltage);
-      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
-      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+    if (moduleIndex == 2) {
+      azimuthSparkMax.setVoltage(0);
     } else {
-      azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
-      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
-      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+      if (azimuthSparkMax == null) {
+        azimuthNova.setVoltage(azimuthCommandedVoltage);
+        // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+        lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+      } else {
+        azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
+        // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+        lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+      }
     }
   }
 }

@@ -90,7 +90,7 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         led = new LEDSubsystem();
         drivetrain = new DrivetrainSubsystem(
-            new GyroIONavX(),
+            new GyroIOPigeon2(),
             new ModuleIONova(0),
             new ModuleIONova(1),
             new ModuleIONova(2),
