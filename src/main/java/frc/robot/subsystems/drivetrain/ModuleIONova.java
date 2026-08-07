@@ -25,6 +25,7 @@ import com.revrobotics.spark.SparkMax;
 import com.thethriftybot.devices.ThriftyNova;
 import com.thethriftybot.devices.ThriftyNova.MotorType;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.AnalogEncoder;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.AbsEncoder;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
@@ -41,6 +42,8 @@ public class ModuleIONova implements ModuleIO {
   private final SparkMax driveSparkMax;
   private final ThriftyNova azimuthNova;
   private final SparkMax azimuthSparkMax;
+
+  private final AnalogEncoder analogEncoder;
 
   private final int moduleIndex;
 
@@ -78,7 +81,10 @@ public class ModuleIONova implements ModuleIO {
           ResetMode.kResetSafeParameters,
           PersistMode.kPersistParameters);
 
+      analogEncoder = new AnalogEncoder(3);
+
     } else {
+      analogEncoder = null;
       azimuthSparkMax = null;
       azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
     }
@@ -221,11 +227,9 @@ public class ModuleIONova implements ModuleIO {
       inputs.azimuth.inputCurrent.mut_replace(azimuthNova.getSupplyCurrent(), Amps);
       inputs.azimuth.errors = azimuthNova.errors.toArray(ThriftyNova.Error[]::new);
       inputs.azimuth.connected = true;
-    } else {
-      inputs.absoluteEncoder.heading =
-          Rotation2d.fromRotations(1 - azimuthSparkMax.getAbsoluteEncoder().getPosition());
-      currentAzimuthPosition_rad =
-          UnitUtil.rotTorad(1 - azimuthSparkMax.getAbsoluteEncoder().getPosition());
+    } else { // analog encoder for BL azimuth
+      inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - analogEncoder.get());
+      currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - analogEncoder.get());
       inputs.absoluteEncoder.connected = true;
 
       inputs.azimuth.position.mut_replace(
