@@ -252,6 +252,12 @@ public class DrivetrainConstants {
         LogUtil.createTunableFF(RobotConstants.TUNING_PREFIX + name, simFF, tunable::get);
       }
     }
+
+    public static final SparkMaxConfig coastAzimuthConfig = sparkMaxConfig;
+
+    static {
+      coastAzimuthConfig.idleMode(IdleMode.kCoast);
+    }
   }
 
   public static class AbsEncoder {
@@ -266,7 +272,10 @@ public class DrivetrainConstants {
 
     /** FL, FR, BL, BR. Negative rotation of each absolute encoder when the wheels face forward */
     public static final int[] zeroRotations_ticks = new int[] {
-      1837 - 2157 - 3897 - 842 - 363 - 189 - 3183, -1529 - 1994 - 69, 2273 - 3930, 1339 - 1751
+      1837 - 2157 - 3897 - 842 - 363 - 189 - 3183 - 3964,
+      -1529 - 1994 - 69,
+      2273 - 3930,
+      1339 - 1751
     };
   }
 }

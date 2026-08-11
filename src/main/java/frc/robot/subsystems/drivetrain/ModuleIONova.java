@@ -25,6 +25,7 @@ import com.revrobotics.spark.SparkMax;
 import com.thethriftybot.devices.ThriftyNova;
 import com.thethriftybot.devices.ThriftyNova.MotorType;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.AnalogEncoder;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.AbsEncoder;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Azimuth;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Drive;
@@ -41,6 +42,8 @@ public class ModuleIONova implements ModuleIO {
   private final SparkMax driveSparkMax;
   private final ThriftyNova azimuthNova;
   private final SparkMax azimuthSparkMax;
+
+  private final AnalogEncoder analogEncoder;
 
   private final int moduleIndex;
 
@@ -69,9 +72,21 @@ public class ModuleIONova implements ModuleIO {
     }
 
     if (module == 2) { // BL Azimuth is also a sparkmax
+
       azimuthNova = null;
+
       azimuthSparkMax = new SparkMax(Azimuth.canIds[module], SparkLowLevel.MotorType.kBrushless);
+      azimuthSparkMax.configure(
+          Azimuth.coastAzimuthConfig,
+          ResetMode.kResetSafeParameters,
+          PersistMode.kPersistParameters);
+
+      analogEncoder = new AnalogEncoder(3,1.0,
+        (3.68 - 1.08) / (2 * Math.PI));
+      analogEncoder.setInverted(true);
+
     } else {
+      analogEncoder = null;
       azimuthSparkMax = null;
       azimuthNova = new ThriftyNova(Azimuth.canIds[module], MotorType.NEO);
     }
@@ -82,6 +97,7 @@ public class ModuleIONova implements ModuleIO {
     if (driveSparkMax == null) {
       driveNova.applyConfig(Drive.config);
     } else {
+
       driveSparkMax.configure(
           Drive.sparkMaxConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
@@ -213,11 +229,9 @@ public class ModuleIONova implements ModuleIO {
       inputs.azimuth.inputCurrent.mut_replace(azimuthNova.getSupplyCurrent(), Amps);
       inputs.azimuth.errors = azimuthNova.errors.toArray(ThriftyNova.Error[]::new);
       inputs.azimuth.connected = true;
-    } else {
-      inputs.absoluteEncoder.heading =
-          Rotation2d.fromRotations(1 - azimuthSparkMax.getAbsoluteEncoder().getPosition());
-      currentAzimuthPosition_rad =
-          UnitUtil.rotTorad(1 - azimuthSparkMax.getAbsoluteEncoder().getPosition());
+    } else { // analog encoder for BL azimuth
+      inputs.absoluteEncoder.heading = Rotation2d.fromRotations(1 - analogEncoder.get());
+      currentAzimuthPosition_rad = UnitUtil.rotTorad(1 - analogEncoder.get());
       inputs.absoluteEncoder.connected = true;
 
       inputs.azimuth.position.mut_replace(
@@ -296,14 +310,18 @@ public class ModuleIONova implements ModuleIO {
     azimuthCommandedVoltage = -Azimuth.realPID.calculate(
             currentAzimuthPosition_rad, nextPosition_rad)
         - Azimuth.realFF.calculateWithVelocities(lastNextAzimuthVelocity_radPs, nextVelocity_radPs);
-    if (azimuthSparkMax == null) {
-      azimuthNova.setVoltage(azimuthCommandedVoltage);
-      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
-      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+    if (moduleIndex == 2) {
+      azimuthSparkMax.setVoltage(0);
     } else {
-      azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
-      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
-      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+      if (azimuthSparkMax == null) {
+        azimuthNova.setVoltage(azimuthCommandedVoltage);
+        // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+        lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+      } else {
+        azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
+        // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+        lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+      }
     }
   }
 }

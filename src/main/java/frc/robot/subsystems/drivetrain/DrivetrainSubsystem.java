@@ -63,6 +63,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
   // Pose estimation
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Chassis.moduleTranslations);
+  private final SwerveDriveKinematics twoWheeledKinematics =
+      new SwerveDriveKinematics(Chassis.moduleTranslations[0], Chassis.moduleTranslations[3]);
   private Rotation2d rawGyroYaw = Rotation2d.kZero;
   private final SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
@@ -71,8 +73,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
         new SwerveModulePosition(),
         new SwerveModulePosition()
       };
-  private final SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, rawGyroYaw, lastModulePositions, new Pose2d());
+  private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+      twoWheeledKinematics,
+      rawGyroYaw,
+      new SwerveModulePosition[] {lastModulePositions[0], lastModulePositions[3]},
+      new Pose2d());
   private final Consumer<Pose2d> resetSimulationPoseCallBack;
 
   // Motion Profiling
@@ -182,12 +187,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
         rawGyroYaw = gyroInputs.odometryYawPositions[i];
       } else {
         // Use the angle delta from the kinematics and module deltas
-        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+        Twist2d twist = twoWheeledKinematics.toTwist2d(moduleDeltas[0], moduleDeltas[3]);
         rawGyroYaw = rawGyroYaw.plus(Rotation2d.fromRadians(twist.dtheta));
       }
 
       // Apply update
-      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroYaw, modulePositions);
+      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroYaw, new SwerveModulePosition[] {
+        modulePositions[0], modulePositions[3]
+      });
 
       // DrivetrainCommands.updatePoses(
       //     getPose()); // maybe get this from somewhere that also considers the vison est???
@@ -331,7 +338,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
       modulePositions[i] = modules[i].getPosition();
     }
     resetSimulationPoseCallBack.accept(pose);
-    poseEstimator.resetPosition(rawGyroYaw, modulePositions, pose);
+    poseEstimator.resetPosition(
+        rawGyroYaw, new SwerveModulePosition[] {modulePositions[0], modulePositions[3]}, pose);
   }
 
   /** Returns the robot's orientation according to the NavX. */
