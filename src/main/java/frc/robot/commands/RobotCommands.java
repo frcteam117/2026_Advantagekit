@@ -83,6 +83,7 @@ public class RobotCommands {
       BooleanSupplier shootWhenReady) {
     return Commands.defer(
             () -> {
+              drivetrain.setCoastMode(true);
               boolean isBlueAlliance =
                   DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
               boolean isPassing = isBlueAlliance
@@ -108,10 +109,7 @@ public class RobotCommands {
                     IntakeCommands.shooting = false;
                   });
             },
-            Set.of(drivetrain, shooter, indexer))
-        .finallyDo(() -> {
-          drivetrain.setCoastMode(true);
-        });
+            Set.of(drivetrain, shooter, indexer));
   }
 
   private static Translation2d shootOnTheMovePrevTarget = new Translation2d();
