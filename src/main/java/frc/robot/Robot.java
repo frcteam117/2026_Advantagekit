@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.logging.LogUtil;
 import java.util.HashMap;
 import java.util.Map;
@@ -123,7 +124,10 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot becomes disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    Commands.waitSeconds(2);
+    robotContainer.disableCoast();
+  }
 
   /** This function is called periodically when disabled. */
   @Override

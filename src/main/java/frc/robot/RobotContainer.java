@@ -551,6 +551,10 @@ public class RobotContainer {
         "_FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
   }
 
+  public void disableCoast() {
+    drivetrain.setCoastMode(false);
+  }
+
   //   @AutoLogOutput(key = "0_Supersystem/ComponentPoses")
   //   private Pose3d[] getSupersystemPose3ds() {
   //     Pose3d[] intakePoses = intake.getPose3ds();
