@@ -425,8 +425,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
     return values;
   }
 
+  public void setCoastMode(boolean coast) {
+    for (var module : modules) {
+      module.setCoastMode(coast);
+    }
+  }
+
   public static boolean useSwerveSetpointGenerator() {
     // return DriverStation.isAutonomous();
     return true;
   }
 }
+

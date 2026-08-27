@@ -180,4 +180,8 @@ public class Module {
   public ModuleIOInputs getInputs() {
     return inputs;
   }
+
+  public void setCoastMode(boolean coast) {
+    io.setCoastMode(coast);
+  }
 }

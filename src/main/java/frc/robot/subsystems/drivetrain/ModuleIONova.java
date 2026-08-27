@@ -22,6 +22,8 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel; // .MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import com.thethriftybot.devices.ThriftyNova;
 import com.thethriftybot.devices.ThriftyNova.MotorType;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -323,4 +325,21 @@ public class ModuleIONova implements ModuleIO {
       }
     }
   }
+
+  @Override
+  public void setCoastMode(boolean coast) {
+    if (driveSparkMax == null) {
+      driveNova.setBrakeMode(!coast);
+    } else {
+      SparkMaxConfig coastMode = new SparkMaxConfig();
+      if (coast) {
+        coastMode.idleMode(IdleMode.kCoast);
+      } else {
+        coastMode.idleMode(IdleMode.kBrake);
+      }
+      driveSparkMax.configure(
+          coastMode, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
+  }
 }
+

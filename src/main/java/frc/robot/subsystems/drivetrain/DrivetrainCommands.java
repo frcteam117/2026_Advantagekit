@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.drivetrain.DrivetrainConstants.Chassis;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.SysIdUtil;
 import frc.robot.util.SysIdUtil.SysIdType;
@@ -1089,5 +1090,12 @@ public class DrivetrainCommands {
 
   private static TrapezoidProfile.State prevAngleState = new TrapezoidProfile.State();
 
-  // public
+  public static Command setCoastMode(DrivetrainSubsystem drivetrain, BooleanSupplier coast) {
+    return drivetrain
+        .run(() -> {
+          drivetrain.setCoastMode(coast.getAsBoolean());
+        })
+        .ignoringDisable(true);
+  }
 }
+
