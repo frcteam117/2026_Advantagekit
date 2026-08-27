@@ -76,11 +76,6 @@ public class ModuleIONova implements ModuleIO {
       azimuthNova = null;
 
       azimuthSparkMax = new SparkMax(Azimuth.canIds[module], SparkLowLevel.MotorType.kBrushless);
-      azimuthSparkMax.configure(
-          Azimuth.coastAzimuthConfig,
-          ResetMode.kResetSafeParameters,
-          PersistMode.kPersistParameters);
-
       analogEncoder = new AnalogEncoder(3, 1.0, (3.68 - 1.08) / (2 * Math.PI));
       analogEncoder.setInverted(true);
 
@@ -309,18 +304,14 @@ public class ModuleIONova implements ModuleIO {
     azimuthCommandedVoltage = -Azimuth.realPID.calculate(
             currentAzimuthPosition_rad, nextPosition_rad)
         - Azimuth.realFF.calculateWithVelocities(lastNextAzimuthVelocity_radPs, nextVelocity_radPs);
-    if (moduleIndex == 2) {
-      azimuthSparkMax.setVoltage(0);
+    if (azimuthSparkMax == null) {
+      azimuthNova.setVoltage(azimuthCommandedVoltage);
+      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
     } else {
-      if (azimuthSparkMax == null) {
-        azimuthNova.setVoltage(azimuthCommandedVoltage);
-        // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
-        lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
-      } else {
-        azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
-        // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
-        lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
-      }
+      azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
+      // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
+      lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
     }
   }
 }

@@ -253,11 +253,11 @@ public class DrivetrainConstants {
       }
     }
 
-    public static final SparkMaxConfig coastAzimuthConfig = sparkMaxConfig;
+    // public static final SparkMaxConfig coastAzimuthConfig = sparkMaxConfig;
 
-    static {
-      coastAzimuthConfig.idleMode(IdleMode.kCoast);
-    }
+    // static {
+    //   coastAzimuthConfig.idleMode(IdleMode.kCoast);
+    // }
   }
 
   public static class AbsEncoder {
