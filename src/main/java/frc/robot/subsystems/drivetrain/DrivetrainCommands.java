@@ -680,7 +680,7 @@ public class DrivetrainCommands {
       // Convert to field relative speeds & send command
       Logger.recordOutput("rotYSupplier", rotXSupplier.getAsDouble());
       double turningSpeed =
-          rotXSupplier.getAsDouble() * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble() * 0.3;
+          rotXSupplier.getAsDouble() * DRIVE_MAX_ANGULAR_VELOCITY.getAsDouble() * 0.4;
       turningSpeed = MathUtil.applyDeadband(turningSpeed, deadband);
       if (snapToAngle2.getAsBoolean()) {
         Rotation2d currentRot = drivetrain.getPose().getRotation();

@@ -81,8 +81,7 @@ public class ModuleIONova implements ModuleIO {
           ResetMode.kResetSafeParameters,
           PersistMode.kPersistParameters);
 
-      analogEncoder = new AnalogEncoder(3,1.0,
-        (3.68 - 1.08) / (2 * Math.PI));
+      analogEncoder = new AnalogEncoder(3, 1.0, (3.68 - 1.08) / (2 * Math.PI));
       analogEncoder.setInverted(true);
 
     } else {
