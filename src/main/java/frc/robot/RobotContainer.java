@@ -174,6 +174,19 @@ public class RobotContainer {
         "flywheel_acc_1", RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer));
     NamedCommands.registerCommand("flywheel_acc_2", ShooterCommands.runForward(shooter));
 
+    NamedCommands.registerCommand(
+        "shootIgnoringDrivetrain",
+        Commands.parallel(
+            IntakeCommands.defaultCommand(intake, () -> false),
+            RobotCommands.autoAimWithoutAlign(
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true)));
+
+    NamedCommands.registerCommand("turnOnCoast", DrivetrainCommands.setCoastMode(drivetrain, true));
+
     // Set up auto routines
     driveModeChooser = new LoggedDashboardChooser<>("Drive Mode:");
     leftRightChooser = new LoggedDashboardChooser<>("Auto Side:");

@@ -75,6 +75,45 @@ public class RobotCommands {
         Set.of(drivetrain, shooter, indexer));
   }
 
+  public static Command autoAimWithoutAlign(
+      DrivetrainSubsystem drivetrain,
+      ShooterSubsystem shooter,
+      IndexerSubsystem indexer,
+      Supplier<Translation2d> centerOfRotationSupplier,
+      BooleanSupplier shootWhenReady) {
+    return Commands.defer(
+            () -> {
+              boolean isBlueAlliance =
+                  DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+              boolean isPassing = isBlueAlliance
+                  ? drivetrain.getPose().getX() > 4.6
+                  : drivetrain.getPose().getX() < 11.9;
+              return Commands.parallel(
+                      ShooterCommands.autoAim(
+                          shooter,
+                          indexer,
+                          drivetrain::getPose,
+                          () -> getTarget(drivetrain.getPose()),
+                          () -> isPassing,
+                          () -> false),
+                      IndexerCommands.conditionalRunForward(
+                          indexer,
+                          () -> shootWhenReady.getAsBoolean()
+                              && ShooterCommands.isAutoAimReady(shooter, isPassing)),
+                      Commands.run(() -> IntakeCommands.shooting = shootWhenReady.getAsBoolean()
+                          && ShooterCommands.isAutoAimReady(shooter, isPassing)))
+                  .beforeStarting(() -> isAutoShooting = true)
+                  .finallyDo(() -> {
+                    isAutoShooting = false;
+                    IntakeCommands.shooting = false;
+                  });
+            },
+            Set.of(drivetrain, shooter, indexer))
+        .finallyDo(() -> {
+          drivetrain.setCoastMode(true);
+        });
+  }
+
   private static Translation2d shootOnTheMovePrevTarget = new Translation2d();
 
   public static Command shootOnTheMove(
