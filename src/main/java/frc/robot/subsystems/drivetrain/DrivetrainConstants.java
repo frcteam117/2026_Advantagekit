@@ -274,7 +274,7 @@ public class DrivetrainConstants {
     public static final int[] zeroRotations_ticks = new int[] {
       1837 - 2157 - 3897 - 842 - 363 - 189 - 3183 - 3964,
       -1529 - 1994 - 69,
-      2273 - 3930,
+      2273 - 3930 - 2073,
       1339 - 1751
     };
   }
