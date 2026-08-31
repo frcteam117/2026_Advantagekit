@@ -76,6 +76,7 @@ public class ModuleIONova implements ModuleIO {
       azimuthNova = null;
 
       azimuthSparkMax = new SparkMax(Azimuth.canIds[module], SparkLowLevel.MotorType.kBrushless);
+      // System.out.println("hello " + Azimuth.canIds[module]);
       analogEncoder = new AnalogEncoder(3, 1.0, (3.68 - 1.08) / (2 * Math.PI));
       analogEncoder.setInverted(true);
 
@@ -312,6 +313,9 @@ public class ModuleIONova implements ModuleIO {
       azimuthSparkMax.setVoltage(azimuthCommandedVoltage * 12);
       // Logger.recordOutput("AzimuthFeedforward", Drive.realFF.getKs());
       lastNextAzimuthVelocity_radPs = nextVelocity_radPs;
+      // if (moduleIndex == 2) {
+      //   System.out.println(azimuthCommandedVoltage);
+      // }
     }
   }
 }
