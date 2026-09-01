@@ -165,6 +165,14 @@ public class RobotContainer {
                 indexer,
                 () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
                 () -> true)));
+    NamedCommands.registerCommand(
+        "alignAndShootIntakeDown",
+        RobotCommands.autoAim(
+            drivetrain,
+            shooter,
+            indexer,
+            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+            () -> true));
     NamedCommands.registerCommand("IntakeRollerOn", Commands.none());
     NamedCommands.registerCommand("IntakeRollerOff", Commands.none());
     NamedCommands.registerCommand(
