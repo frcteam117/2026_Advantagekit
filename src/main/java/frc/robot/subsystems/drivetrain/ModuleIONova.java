@@ -77,7 +77,7 @@ public class ModuleIONova implements ModuleIO {
 
       azimuthSparkMax = new SparkMax(Azimuth.canIds[module], SparkLowLevel.MotorType.kBrushless);
       // System.out.println("hello " + Azimuth.canIds[module]);
-      analogEncoder = new AnalogEncoder(3, 1.0, (3.68 - 1.08) / (2 * Math.PI));
+      analogEncoder = new AnalogEncoder(3, 1.0, -0.5 / (2 * Math.PI));
       analogEncoder.setInverted(true);
 
     } else {
