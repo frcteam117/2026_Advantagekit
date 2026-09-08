@@ -32,9 +32,11 @@ public class IndexerCommands {
   public static Command conditionalRunForward(IndexerSubsystem indexer, BooleanSupplier shouldRun) {
     return indexer
         .run(() -> {
+          /*
           indexer.setHopperSpeed(forwardSpeed.getAsDouble());
           indexer.setKickerSpeed(forwardSpeed.getAsDouble());
           indexer.isPreloading = true;
+          */
         })
         .withTimeout(.2)
         .andThen(indexer.run(() -> {
