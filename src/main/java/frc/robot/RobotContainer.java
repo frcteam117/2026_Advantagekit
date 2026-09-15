@@ -21,7 +21,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -269,30 +268,30 @@ public class RobotContainer {
         targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
     led.setDefaultCommand(Commands.either(
         led.updateLEDs(controller.R3()), led.updateLEDs(controller.R1()), driveModeChooser::get));
-    drivetrain.setDefaultCommand(Commands.either(
-        DrivetrainCommands.joystickDriveAtAngle(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightY(),
-            () -> -controller.getRightX(),
-            0.2,
-            controller.R3(),
-            controller.R3(),
-            () -> new Translation2d(),
-            () -> false),
-        DrivetrainCommands.joystickDriveAtAngleRegularTurning(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRawAxis(2),
-            () -> -controller.getRightX() * Math.abs(controller.getRightX()),
-            .4,
-            () -> false, // controller.R3(),
-            controller.R1(), // controller.R1(),
-            () -> new Translation2d(),
-            () -> false),
-        driveModeChooser::get));
+    // drivetrain.setDefaultCommand(Commands.either(
+    //     DrivetrainCommands.joystickDriveAtAngle(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () -> -controller.getRightY(),
+    //         () -> -controller.getRightX(),
+    //         0.2,
+    //         controller.R3(),
+    //         controller.R3(),
+    //         () -> new Translation2d(),
+    //         () -> false),
+    //     DrivetrainCommands.joystickDriveAtAngleRegularTurning(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () -> -controller.getRawAxis(2),
+    //         () -> -controller.getRightX() * Math.abs(controller.getRightX()),
+    //         .4,
+    //         () -> false, // controller.R3(),
+    //         controller.R1(), // controller.R1(),
+    //         () -> new Translation2d(),
+    //         () -> false),
+    //     driveModeChooser::get));
 
     controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
     /*
@@ -363,11 +362,12 @@ public class RobotContainer {
     } else {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
-    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
+    // controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
     controller.triangle().whileTrue(led.showREVCommand(shooter, indexer));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
-    controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
+    controller.circle().whileTrue(ShooterCommands.demoHoodAndShoot(shooter));
+    controller.triangle().whileTrue(IndexerCommands.runForwardCommand(indexer));
 
     // new button bindings:
     controller2

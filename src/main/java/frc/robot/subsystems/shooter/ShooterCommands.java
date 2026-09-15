@@ -387,6 +387,14 @@ public class ShooterCommands {
     });
   }
 
+  public static Command demoHoodAndShoot(ShooterSubsystem shooter) {
+    return shooter.run(() -> {
+      shooter.setHoodGoalPos(Radians.of(Math.PI / 3));
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+    });
+  }
+
   // public static Command hoodSysId(ShooterSubsystem shooter, SysIdType type) {
   //   return Commands.run(() -> {}, shooter)
   //       .withTimeout(1)
