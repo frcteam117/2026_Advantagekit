@@ -53,4 +53,9 @@ public class IntakeIOReal implements IntakeIO {
   public void setRollerSpeed(double speed) {
     roller_Spark.set(speed);
   }
+
+  @Override
+  public void setRollerVoltage(Voltage voltage) {
+    roller_Spark.setVoltage(voltage);
+  }
 }

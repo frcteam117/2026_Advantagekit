@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
 import edu.wpi.first.math.MathUtil;
@@ -350,8 +351,10 @@ public class ShooterCommands {
   public static Command stopAndZeroHood(ShooterSubsystem shooter) {
     return shooter.run(() -> {
       shooter.setHoodGoalPos(Radians.zero());
-      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
-      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
+      shooter.setRIOFlywheelVoltage(Volts.zero());
+      shooter.setPDHFlywheelVoltage(Volts.zero());
+      // shooter.setRIOFlywheelGoalVel(RadiansPerSecond.zero());
+      // shooter.setPDHFlywheelGoalVel(RadiansPerSecond.zero());
     });
   }
 

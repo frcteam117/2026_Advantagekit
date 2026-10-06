@@ -158,7 +158,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "alignAndShoot",
         Commands.parallel(
-            IntakeCommands.defaultCommand(intake, () -> false),
+            IntakeCommands.defaultCommand(intake, () -> false, false),
             RobotCommands.autoAim(
                 drivetrain,
                 shooter,
@@ -167,12 +167,14 @@ public class RobotContainer {
                 () -> true)));
     NamedCommands.registerCommand(
         "alignAndShootIntakeDown",
-        RobotCommands.autoAim(
-            drivetrain,
-            shooter,
-            indexer,
-            () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-            () -> true));
+        Commands.parallel(
+            IntakeCommands.defaultCommand(intake, () -> false, true),
+            RobotCommands.autoAim(
+                drivetrain,
+                shooter,
+                indexer,
+                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+                () -> true)));
     NamedCommands.registerCommand("IntakeRollerOn", Commands.none());
     NamedCommands.registerCommand("IntakeRollerOff", Commands.none());
     NamedCommands.registerCommand(
@@ -326,7 +328,7 @@ public class RobotContainer {
         .whileTrue(IndexerCommands.intakingAgitation(indexer)
             .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
     */
-    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, raiseIntakeSupplier));
+    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, raiseIntakeSupplier, false));
     controller2.button(9).whileTrue(IntakeCommands.rezeroPivotCommand(intake));
     controller
         .L1()

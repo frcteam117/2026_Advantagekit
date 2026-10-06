@@ -37,6 +37,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private TrapezoidProfile.State pivot_PrevNextState;
 
+  // Roller
+  private final PIDController roller_PID;
+  private final SimpleMotorFeedforward roller_FF;
+
   public IntakeSubsystem(IntakeIO io) {
     this.io = io;
 
@@ -53,11 +57,17 @@ public class IntakeSubsystem extends SubsystemBase {
       pivot_ArbitraryFF.put(-1.0 + 1.41, 0.045);
       pivot_ArbitraryFF.put(-1.3 + 1.41, 0.075);
       pivot_ArbitraryFF.put(-1.6 + 1.41, 0.09);
+
+      roller_PID = new PIDController(Roller.KP, 0, 0, RobotConstants.CODE_PERIOD_s);
+      roller_FF = new SimpleMotorFeedforward(Roller.KS, Roller.KV, 0, RobotConstants.CODE_PERIOD_s);
     } else {
       pivot_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
       pivot_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
       pivot_ArbitraryFF.put(-1000000.0, 0.0);
       pivot_ArbitraryFF.put(1000.0, 0.0);
+
+      roller_PID = new PIDController(0, 0, 0, RobotConstants.CODE_PERIOD_s);
+      roller_FF = new SimpleMotorFeedforward(0, 0, 0, RobotConstants.CODE_PERIOD_s);
     }
 
     final String pivot_tuningNTKey = RobotConstants.TUNING_PREFIX + Pivot.NT_KEY;
@@ -77,13 +87,15 @@ public class IntakeSubsystem extends SubsystemBase {
         -1.3 + 1.41,
         -1.6 + 1.41);
 
-    // final String roller_tuningNTKey = RobotConstants.TUNING_PREFIX + Roller.NT_KEY;
-    // final BooleanSupplier roller_Tunable = new TunableBoolean(roller_tuningNTKey + "/.tunable",
-    // false);
+    final String roller_tuningNTKey = RobotConstants.TUNING_PREFIX + Roller.NT_KEY;
+    final BooleanSupplier roller_Tunable =
+        new TunableBoolean(roller_tuningNTKey + "/.tunable", false);
+    LogUtil.createTunablePID(roller_tuningNTKey + "/PID", roller_PID, roller_Tunable);
+    LogUtil.createTunableFF(roller_tuningNTKey + "/SimpleFF", roller_FF, roller_Tunable);
 
     periodic();
     setPivotVoltage(Volts.of(0.0));
-    setRollerSpeed(0);
+    setRollerVoltage(Volts.of(0.0));
   }
 
   @Override
@@ -179,7 +191,27 @@ public class IntakeSubsystem extends SubsystemBase {
   // Roller
   public void setRollerSpeed(double speed) {
     io.setRollerSpeed(speed);
+    Logger.recordOutput(Roller.NT_KEY + "/1_GoalVel", Double.NaN, RadiansPerSecond);
     Logger.recordOutput(Roller.NT_KEY + "/3_OutputSpeed", speed);
+    Logger.recordOutput(Roller.NT_KEY + "/3_OutputVoltage", Volts.of(speed * 12.0));
+  }
+
+  public void setRollerVoltage(Voltage voltage) {
+    io.setRollerVoltage(voltage);
+    Logger.recordOutput(Roller.NT_KEY + "/1_GoalVel", Double.NaN, RadiansPerSecond);
+    Logger.recordOutput(Roller.NT_KEY + "/3_OutputSpeed", voltage.in(Volts) / 12.0);
+    Logger.recordOutput(Roller.NT_KEY + "/3_OutputVoltage", voltage);
+  }
+
+  public void setRollerGoalVel(AngularVelocity goalVel) {
+    Voltage voltage = Volts.of(roller_FF.calculate(goalVel.in(RadiansPerSecond))
+        + roller_PID.calculate(
+            inputs.roller.velocity.in(RadiansPerSecond), goalVel.in(RadiansPerSecond)));
+    io.setRollerVoltage(voltage);
+    Logger.recordOutput(
+        Roller.NT_KEY + "/1_GoalVel", goalVel.in(RadiansPerSecond), RadiansPerSecond);
+    Logger.recordOutput(Roller.NT_KEY + "/3_OutputSpeed", voltage.in(Volts) / 12.0);
+    Logger.recordOutput(Roller.NT_KEY + "/3_OutputVoltage", voltage);
   }
 
   private Pose3d[] getIntakePose(double rad) {

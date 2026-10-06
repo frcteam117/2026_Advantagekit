@@ -125,7 +125,10 @@ public class ModuleIONova implements ModuleIO {
               () -> UnitUtil.rotTorad(driveSparkMax.getEncoder().getPosition() / Drive.reduction));
     }
 
-    if (azimuthSparkMax == null) {
+    if (analogEncoder != null) {
+      azimuthPositionQueue =
+          NovaOdometryThread.getInstance().registerSignal(() -> -analogEncoder.get());
+    } else if (azimuthSparkMax == null) {
       azimuthPositionQueue =
           NovaOdometryThread.getInstance().registerSignal(() -> -azimuthNova.getPositionAbs());
     } else {
@@ -247,9 +250,8 @@ public class ModuleIONova implements ModuleIO {
     // Update odometry inputs
     inputs.odometry.timestamps =
         timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometry.drivePositions_rad = drivePositionQueue.stream()
-        .mapToDouble((Double value) -> UnitUtil.rotTorad(value / Drive.reduction))
-        .toArray();
+    inputs.odometry.drivePositions_rad =
+        drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometry.azimuthPositions_rad = azimuthPositionQueue.stream()
         .mapToDouble((Double value) -> UnitUtil.rotTorad(value)) // - zeroRotation_rad)
         .toArray();

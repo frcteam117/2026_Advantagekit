@@ -9,9 +9,11 @@ import static frc.robot.subsystems.intake.IntakeConstants.NT_KEY;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.intake.IntakeConstants.Pivot;
+import frc.robot.subsystems.intake.IntakeConstants.Roller;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
 import java.util.function.BooleanSupplier;
@@ -28,9 +30,15 @@ public class IntakeCommands {
       new TunableDouble(TUNING_NT_KEY + "/PivotLowerThreshold_rad", 0.01);
   private static final DoubleSupplier ROLLER_THRESHOLD =
       new TunableDouble(TUNING_NT_KEY + "/RollerThreshold_radPs", 10);
+  private static final DoubleSupplier ROLLER_TARGET_VEL = new TunableDouble(
+      TUNING_NT_KEY + "/RollerTargetVel_radPs", Roller.TARGET_INTAKE_VELOCITY.in(RadiansPerSecond));
   private static final double ROLLER_FORWARD_SPEED = 0.9;
   private static final DoubleSupplier ROLLER_REVERSE_SPEED =
       new TunableDouble(TUNING_NT_KEY + "/RollerReverseSpeed", -0.9);
+
+  public static AngularVelocity getTargetRollerVelocity() {
+    return RadiansPerSecond.of(ROLLER_TARGET_VEL.getAsDouble());
+  }
   // private static final DoubleSupplier lowered_rad = new TunableDouble(
   //     TUNING_NT_KEY + "/lowered_rad",
   //     (PIVOT_CONSTANTS.min_Pos.pos(Radians) + PIVOT_CONSTANTS.max_Pos.pos(Radians)) / 2,
@@ -40,7 +48,7 @@ public class IntakeCommands {
   private static final Supplier<Angle> SHOOTING_POS =
       () -> Radians.of(up_pos_supplier.getAsDouble());
   private static final DoubleSupplier dislodging_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1 + 1.41);
+      new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1 + 2); // -1+1.41
   private static final Supplier<Angle> DISLODGING_POS =
       () -> Radians.of(dislodging_pos_supplier.getAsDouble());
   private static final DoubleSupplier down_pos_supplier =
@@ -64,11 +72,11 @@ public class IntakeCommands {
   //   INDEXING
   // }
 
-  public static Command defaultCommand(IntakeSubsystem intake, BooleanSupplier raisePivot) {
+  public static Command defaultCommand(IntakeSubsystem intake, BooleanSupplier raisePivot, Boolean intaking) {
     return Commands.run(
         () -> {
-          if (shooting) {
-            intake.setRollerSpeed(ROLLER_FORWARD_SPEED);
+          intake.setRollerVoltage(Volts.zero());
+          if (shooting&!intaking) {
             if (PIVOT_WORKS.getAsBoolean()) {
               intake.setPivotGoalPos(SHOOTING_POS.get());
             } else {
@@ -80,7 +88,6 @@ public class IntakeCommands {
               }
             }
           } else {
-            intake.setRollerSpeed(0);
             if (PIVOT_WORKS.getAsBoolean()) {
               if (raisePivot.getAsBoolean()) {
                 intake.setPivotGoalPos(SHOOTING_POS.get());
@@ -104,13 +111,17 @@ public class IntakeCommands {
       IntakeSubsystem intake, BooleanSupplier raisePivot, BooleanSupplier trenchOverride) {
     return Commands.run(
         () -> {
-          intake.setRollerSpeed(ROLLER_FORWARD_SPEED);
+          if (shooting) {
+            intake.setRollerVoltage(Volts.zero());
+          } else {
+            intake.setRollerGoalVel(getTargetRollerVelocity());
+          }
           if (PIVOT_WORKS.getAsBoolean()) {
             if (!trenchOverride.getAsBoolean()
                 && (raisePivot.getAsBoolean()
                     || intake.getRollerVel().in(RadiansPerSecond)
                         < ROLLER_THRESHOLD.getAsDouble())) {
-              intake.setPivotGoalPos(DISLODGING_POS.get());
+              //intake.setPivotGoalPos(DISLODGING_POS.get());
             } else {
               intake.setPivotGoalPos(DOWN_POS.get());
             }
@@ -129,7 +140,7 @@ public class IntakeCommands {
   public static Command outtakeFuel(IntakeSubsystem intake, BooleanSupplier raisePivot) {
     return Commands.run(
         () -> {
-          intake.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
+          intake.setRollerGoalVel(getTargetRollerVelocity().unaryMinus());
           if (PIVOT_WORKS.getAsBoolean()) {
             if (raisePivot.getAsBoolean()) {
               intake.setPivotGoalPos(DISLODGING_POS.get());
@@ -173,7 +184,7 @@ public class IntakeCommands {
     return Commands.run(
         () -> {
           instance.setPivotGoalPos(Radians.of(-0.7));
-          instance.setRollerSpeed(1);
+          instance.setRollerGoalVel(getTargetRollerVelocity());
           // runRollerWhenLowered(instance);
           // instance.setRollerGoal(new RadVel_State(0));
         },
@@ -194,7 +205,7 @@ public class IntakeCommands {
     return Commands.run(
         () -> {
           instance.setPivotGoalPos(Pivot.MIN_POS);
-          instance.setRollerSpeed(ROLLER_FORWARD_SPEED);
+          instance.setRollerGoalVel(getTargetRollerVelocity());
           // runRollerWhenLowered(instance);
           // instance.setRollerGoal(new RadVel_State(targetSpeed_radPs.getAsDouble()));
         },
@@ -212,7 +223,7 @@ public class IntakeCommands {
   public static Command runRollerForward(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setRollerSpeed(ROLLER_FORWARD_SPEED);
+          instance.setRollerGoalVel(getTargetRollerVelocity());
         },
         instance);
   }
@@ -220,7 +231,7 @@ public class IntakeCommands {
   public static Command runRollerBackward(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setRollerSpeed(ROLLER_REVERSE_SPEED.getAsDouble());
+          instance.setRollerGoalVel(getTargetRollerVelocity().unaryMinus());
         },
         instance);
   }
@@ -228,7 +239,7 @@ public class IntakeCommands {
   public static Command stopCommand(IntakeSubsystem instance) {
     return Commands.run(
         () -> {
-          instance.setRollerSpeed(0);
+          instance.setRollerVoltage(Volts.zero());
           // instance.setPivotGoal(new RadVel_State(0));
         },
         instance);

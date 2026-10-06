@@ -2,12 +2,14 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MomentOfInertia;
 
@@ -41,10 +43,17 @@ public class IntakeConstants {
     public static final String NT_KEY = IntakeConstants.NT_KEY + "/Roller";
     public static final int CAN_ID = 11;
     public static final SparkFlexConfig SPARK_FLEX_CONFIG = new SparkFlexConfig();
-    public static final double REDUCTION = 24 / 15;
+    public static final double REDUCTION = 24.0 / 15.0;
     public static final Distance RADIUS = Inches.of(1.0);
     public static final MomentOfInertia MOI = null;
     public static final DCMotor GEARBOX = DCMotor.getNEO(1).withReduction(REDUCTION);
+    public static final AngularVelocity MAX_VELOCITY =
+        RadiansPerSecond.of(GEARBOX.freeSpeedRadPerSec);
+    public static final AngularVelocity TARGET_INTAKE_VELOCITY = MAX_VELOCITY.times(0.7);
+
+    public static final double KS = 0.1;
+    public static final double KV = 12.0 / GEARBOX.freeSpeedRadPerSec;
+    public static final double KP = 3;
 
     static {
       SPARK_FLEX_CONFIG
