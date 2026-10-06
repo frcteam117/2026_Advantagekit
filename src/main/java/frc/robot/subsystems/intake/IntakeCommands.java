@@ -72,11 +72,12 @@ public class IntakeCommands {
   //   INDEXING
   // }
 
-  public static Command defaultCommand(IntakeSubsystem intake, BooleanSupplier raisePivot, Boolean intaking) {
+  public static Command defaultCommand(
+      IntakeSubsystem intake, BooleanSupplier raisePivot, Boolean intaking) {
     return Commands.run(
         () -> {
           intake.setRollerVoltage(Volts.zero());
-          if (shooting&!intaking) {
+          if (shooting & !intaking) {
             if (PIVOT_WORKS.getAsBoolean()) {
               intake.setPivotGoalPos(SHOOTING_POS.get());
             } else {
@@ -121,7 +122,7 @@ public class IntakeCommands {
                 && (raisePivot.getAsBoolean()
                     || intake.getRollerVel().in(RadiansPerSecond)
                         < ROLLER_THRESHOLD.getAsDouble())) {
-              //intake.setPivotGoalPos(DISLODGING_POS.get());
+              // intake.setPivotGoalPos(DISLODGING_POS.get());
             } else {
               intake.setPivotGoalPos(DOWN_POS.get());
             }
