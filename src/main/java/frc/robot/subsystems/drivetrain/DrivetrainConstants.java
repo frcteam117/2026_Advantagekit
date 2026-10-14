@@ -215,7 +215,7 @@ public class DrivetrainConstants {
       config.brakeMode = true;
       config.voltageCompensation = null;
       config.currentType = CurrentType.STATOR;
-      config.maxCurrent = 30.0;
+      config.maxCurrent = 25.0; // 30
       config.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
       config.canFreq.control = 0.02;
       config.canFreq.current = 0.02;
@@ -234,7 +234,7 @@ public class DrivetrainConstants {
       config.encoderType = EncoderType.ABS;
 
       absoluteEncoderConfig.zeroOffset((3.68 - 1.08) / (2 * Math.PI)).inverted(true);
-      sparkMaxConfig.smartCurrentLimit(50);
+      sparkMaxConfig.smartCurrentLimit(25); // was 50, should have been 30
       sparkMaxConfig.voltageCompensation(RobotConstants.NOMINAL_V);
       sparkMaxConfig.apply(absoluteEncoderConfig);
       sparkMaxConfig.apply(encoderConfig);

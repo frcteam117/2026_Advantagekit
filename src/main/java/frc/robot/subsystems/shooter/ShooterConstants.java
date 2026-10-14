@@ -27,7 +27,7 @@ public class ShooterConstants {
       SPARK_MAX_CONFIG
           .disableVoltageCompensation()
           .idleMode(IdleMode.kBrake)
-          .smartCurrentLimit(30)
+          .smartCurrentLimit(15) // 30
           .encoder
           .quadratureMeasurementPeriod(10)
           .quadratureAverageDepth(4);
@@ -50,7 +50,7 @@ public class ShooterConstants {
       SPARK_MAX_CONFIG
           .disableVoltageCompensation()
           .idleMode(IdleMode.kCoast)
-          .smartCurrentLimit(60)
+          .smartCurrentLimit(60) // 60, 35
           .encoder
           .quadratureMeasurementPeriod(10)
           .quadratureAverageDepth(4);
@@ -73,7 +73,7 @@ public class ShooterConstants {
       SPARK_MAX_CONFIG
           .disableVoltageCompensation()
           .idleMode(IdleMode.kCoast)
-          .smartCurrentLimit(60)
+          .smartCurrentLimit(60) // 60, 35
           .encoder
           .quadratureMeasurementPeriod(10)
           .quadratureAverageDepth(4);

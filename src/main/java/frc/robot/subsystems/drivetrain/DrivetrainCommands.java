@@ -86,6 +86,7 @@ public class DrivetrainCommands {
   public static Rotation2d targetTagRotation2d;
   public static Rotation2d robotRotation2d[];
   public static Rotation2d intendedDirection = new Rotation2d();
+  private static SlewRateLimiter filter = new SlewRateLimiter(0.8);
 
   static {
     angleProfiledPID.enableContinuousInput(-Math.PI, Math.PI);
@@ -695,8 +696,12 @@ public class DrivetrainCommands {
         turningSpeed -= (drivetrain.getChassisSpeeds().omegaRadiansPerSecond - turningSpeed);
       }
       ChassisSpeeds speeds = new ChassisSpeeds(
-          linearVelocity.getX() * DRIVE_MAX_VELOCITY.getAsDouble(),
-          linearVelocity.getY() * DRIVE_MAX_VELOCITY.getAsDouble(),
+          linearVelocity.getX()
+              * DRIVE_MAX_VELOCITY.getAsDouble(), // filter.calculate(linearVelocity.getX()) *
+          // DRIVE_MAX_VELOCITY.getAsDouble(),
+          linearVelocity.getY()
+              * DRIVE_MAX_VELOCITY.getAsDouble(), // filter.calculate(linearVelocity.getY()) *
+          // DRIVE_MAX_VELOCITY.getAsDouble(),
           turningSpeed);
       speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
           speeds,

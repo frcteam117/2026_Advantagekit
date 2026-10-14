@@ -46,13 +46,13 @@ public class IntakeCommands {
   private static final DoubleSupplier up_pos_supplier =
       new TunableDouble(TUNING_NT_KEY + "/up_pos", -0.67 + 1.41); // -0.635
   private static final Supplier<Angle> SHOOTING_POS =
-      () -> Radians.of(up_pos_supplier.getAsDouble());
+      () -> Radians.of(up_pos_supplier.getAsDouble() + 0.5);
   private static final DoubleSupplier dislodging_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1 + 2); // -1+1.41
+      new TunableDouble(TUNING_NT_KEY + "/dislodging_pos", -1 + 2.8); // -1+1.41
   private static final Supplier<Angle> DISLODGING_POS =
       () -> Radians.of(dislodging_pos_supplier.getAsDouble());
   private static final DoubleSupplier down_pos_supplier =
-      new TunableDouble(TUNING_NT_KEY + "/down_pos", -1.398 + 1.41);
+      new TunableDouble(TUNING_NT_KEY + "/down_pos", -1.398 + 1.41); // -1.398+1.41
   private static final Supplier<Angle> DOWN_POS = () -> Radians.of(down_pos_supplier.getAsDouble());
   public static boolean shooting = false;
 

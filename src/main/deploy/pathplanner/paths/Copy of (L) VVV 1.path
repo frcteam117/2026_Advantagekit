@@ -37,7 +37,7 @@
       },
       "prevControl": {
         "x": 8.013883664266872,
-        "y": 5.5004667104255285
+        "y": 5.500466710425529
       },
       "nextControl": {
         "x": 7.764317912218269,
@@ -143,7 +143,7 @@
   "eventMarkers": [
     {
       "name": "flywheel_acc_1",
-      "waypointRelativePos": 2.9336332958380344,
+      "waypointRelativePos": 3.3475815523059946,
       "endWaypointRelativePos": 4.0,
       "command": null
     }
