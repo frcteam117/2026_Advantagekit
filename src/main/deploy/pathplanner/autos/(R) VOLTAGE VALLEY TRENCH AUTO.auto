@@ -17,7 +17,26 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) VVV 1"
+                  "pathName": "(R) VOLTAGE VALLEY TRENCH AUTO 1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "alignAndShootIntakeDown"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.5
                 }
               }
             ]
@@ -36,7 +55,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.65
+                  "waitTime": 1.7
                 }
               }
             ]
@@ -61,7 +80,26 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "(L) VVV 2"
+                  "pathName": "(R) VOLTAGE VALLEY TRENCH AUTO 2"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "alignAndShootIntakeDown"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.5
                 }
               }
             ]
@@ -80,57 +118,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 1.25
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "shootIgnoringDrivetrain"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "turnOnCoast"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 2.0
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "stopFlywheel"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeDeploy"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "(L) VVV 3"
+                  "waitTime": 3.0
                 }
               }
             ]
