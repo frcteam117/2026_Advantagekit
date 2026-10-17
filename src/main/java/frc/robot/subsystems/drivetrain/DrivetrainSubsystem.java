@@ -66,7 +66,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private Rotation2d rawGyroYaw = Rotation2d.kZero;
   private final SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
-        new SwerveModulePosition(),
+        // new SwerveModulePosition(),
         new SwerveModulePosition(),
         new SwerveModulePosition(),
         new SwerveModulePosition()
@@ -162,12 +162,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
     // Update odometry
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
-    SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-    SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
+    SwerveModulePosition[] modulePositions = new SwerveModulePosition[3];
+    SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[3];
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       // Read wheel positions and deltas from each module
-      for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
+      for (int moduleIndex = 0; moduleIndex < 3; moduleIndex++) {
         modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
         moduleDeltas[moduleIndex] = new SwerveModulePosition(
             modulePositions[moduleIndex].distanceMeters
@@ -223,6 +223,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
       // Send setpoints to modules
       for (int i = 0; i < 4; i++) {
+        if (i != 1) {
         if (controllingHeadings
             && lastSetpoint.moduleStates()[i].speedMetersPerSecond < 1e-6
             && lastSetpoint.feedforwards().accelerationsMPSSq()[i] < 1e-6) {
@@ -244,6 +245,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
       } else {
         controllingHeadings = false;
       }
+    }
     } else {
       Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Chassis", goalSpeeds_mps);
       SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(
@@ -251,10 +253,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
       // Send setpoints to modules
       for (int i = 0; i < 4; i++) {
+        if (i != 1) {
         if (controllingHeadings && moduleStates[i].speedMetersPerSecond < 1e-6) {
           moduleStates[i].angle = goalHeadings[i];
         }
         modules[i].setNextState(moduleStates[i], 0);
+      }
       }
       Logger.recordOutput(DrivetrainConstants.NAME + "/1_Goal/Modules", moduleStates);
       if (controllingHeadings) controllingHeadings = false;
@@ -275,6 +279,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
             .toArray(SwerveModuleState[]::new));
     controllingHeadings = true;
     for (int i = 0; i < 4; i++) {
+      if (i != 1) {
       if (!MathUtil.isNear(
           modules[i].getHeading().getRadians(),
           goalHeadings[i].getRadians(),
@@ -284,21 +289,31 @@ public class DrivetrainSubsystem extends SubsystemBase {
         goalHeadings[i] = goalHeadings[i].rotateBy(Rotation2d.k180deg);
       }
       this.goalHeadings[i] = goalHeadings[i];
-    }
+    
     setGoalVelocity(new ChassisSpeeds(), new Translation2d());
+      }
+  }
   }
 
   // /** Runs the drive motors at the specified voltage while controlling the heading with pure
   // feedback. */
   public void setDriveVoltage(double output_V, double[] headings_rad) {
     for (int i = 0; i < 4; i++) {
+      if (i == 1) {
+        modules[i].runDriveVoltage(0.0, headings_rad[i]);
+      }
+      else {
       modules[i].runDriveVoltage(output_V, headings_rad[i]);
+      }
     }
   }
 
   public void setAzimuthVoltage(double output_V) {
     for (int i = 0; i < 4; i++) {
-      modules[i].runAzimuthVoltage(output_V);
+      if (i == 1) {
+        modules[i].runAzimuthVoltage(0.0);
+      }
+      else {modules[i].runAzimuthVoltage(output_V);}
     }
   }
 
@@ -326,9 +341,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   /** Resets the current odometry pose. */
   public void resetOdometry(Pose2d pose) {
-    SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
+    SwerveModulePosition[] modulePositions = new SwerveModulePosition[3];
     for (int i = 0; i < 4; i++) {
+      if (i != 1) {
       modulePositions[i] = modules[i].getPosition();
+      }
     }
     resetSimulationPoseCallBack.accept(pose);
     poseEstimator.resetPosition(rawGyroYaw, modulePositions, pose);
@@ -412,7 +429,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
   public double[] getWheelRadiusCharacterizationPositions() {
     double[] values = new double[4];
     for (int i = 0; i < 4; i++) {
+      if (i != 1) {
       values[i] = modules[i].getWheelRadiusCharacterizationPosition();
+      }
     }
     return values;
   }

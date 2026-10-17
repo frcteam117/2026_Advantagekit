@@ -400,7 +400,7 @@ public class ShooterCommands {
   // public static Command rioFlywheelSysId(ShooterSubsystem shooter, SysIdType type) {
   //   return Commands.run(() -> {}, shooter)
   //       .withTimeout(1)
-  //       .andThen(shooter.getRIOFlywheelSysIdCommand(type))
+  //       .andThen(shooter.egt(type))
   //       .withName("FlywheelSysId_" + type.name());
   // }
 

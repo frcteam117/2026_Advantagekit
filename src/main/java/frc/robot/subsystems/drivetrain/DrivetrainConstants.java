@@ -127,7 +127,7 @@ public class DrivetrainConstants {
         0.049; // 0.0476885; // Units.inchesToMeters((3.875 - .12) / 2);
     public static final double cof = 1.2;
     /** FL, FR, BL, BR */
-    public static final int[] canIds = new int[] {7, 1, 5, 3};
+    public static final int[] canIds = new int[] {7, 5, 3};//{7, 1, 5, 3};
 
     public static final double reduction = 6.23;
     public static final DCMotor gearbox = DCMotor.getNeoVortex(1).withReduction(reduction);
@@ -135,6 +135,7 @@ public class DrivetrainConstants {
     // software limits
     public static final double max_mPs = Units.feetToMeters(15);
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
+    public static final ThriftyNovaConfig freeSpinConfig = new ThriftyNovaConfig();
 
     public static final SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
 
@@ -167,6 +168,26 @@ public class DrivetrainConstants {
       config.encoderType = EncoderType.INTERNAL;
       config.maxOutput = 1.0;
 
+      freeSpinConfig.brakeMode = false;
+      freeSpinConfig.voltageCompensation = RobotConstants.NOMINAL_V;
+      freeSpinConfig.currentType = CurrentType.STATOR;
+      freeSpinConfig.maxCurrent = 0.0;
+      freeSpinConfig.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
+      freeSpinConfig.canFreq.control = 0.02;
+      freeSpinConfig.canFreq.current = 0.02;
+      freeSpinConfig.canFreq.fault = 0.02;
+      freeSpinConfig.pidSlot = PIDSlot.SLOT0;
+      freeSpinConfig.pid0.p = 0.001;
+      freeSpinConfig.pid0.i = 0.0;
+      freeSpinConfig.pid0.d = 0.0;
+      freeSpinConfig.pid0.f = 0.001;
+      freeSpinConfig.pid0.allowableError = 0.0;
+      freeSpinConfig.pid0.iZone = 0.0;
+      freeSpinConfig.absoluteWrapping = false;
+      freeSpinConfig.inverted = false;
+      freeSpinConfig.encoderType = EncoderType.INTERNAL;
+      freeSpinConfig.maxOutput = 0.0;
+
       // signalsConfig.primaryEncoderPositionPeriodMs((int) (1 / Chassis.odometryFrequency_Hz) *
       // 1000);
       // sparkMaxConfig.closedLoop.p(0.0).i(0.00000).d(0.0).velocityFF(0.0);
@@ -191,13 +212,14 @@ public class DrivetrainConstants {
     // physical properties
     public static final double moi_kgm2 = 0.02;
     /** FL, FR, BL, BR */
-    public static final int[] canIds = new int[] {8, 2, 6, 4};
+    public static final int[] canIds = new int[] {8, 6, 4};//{8, 2, 6, 4};
 
     public static final double reduction = 25;
     public static final DCMotor gearbox = DCMotor.getNEO(1).withReduction(reduction);
 
     // software limits
     public static final ThriftyNovaConfig config = new ThriftyNovaConfig();
+    public static final ThriftyNovaConfig freeSpinConfig = new ThriftyNovaConfig();
 
     public static final SignalsConfig signalsConfig = new SignalsConfig();
     public static final EncoderConfig encoderConfig = new EncoderConfig();
@@ -232,6 +254,27 @@ public class DrivetrainConstants {
       config.externalEncoder = ExternalEncoder.THRIFTY_10_PIN_ENCODER;
       config.inverted = true;
       config.encoderType = EncoderType.ABS;
+
+      freeSpinConfig.brakeMode = false;
+      freeSpinConfig.voltageCompensation = null;
+      freeSpinConfig.currentType = CurrentType.STATOR;
+      freeSpinConfig.maxCurrent = 0.0; // 30
+      freeSpinConfig.canFreq.sensor = 1 / Chassis.odometryFrequency_Hz;
+      freeSpinConfig.canFreq.control = 0.02;
+      freeSpinConfig.canFreq.current = 0.02;
+      freeSpinConfig.canFreq.fault = 0.02;
+      freeSpinConfig.canFreq.quadSensor = 1 / Chassis.odometryFrequency_Hz;
+      freeSpinConfig.pidSlot = PIDSlot.SLOT0;
+      freeSpinConfig.pid0.p = .005;
+      freeSpinConfig.pid0.i = 0.0;
+      freeSpinConfig.pid0.d = 0.0;
+      freeSpinConfig.pid0.f = 0.0;
+      freeSpinConfig.pid0.allowableError = 0.0;
+      freeSpinConfig.pid0.iZone = 0.0;
+      freeSpinConfig.absoluteWrapping = true;
+      freeSpinConfig.externalEncoder = ExternalEncoder.THRIFTY_10_PIN_ENCODER;
+      freeSpinConfig.inverted = true;
+      freeSpinConfig.encoderType = EncoderType.ABS;
 
       absoluteEncoderConfig.zeroOffset((3.68 - 1.08) / (2 * Math.PI)).inverted(true);
       sparkMaxConfig.smartCurrentLimit(25); // was 50, should have been 30
@@ -273,7 +316,7 @@ public class DrivetrainConstants {
     /** FL, FR, BL, BR. Negative rotation of each absolute encoder when the wheels face forward */
     public static final int[] zeroRotations_ticks = new int[] {
       1837 - 2157 - 3897 - 842 - 363 - 189 - 3183 - 3964,
-      -1529 - 1994 - 69,
+      // -1529 - 1994 - 69,
       2000, // 2273 - 3930 - 2073 - 3416 - 1362,
       1339 - 1751
     };

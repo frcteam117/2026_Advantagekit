@@ -836,7 +836,8 @@ public class DrivetrainCommands {
                 .finallyDo(() -> {
                   double[] positions = drive.getWheelRadiusCharacterizationPositions();
                   double wheelDelta = 0.0;
-                  for (int i = 0; i < 4; i++) {
+                  for (int i = 0; i < 3; i++) {
+                    
                     wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
                   }
                   double wheelRadius = (state.gyroDelta * Chassis.trackRadius_m) / wheelDelta;

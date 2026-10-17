@@ -66,6 +66,7 @@ public class ModuleIONova implements ModuleIO {
     if ((module == 0) || (module == 1)) { // FL, FR are still novas
       driveNova = new ThriftyNova(Drive.canIds[module], MotorType.NEO);
       driveSparkMax = null;
+
     } else {
       driveNova = null;
       driveSparkMax = new SparkMax(Drive.canIds[module], SparkLowLevel.MotorType.kBrushless);
@@ -90,7 +91,12 @@ public class ModuleIONova implements ModuleIO {
     System.out.println(
         "Configuring drive motor. Module: " + module + "  CAN Id: " + Drive.canIds[module]);
     if (driveSparkMax == null) {
-      driveNova.applyConfig(Drive.config);
+      if (module == 1) {
+        driveNova.applyConfig(Drive.freeSpinConfig);
+      }
+      else {
+        driveNova.applyConfig(Drive.config);
+      }
     } else {
 
       driveSparkMax.configure(
@@ -105,7 +111,12 @@ public class ModuleIONova implements ModuleIO {
         "Configuring Azimuth motor. Module: " + module + "  CAN Id: " + Azimuth.canIds[module]);
     Azimuth.config.absOffset = AbsEncoder.zeroRotations_ticks[module];
     if (azimuthSparkMax == null) {
-      azimuthNova.applyConfig(Azimuth.config);
+      if (module == 1) {
+        azimuthNova.applyConfig(Azimuth.freeSpinConfig);
+      }
+      else {
+        azimuthNova.applyConfig(Azimuth.config);
+      }
     } else {
       azimuthSparkMax.configure(
           Azimuth.sparkMaxConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
