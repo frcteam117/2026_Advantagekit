@@ -322,7 +322,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (int i = 0; i < 4; i++) {
-      states[i] = modules[i].getState();
+      if (i != 1){
+        states[i] = modules[i].getState();
+      }
     }
     return states;
   }

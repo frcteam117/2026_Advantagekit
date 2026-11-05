@@ -57,7 +57,7 @@ public class DrivetrainConstants {
     public static final double trackRadius_m = Math.hypot(trackLength_m / 2.0, trackWidth_m / 2.0);
     public static final Translation2d[] moduleTranslations = new Translation2d[] {
       new Translation2d(trackLength_m / 2.0, trackWidth_m / 2.0),
-      new Translation2d(trackLength_m / 2.0, -trackWidth_m / 2.0),
+      // new Translation2d(trackLength_m / 2.0, -trackWidth_m / 2.0),
       new Translation2d(-trackLength_m / 2.0, trackWidth_m / 2.0),
       new Translation2d(-trackLength_m / 2.0, -trackWidth_m / 2.0)
     };
