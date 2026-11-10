@@ -34,7 +34,7 @@ public class ShooterCommands {
   public static final boolean isTuning = false;
   private static final String TUNING_NT_KEY = "Tuning/" + LOG_NAME + "/Commands";
   private static final DoubleSupplier targetSpeed_radPs =
-      new TunableDouble(TUNING_NT_KEY + "/Flywheel_radPs", 320, () -> true);
+      new TunableDouble(TUNING_NT_KEY + "/Flywheel_radPs", 240, () -> true);
   // Change if flywheel accelerates too much during auto
   private static final DoubleSupplier targetHoodSpeed_radPs =
       new TunableDouble(TUNING_NT_KEY + "/Hood_radPs", .2, () -> true);
@@ -395,7 +395,7 @@ public class ShooterCommands {
     return shooter.run(() -> {
       shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
       shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
-      shooter.setHoodGoalPos(Radians.of(Math.PI / 3));
+      shooter.setHoodGoalPos(Radians.of(Math.PI / 3 * 1.3));
     });
   }
 

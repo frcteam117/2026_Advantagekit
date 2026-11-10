@@ -71,8 +71,8 @@ public class IndexerCommands {
 
   public static Command runBackwardCommand(IndexerSubsystem indexer) {
     return indexer.run(() -> {
-      indexer.setHopperSpeed(reverseSpeed.getAsDouble());
-      indexer.setKickerSpeed(reverseSpeed.getAsDouble());
+      indexer.setHopperSpeed(reverseSpeed.getAsDouble() / 2);
+      indexer.setKickerSpeed(reverseSpeed.getAsDouble() / 2);
     });
   }
 }

@@ -202,14 +202,15 @@ public class RobotCommands {
   }
 
   // here
-  public static Command demoShooting(ShooterSubsystem shooter, IndexerSubsystem indexer) {
-    return Commands.parallel(
-        ShooterCommands.runShooter(shooter),
-        IndexerCommands.runForwardCommand(indexer)
-            .onlyIf(() ->
-                Math.abs(shooter.getPDHFlywheelVel().minus(targetSpeed_radPs).baseUnitMagnitude())
-                    > 0.1));
-  }
+  //   public static Command demoShooting(ShooterSubsystem shooter, IndexerSubsystem indexer) {
+  //     return Commands.parallel(
+  //         ShooterCommands.runShooter(shooter),
+  //         IndexerCommands.runForwardCommand(indexer)
+  //             .onlyIf(() ->
+  //
+  // Math.abs(shooter.getPDHFlywheelVel().minus(targetSpeed_radPs).baseUnitMagnitude())
+  //                     < 10));
+  //   }
 
   public static Translation2d getTarget(Pose2d robotPose) {
     boolean isBlueAlliance = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;

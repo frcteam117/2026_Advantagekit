@@ -335,11 +335,11 @@ public class RobotContainer {
                   Commands.run(() -> IntakeCommands.shooting = true)
                       .finallyDo(() -> IntakeCommands.shooting = false)));
     }
-    controller
-        .square()
-        .whileTrue(Commands.startEnd(
-            () -> IndexerCommands.runningBackwards = true,
-            () -> IndexerCommands.runningBackwards = false));
+    // controller
+    //     .square()
+    //     .whileTrue(Commands.startEnd(
+    //         () -> IndexerCommands.runningBackwards = true,
+    //         () -> IndexerCommands.runningBackwards = false));
     controller2.square().whileTrue(IndexerCommands.runForwardCommand(indexer));
     controller2.circle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
 
@@ -351,13 +351,18 @@ public class RobotContainer {
     }
 
     // controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
-    controller.triangle().whileTrue(led.showREVCommand(shooter, indexer));
+    controller
+        .triangle()
+        .whileTrue(IntakeCommands.runRollerAndLowerPivot(intake)
+            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
+
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
 
     // here
-    controller.circle().whileTrue(RobotCommands.demoShooting(shooter, indexer));
+    controller.circle().whileTrue(ShooterCommands.runForward(shooter));
+    controller.square().whileTrue(IndexerCommands.runForwardCommand(indexer));
 
     // new button bindings:
     // controller2
