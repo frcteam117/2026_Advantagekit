@@ -140,6 +140,7 @@ public class RobotCommands {
         Set.of(drivetrain, shooter, indexer));
   }
 
+  //here
   public static Command setPointRevThenShoot(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     Pose2d pose = new Pose2d(1.578, 4.008, Rotation2d.fromDegrees(180));
     return Commands.parallel(
@@ -181,6 +182,7 @@ public class RobotCommands {
         Set.of(drivetrain));
   }
 
+  //here
   public static Command autoAimRevFlywheels(
       Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter, IndexerSubsystem indexer) {
     return ShooterCommands.autoAim(

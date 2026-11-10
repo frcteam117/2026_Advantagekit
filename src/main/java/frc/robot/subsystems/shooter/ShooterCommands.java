@@ -390,6 +390,15 @@ public class ShooterCommands {
     });
   }
 
+  //here
+  public static Command runShooter(ShooterSubsystem shooter) {
+    return shooter.run(() -> {
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+      shooter.setHoodGoalVel(RadiansPerSecond.of(-0.1));
+    });
+  }
+
   // public static Command hoodSysId(ShooterSubsystem shooter, SysIdType type) {
   //   return Commands.run(() -> {}, shooter)
   //       .withTimeout(1)

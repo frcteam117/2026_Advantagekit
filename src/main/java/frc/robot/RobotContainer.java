@@ -99,8 +99,9 @@ public class RobotContainer {
         intake = new IntakeSubsystem(new IntakeIOReal());
         shooter = new ShooterSubsystem(new ShooterIOReal());
 
-        vision = new VisionSubsystem(
-            drivetrain::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
+        vision = null;
+        // new VisionSubsystem(
+        //     drivetrain::accept, new VisionIOPhotonVision(0), new VisionIOPhotonVision(1));
         break;
       case SIM:
         led = new LEDSubsystem();
@@ -121,10 +122,12 @@ public class RobotContainer {
         intake = new IntakeSubsystem(new IntakeIO() {});
         shooter = new ShooterSubsystem(new ShooterIO() {});
 
-        vision = new VisionSubsystem(
-            drivetrain::accept,
-            new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
-            new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
+        vision = null;
+        
+        // new VisionSubsystem(
+        //     drivetrain::accept,
+        //     new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
+        //     new VisionIOPhotonVisionSim(1, driveSimulation::getSimulatedDriveTrainPose));
         break;
       default:
         led = new LEDSubsystem();
@@ -138,8 +141,8 @@ public class RobotContainer {
             (pose) -> {});
         intake = new IntakeSubsystem(new IntakeIO() {});
         shooter = new ShooterSubsystem(new ShooterIO() {});
-        // vision = null;
-        vision = new VisionSubsystem(drivetrain::accept, new VisionIO() {}, new VisionIO() {});
+        vision = null;
+        // vision = new VisionSubsystem(drivetrain::accept, new VisionIO() {}, new VisionIO() {});
         break;
     }
     indexer = new IndexerSubsystem();
@@ -279,55 +282,31 @@ public class RobotContainer {
         targetPose -> Logger.recordOutput("PathPlanner/TargetPose", targetPose));
     led.setDefaultCommand(Commands.either(
         led.updateLEDs(controller.R3()), led.updateLEDs(controller.R1()), driveModeChooser::get));
-    drivetrain.setDefaultCommand(Commands.either(
-        DrivetrainCommands.joystickDriveAtAngle(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightY(),
-            () -> -controller.getRightX(),
-            0.2,
-            controller.R3(),
-            controller.R3(),
-            () -> new Translation2d(),
-            () -> false),
-        DrivetrainCommands.joystickDriveAtAngleRegularTurning(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRawAxis(2),
-            () -> -controller.getRightX() * Math.abs(controller.getRightX()),
-            .4,
-            () -> false, // controller.R3(),
-            controller.R1(), // controller.R1(),
-            () -> new Translation2d(),
-            () -> false),
-        driveModeChooser::get));
+    // drivetrain.setDefaultCommand(Commands.either(
+    //     DrivetrainCommands.joystickDriveAtAngle(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () -> -controller.getRightY(),
+    //         () -> -controller.getRightX(),
+    //         0.2,
+    //         controller.R3(),
+    //         controller.R3(),
+    //         () -> new Translation2d(),
+    //         () -> false),
+    //     DrivetrainCommands.joystickDriveAtAngleRegularTurning(
+    //         drivetrain,
+    //         () -> -controller.getLeftY(),
+    //         () -> -controller.getLeftX(),
+    //         () -> -controller.getRawAxis(2),
+    //         () -> -controller.getRightX() * Math.abs(controller.getRightX()),
+    //         .4,
+    //         () -> false, // controller.R3(),
+    //         controller.R1(), // controller.R1(),
+    //         () -> new Translation2d(),
+    //         () -> false),
+    //     driveModeChooser::get));
 
-    controller.L3().whileTrue(DrivetrainCommands.pathOverBump(drivetrain));
-    /*
-    controller
-        .R1()
-        .whileTrue(RobotCommands.faceHubAndDrive(
-            drivetrain,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            // () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())
-            () -> new Translation2d(-.2, 0)));
-    */
-    // Intake
-    /*
-    intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, controller.L1()));
-    controller
-        .circle()
-        .whileTrue(IntakeCommands.outtakeFuel(intake, controller.L1())
-            .alongWith(IndexerCommands.runBackwardCommand(indexer)));
-    controller
-        .L2()
-        .whileTrue(IntakeCommands.intakeFuel(intake, controller.L1(), () -> false))
-        .whileTrue(IndexerCommands.intakingAgitation(indexer)
-            .withInterruptBehavior(InterruptionBehavior.kCancelSelf));
-    */
     intake.setDefaultCommand(IntakeCommands.defaultCommand(intake, raiseIntakeSupplier, false));
     controller2.button(9).whileTrue(IntakeCommands.rezeroPivotCommand(intake));
     controller
@@ -373,28 +352,33 @@ public class RobotContainer {
     } else {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
-    controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
+    
+    // controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
     controller.triangle().whileTrue(led.showREVCommand(shooter, indexer));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
 
+    //here
+    controller.circle().whileTrue(ShooterCommands.runShooter(shooter));
+
+
     // new button bindings:
-    controller2
-        .L1()
-        .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer));
+    // controller2
+    //     .L1()
+    //     .whileTrue(RobotCommands.autoAimRevFlywheels(drivetrain::getPose, shooter, indexer));
     controller2.L1().whileTrue(led.showREVCommand(shooter, indexer));
     // should this be whileTrue? vvv
-    controller
-        .R2()
-        .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
-            .andThen(RobotCommands.autoAim(
-                drivetrain,
-                shooter,
-                indexer,
-                () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
-                () -> true))
-            .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+    // controller
+    //     .R2()
+    //     .whileTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision())
+    //         .andThen(RobotCommands.autoAim(
+    //             drivetrain,
+    //             shooter,
+    //             indexer,
+    //             () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos()),
+    //             () -> true))
+    //         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
     controller.R2().whileTrue(led.showREVCommand(shooter, indexer));
     if (ShooterCommands.isTuning) {
       controller2
@@ -402,7 +386,7 @@ public class RobotContainer {
           .whileTrue(RobotCommands.autoFaceTarget(
               drivetrain,
               () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
-    }
+    }}
     // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
     // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
     // controller
@@ -414,36 +398,37 @@ public class RobotContainer {
     //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
     //             intake.getPivotPos()))); // make aimToPass
 
-    controller2.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
-      final double distance = RobotCommands.getTarget(drivetrain.getPose())
-          .getDistance(drivetrain.getPose().getTranslation());
-      ShooterCommands.setAutoAimPoint(distance);
-      shooterTuningDistances.add(distance);
-      shooterTuningRIOVels.add(shooter.getRIOFlywheelVel().in(RadiansPerSecond));
-      shooterTuningPDHVels.add(shooter.getPDHFlywheelVel().in(RadiansPerSecond));
-      shooterTuningFlywheelVels.add(ShooterCommands.getFlywheelGoal());
-      shooterTuningHoodPoses.add(shooter.getHoodPos().in(Radians));
-      Logger.recordOutput(
-          "ShooterTuning/Poses",
-          Arrays.stream(shooterTuningDistances.toArray(Double[]::new))
-              .mapToDouble(value -> value)
-              .toArray());
-      Logger.recordOutput(
-          "ShooterTuning/RIOVels",
-          Arrays.stream(shooterTuningRIOVels.toArray(Double[]::new))
-              .mapToDouble(value -> value)
-              .toArray());
-      Logger.recordOutput(
-          "ShooterTuning/PDHVels",
-          Arrays.stream(shooterTuningPDHVels.toArray(Double[]::new))
-              .mapToDouble(value -> value)
-              .toArray());
-      Logger.recordOutput(
-          "ShooterTuning/HoodPoses",
-          Arrays.stream(shooterTuningHoodPoses.toArray(Double[]::new))
-              .mapToDouble(value -> value)
-              .toArray());
-    }));
+    // controller2.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
+    //   final double distance = RobotCommands.getTarget(drivetrain.getPose())
+    //       .getDistance(drivetrain.getPose().getTranslation());
+    
+    //   ShooterCommands.setAutoAimPoint(distance);
+    //   shooterTuningDistances.add(distance);
+    //   shooterTuningRIOVels.add(shooter.getRIOFlywheelVel().in(RadiansPerSecond));
+    //   shooterTuningPDHVels.add(shooter.getPDHFlywheelVel().in(RadiansPerSecond));
+    //   shooterTuningFlywheelVels.add(ShooterCommands.getFlywheelGoal());
+    //   shooterTuningHoodPoses.add(shooter.getHoodPos().in(Radians));
+    //   Logger.recordOutput(
+    //       "ShooterTuning/Poses",
+    //       Arrays.stream(shooterTuningDistances.toArray(Double[]::new))
+    //           .mapToDouble(value -> value)
+    //           .toArray());
+    //   Logger.recordOutput(
+    //       "ShooterTuning/RIOVels",
+    //       Arrays.stream(shooterTuningRIOVels.toArray(Double[]::new))
+    //           .mapToDouble(value -> value)
+    //           .toArray());
+    //   Logger.recordOutput(
+    //       "ShooterTuning/PDHVels",
+    //       Arrays.stream(shooterTuningPDHVels.toArray(Double[]::new))
+    //           .mapToDouble(value -> value)
+    //           .toArray());
+    //   Logger.recordOutput(
+    //       "ShooterTuning/HoodPoses",
+    //       Arrays.stream(shooterTuningHoodPoses.toArray(Double[]::new))
+    //           .mapToDouble(value -> value)
+    //           .toArray());
+    // }));
 
     // snake mode around middle
     // controller
@@ -501,16 +486,16 @@ public class RobotContainer {
     //         RobotBase.isReal()
     //             ? DrivetrainCommands.replacePoseWithVision(drivetrain)
     //             : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
-    controller
-        .touchpad()
-        .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+    // controller
+    //     .touchpad()
+    //     .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
     // controller
     //     .L3()
     //     .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-    controller2
-        .touchpad()
-        .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-  }
+//     controller2
+//         .touchpad()
+//         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+//   }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
