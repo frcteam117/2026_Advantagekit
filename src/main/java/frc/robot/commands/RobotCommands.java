@@ -21,6 +21,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public class RobotCommands {
   private static boolean isAutoShooting = false;
@@ -195,6 +196,16 @@ public class RobotCommands {
                 : robotPoseSupplier.get().getX() < 12,
             () -> true)
         .onlyIf(() -> !isAutoShooting);
+  }
+
+  //here
+  public static Command demoShooting(ShooterSubsystem shooter, IndexerSubsystem indexer){
+    return Commands.parallel(
+        ShooterCommands.runShooter(shooter),
+        IndexerCommands.runForwardCommand(indexer)
+        .onlyIf(() -> shooter.getPDHFlywheelVel().in(RadiansPerSecond) > Math.PI/3)
+        
+        );
   }
 
   public static Translation2d getTarget(Pose2d robotPose) {
