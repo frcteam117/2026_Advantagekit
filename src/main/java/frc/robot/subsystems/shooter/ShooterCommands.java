@@ -5,17 +5,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.shooter.ShooterConstants.LOG_NAME;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -31,6 +20,15 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.util.logging.TunableBoolean;
 import frc.robot.util.logging.TunableDouble;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class ShooterCommands {
   public static final boolean isTuning = false;
@@ -392,12 +390,12 @@ public class ShooterCommands {
     });
   }
 
-  //here
+  // here
   public static Command runShooter(ShooterSubsystem shooter) {
     return shooter.run(() -> {
-      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(Math.PI/3));
-      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(Math.PI/3));
-      shooter.setHoodGoalPos(Radians.of(Math.PI/3));
+      shooter.setRIOFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+      shooter.setPDHFlywheelGoalVel(RadiansPerSecond.of(targetSpeed_radPs.getAsDouble()));
+      shooter.setHoodGoalPos(Radians.of(Math.PI / 3));
     });
   }
 

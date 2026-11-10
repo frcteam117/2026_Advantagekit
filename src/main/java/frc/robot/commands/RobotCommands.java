@@ -1,8 +1,11 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -21,7 +24,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public class RobotCommands {
   private static boolean isAutoShooting = false;
@@ -31,6 +33,7 @@ public class RobotCommands {
   private static final Translation2d redHub = RobotConstants.FIELD_TYPE.equals(FieldType.WELDED)
       ? new Translation2d(0.0254 * (651.22 - 182.11), 0.0254 * (317.69 / 2))
       : new Translation2d(0.0254 * (650.12 - 181.56), 0.0254 * (316.64 / 2));
+  private static final AngularVelocity targetSpeed_radPs = RadiansPerSecond.of(320);
   private static final Translation2d redLPassingTarget = new Translation2d(13.1, 6.1);
   private static final Translation2d redRPassingTarget = new Translation2d(13.1, 2);
   private static final Translation2d blueLPassingTarget = new Translation2d(3, 6.6);
@@ -141,7 +144,7 @@ public class RobotCommands {
         Set.of(drivetrain, shooter, indexer));
   }
 
-  //here
+  // here
   public static Command setPointRevThenShoot(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     Pose2d pose = new Pose2d(1.578, 4.008, Rotation2d.fromDegrees(180));
     return Commands.parallel(
@@ -183,7 +186,7 @@ public class RobotCommands {
         Set.of(drivetrain));
   }
 
-  //here
+  // here
   public static Command autoAimRevFlywheels(
       Supplier<Pose2d> robotPoseSupplier, ShooterSubsystem shooter, IndexerSubsystem indexer) {
     return ShooterCommands.autoAim(
@@ -198,14 +201,14 @@ public class RobotCommands {
         .onlyIf(() -> !isAutoShooting);
   }
 
-  //here
-  public static Command demoShooting(ShooterSubsystem shooter, IndexerSubsystem indexer){
+  // here
+  public static Command demoShooting(ShooterSubsystem shooter, IndexerSubsystem indexer) {
     return Commands.parallel(
         ShooterCommands.runShooter(shooter),
         IndexerCommands.runForwardCommand(indexer)
-        .onlyIf(() -> shooter.getPDHFlywheelVel().in(RadiansPerSecond) > Math.PI/3)
-        
-        );
+            .onlyIf(() ->
+                Math.abs(shooter.getPDHFlywheelVel().minus(targetSpeed_radPs).baseUnitMagnitude())
+                    > 0.1));
   }
 
   public static Translation2d getTarget(Pose2d robotPose) {

@@ -14,14 +14,12 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,7 +45,6 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.SysIdUtil;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +120,7 @@ public class RobotContainer {
         shooter = new ShooterSubsystem(new ShooterIO() {});
 
         vision = null;
-        
+
         // new VisionSubsystem(
         //     drivetrain::accept,
         //     new VisionIOPhotonVisionSim(0, driveSimulation::getSimulatedDriveTrainPose),
@@ -352,16 +349,15 @@ public class RobotContainer {
     } else {
       shooter.setDefaultCommand(ShooterCommands.stopAndZeroHood(shooter));
     }
-    
+
     // controller.triangle().whileTrue(RobotCommands.setPointRevThenShoot(shooter, indexer));
     controller.triangle().whileTrue(led.showREVCommand(shooter, indexer));
     controller2.povUp().whileTrue(ShooterCommands.raiseHood(shooter));
     controller2.povDown().whileTrue(ShooterCommands.lowerHood(shooter));
     controller2.triangle().whileTrue(ShooterCommands.runForward(shooter));
 
-    //here
-    controller.circle().whileTrue(ShooterCommands.runShooter(shooter));
-
+    // here
+    controller.circle().whileTrue(RobotCommands.demoShooting(shooter, indexer));
 
     // new button bindings:
     // controller2
@@ -386,116 +382,118 @@ public class RobotContainer {
           .whileTrue(RobotCommands.autoFaceTarget(
               drivetrain,
               () -> DrivetrainCommands.pivotBasedCenterOfRotation(intake.getPivotPos())));
-    }}
-    // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
-    // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
-    // controller
-    //     .cross()
-    //     .whileTrue(RobotCommands.faceHubAndDrive(
-    //         drivetrain,
-    //         () -> -controller.getLeftY(),
-    //         () -> -controller.getLeftX(),
-    //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
-    //             intake.getPivotPos()))); // make aimToPass
+    }
+  }
+  // make separate shooting and facing hub commands once max figures out his commands stuff ^^^
+  // controller.triangle().whileTrue(IndexerCommands.runBackwardCommand(indexer));
+  // controller
+  //     .cross()
+  //     .whileTrue(RobotCommands.faceHubAndDrive(
+  //         drivetrain,
+  //         () -> -controller.getLeftY(),
+  //         () -> -controller.getLeftX(),
+  //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+  //             intake.getPivotPos()))); // make aimToPass
 
-    // controller2.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
-    //   final double distance = RobotCommands.getTarget(drivetrain.getPose())
-    //       .getDistance(drivetrain.getPose().getTranslation());
-    
-    //   ShooterCommands.setAutoAimPoint(distance);
-    //   shooterTuningDistances.add(distance);
-    //   shooterTuningRIOVels.add(shooter.getRIOFlywheelVel().in(RadiansPerSecond));
-    //   shooterTuningPDHVels.add(shooter.getPDHFlywheelVel().in(RadiansPerSecond));
-    //   shooterTuningFlywheelVels.add(ShooterCommands.getFlywheelGoal());
-    //   shooterTuningHoodPoses.add(shooter.getHoodPos().in(Radians));
-    //   Logger.recordOutput(
-    //       "ShooterTuning/Poses",
-    //       Arrays.stream(shooterTuningDistances.toArray(Double[]::new))
-    //           .mapToDouble(value -> value)
-    //           .toArray());
-    //   Logger.recordOutput(
-    //       "ShooterTuning/RIOVels",
-    //       Arrays.stream(shooterTuningRIOVels.toArray(Double[]::new))
-    //           .mapToDouble(value -> value)
-    //           .toArray());
-    //   Logger.recordOutput(
-    //       "ShooterTuning/PDHVels",
-    //       Arrays.stream(shooterTuningPDHVels.toArray(Double[]::new))
-    //           .mapToDouble(value -> value)
-    //           .toArray());
-    //   Logger.recordOutput(
-    //       "ShooterTuning/HoodPoses",
-    //       Arrays.stream(shooterTuningHoodPoses.toArray(Double[]::new))
-    //           .mapToDouble(value -> value)
-    //           .toArray());
-    // }));
+  // controller2.button(13).debounce(1).onTrue(Commands.runOnce(() -> {
+  //   final double distance = RobotCommands.getTarget(drivetrain.getPose())
+  //       .getDistance(drivetrain.getPose().getTranslation());
 
-    // snake mode around middle
-    // controller
-    //     .triangle()
-    //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
-    //         drivetrain,
-    //         () -> -controller.getLeftY(),
-    //         () -> -controller.getLeftX(),
-    //         () -> -controller.getLeftY(),
-    //         () -> -controller.getLeftX(),
-    //         .05,
-    //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
-    //             intake.getPivotState().pos()),
-    //         () -> false));
+  //   ShooterCommands.setAutoAimPoint(distance);
+  //   shooterTuningDistances.add(distance);
+  //   shooterTuningRIOVels.add(shooter.getRIOFlywheelVel().in(RadiansPerSecond));
+  //   shooterTuningPDHVels.add(shooter.getPDHFlywheelVel().in(RadiansPerSecond));
+  //   shooterTuningFlywheelVels.add(ShooterCommands.getFlywheelGoal());
+  //   shooterTuningHoodPoses.add(shooter.getHoodPos().in(Radians));
+  //   Logger.recordOutput(
+  //       "ShooterTuning/Poses",
+  //       Arrays.stream(shooterTuningDistances.toArray(Double[]::new))
+  //           .mapToDouble(value -> value)
+  //           .toArray());
+  //   Logger.recordOutput(
+  //       "ShooterTuning/RIOVels",
+  //       Arrays.stream(shooterTuningRIOVels.toArray(Double[]::new))
+  //           .mapToDouble(value -> value)
+  //           .toArray());
+  //   Logger.recordOutput(
+  //       "ShooterTuning/PDHVels",
+  //       Arrays.stream(shooterTuningPDHVels.toArray(Double[]::new))
+  //           .mapToDouble(value -> value)
+  //           .toArray());
+  //   Logger.recordOutput(
+  //       "ShooterTuning/HoodPoses",
+  //       Arrays.stream(shooterTuningHoodPoses.toArray(Double[]::new))
+  //           .mapToDouble(value -> value)
+  //           .toArray());
+  // }));
 
-    // snake mode around intake
-    // controller
-    //     .triangle()
-    //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
-    //         drivetrain,
-    //         () -> -controller.getLeftY(),
-    //         () -> -controller.getLeftX(),
-    //         () -> -controller.getLeftY(),
-    //         () -> -controller.getLeftX(),
-    //         .05,
-    //         controller.R3(),
-    //         controller.R1(),
-    //         () -> new Translation2d(
-    //             (DrivetrainConstants.Chassis.bumperLength_m / 2) + Units.inchesToMeters(2), 0),
-    //         () -> false));
+  // snake mode around middle
+  // controller
+  //     .triangle()
+  //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+  //         drivetrain,
+  //         () -> -controller.getLeftY(),
+  //         () -> -controller.getLeftX(),
+  //         () -> -controller.getLeftY(),
+  //         () -> -controller.getLeftX(),
+  //         .05,
+  //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+  //             intake.getPivotState().pos()),
+  //         () -> false));
 
-    // angle from right joystick mode
-    // controller
-    //     .triangle()
-    //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
-    //         drivetrain,
-    //         () -> -controller.getLeftY(),
-    //         () -> -controller.getLeftX(),
-    //         () -> Rotation2d.fromRadians(
-    //             Math.atan2(-controller.getRightX(), -controller.getRightY())),
-    //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
-    //             intake.getPivotState().pos()),
-    //         () -> false));
+  // snake mode around intake
+  // controller
+  //     .triangle()
+  //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+  //         drivetrain,
+  //         () -> -controller.getLeftY(),
+  //         () -> -controller.getLeftX(),
+  //         () -> -controller.getLeftY(),
+  //         () -> -controller.getLeftX(),
+  //         .05,
+  //         controller.R3(),
+  //         controller.R1(),
+  //         () -> new Translation2d(
+  //             (DrivetrainConstants.Chassis.bumperLength_m / 2) + Units.inchesToMeters(2), 0),
+  //         () -> false));
 
-    // Reset gyro / odometry
-    // final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
-    //     ? () -> drivetrain.resetOdometry(
-    //         driveSimulation
-    //             .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
-    //     // simulation
-    //     : () -> drivetrain.resetPoseWithVision(); // zero gyro
-    // controller
-    //     .touchpad()
-    //     .onTrue(
-    //         RobotBase.isReal()
-    //             ? DrivetrainCommands.replacePoseWithVision(drivetrain)
-    //             : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
-    // controller
-    //     .touchpad()
-    //     .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-    // controller
-    //     .L3()
-    //     .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-//     controller2
-//         .touchpad()
-//         .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
-//   }
+  // angle from right joystick mode
+  // controller
+  //     .triangle()
+  //     .whileTrue(DrivetrainCommands.joystickDriveAtAngle(
+  //         drivetrain,
+  //         () -> -controller.getLeftY(),
+  //         () -> -controller.getLeftX(),
+  //         () -> Rotation2d.fromRadians(
+  //             Math.atan2(-controller.getRightX(), -controller.getRightY())),
+  //         () -> DrivetrainCommands.pivotBasedCenterOfRotation(
+  //             intake.getPivotState().pos()),
+  //         () -> false));
+
+  // Reset gyro / odometry
+  // final Runnable resetGyro = RobotConstants.currentMode == RobotConstants.Mode.SIM
+  //     ? () -> drivetrain.resetOdometry(
+  //         driveSimulation
+  //             .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during
+  //     // simulation
+  //     : () -> drivetrain.resetPoseWithVision(); // zero gyro
+  // controller
+  //     .touchpad()
+  //     .onTrue(
+  //         RobotBase.isReal()
+  //             ? DrivetrainCommands.replacePoseWithVision(drivetrain)
+  //             : Commands.runOnce(resetGyro, drivetrain).ignoringDisable(true));
+  // controller
+  //     .touchpad()
+  //     .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+  // controller
+  //     .L3()
+  //     .onTrue(Commands.runOnce(() -> drivetrain.resetPoseWithVision()).ignoringDisable(true));
+  //     controller2
+  //         .touchpad()
+  //         .onTrue(Commands.runOnce(() ->
+  // drivetrain.resetPoseWithVision()).ignoringDisable(true));
+  //   }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
